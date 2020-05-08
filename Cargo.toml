@@ -7,15 +7,10 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-sqlx = { version = "0.3", default-features = false, features = ["runtime-tokio", "macros"] }
-pretty_env_logger = "0.4.0"
-urlencoding = "1.0.0"
-futures = "0.3.4"
-mime = "0.3.16"
-tide = "0.8.1"
-tokio = { version = "0.2.20", features = ["macros"] }
-warp = "0.2.2"
+rocket = "0.4.4"
+rocket_contrib = { version = "0.4.4", default-features = false, features = ["tera_templates", "serve"] }
+serde = { version = "1.0.106", features = ["derive"] }
+serde_json = "1.0.52"
 
 [build-dependencies]
-ructe = { version = "0.11.4", features = ["warp02"] }
 vergen = "3.1.0"
