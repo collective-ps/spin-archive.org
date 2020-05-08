@@ -1,4 +1,4 @@
-{% set build_info = footer_data() %}
+{% set build_info = build_info() %}
 
 <footer class="text-center">
   <span>SHA: <em>{{ build_info.sha_short }}</em></span>

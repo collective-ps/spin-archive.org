@@ -37,12 +37,12 @@ fn main() {
             StaticFiles::from(concat!(env!("CARGO_MANIFEST_DIR"), "/build")),
         )
         .attach(Template::custom(|engines| {
-            engines.tera.register_function("footer_data", footer_data());
+            engines.tera.register_function("build_info", build_info());
         }))
         .launch();
 }
 
-fn footer_data() -> GlobalFn {
+fn build_info() -> GlobalFn {
     Box::new(move |_args| -> TeraResult<TeraValue> {
         let build_info = BuildInfo {
             build_timestamp: env::var("VERGEN_BUILD_TIMESTAMP").unwrap(),
