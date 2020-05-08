@@ -1,8 +1,13 @@
 #![feature(proc_macro_hygiene, decl_macro)]
 
+#[macro_use]
+extern crate diesel_migrations;
+
 use std::collections::HashMap;
 use std::env;
 
+use rocket::Rocket;
+use rocket_contrib::databases::diesel;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::tera::{
     Context as TeraContext, Result as TeraResult, Value as TeraValue,
@@ -10,7 +15,12 @@ use rocket_contrib::templates::tera::{
 use rocket_contrib::templates::Template;
 use serde::Serialize;
 
+embed_migrations!();
+
 type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
+
+#[rocket_contrib::database("spin_archive")]
+struct DatabaseConnection(diesel::PgConnection);
 
 #[derive(Debug, Serialize)]
 pub struct BuildInfo {
@@ -35,16 +45,33 @@ fn not_found(_req: &rocket::Request) -> Template {
     Template::render("error/404", &context)
 }
 
+fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
+    let conn = DatabaseConnection::get_one(&rocket).expect("No DB connection!");
+
+    match embedded_migrations::run(&*conn) {
+        Ok(()) => Ok(rocket),
+        Err(e) => {
+            log::error!("Failed to run DB migrations: {:?}", e);
+            Err(rocket)
+        }
+    }
+}
+
 fn main() {
     rocket::ignite()
+        .attach(DatabaseConnection::fairing())
+        .attach(Template::custom(|engines| {
+            engines.tera.register_function("build_info", build_info());
+        }))
+        .attach(rocket::fairing::AdHoc::on_attach(
+            "DB Migrations",
+            run_db_migrations,
+        ))
         .mount("/", rocket::routes![index])
         .mount(
             "/public",
             StaticFiles::from(concat!(env!("CARGO_MANIFEST_DIR"), "/build")),
         )
-        .attach(Template::custom(|engines| {
-            engines.tera.register_function("build_info", build_info());
-        }))
         .register(rocket::catchers![not_found])
         .launch();
 }
