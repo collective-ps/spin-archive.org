@@ -22,6 +22,30 @@ pub struct BuildInfo {
 async fn main() {
     pretty_env_logger::init();
 
+    let default_host = "127.0.0.1".to_owned();
+    let host = match env::var("HOST") {
+        Ok(val) => val,
+        Err(_) => default_host,
+    };
+
+    let default_port = 3030;
+    let port = match env::var("PORT") {
+        Ok(val) => match val.parse::<u16>() {
+            Ok(port) => port,
+            Err(_) => {
+                println!(
+                    "the port number \"{}\" is invalid. default port will be used.",
+                    val
+                );
+                default_port
+            }
+        },
+        Err(_) => {
+            println!("PORT is not defined in environment variables. default port will be used.",);
+            default_port
+        }
+    };
+
     // GET /
     let index = warp::get().and(warp::path::end().and_then(index));
 
@@ -31,7 +55,9 @@ async fn main() {
     // All combined routes.
     let routes = index.or(assets);
 
-    warp::serve(routes).run(([127, 0, 0, 1], 3030)).await;
+    let addr: std::net::SocketAddr = format!("{}:{}", host, port).parse().unwrap();
+
+    warp::serve(routes).run(addr).await;
 }
 
 async fn index() -> Result<impl Reply, Rejection> {
