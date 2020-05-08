@@ -29,6 +29,12 @@ fn index() -> Template {
     Template::render("index", &context)
 }
 
+#[rocket::catch(404)]
+fn not_found(_req: &rocket::Request) -> Template {
+    let context = TeraContext::new();
+    Template::render("error/404", &context)
+}
+
 fn main() {
     rocket::ignite()
         .mount("/", rocket::routes![index])
@@ -39,9 +45,11 @@ fn main() {
         .attach(Template::custom(|engines| {
             engines.tera.register_function("build_info", build_info());
         }))
+        .register(rocket::catchers![not_found])
         .launch();
 }
 
+/// Template function that returns information about the current release build.
 fn build_info() -> GlobalFn {
     Box::new(move |_args| -> TeraResult<TeraValue> {
         let build_info = BuildInfo {

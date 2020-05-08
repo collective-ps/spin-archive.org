@@ -1,0 +1,13 @@
+{% extends "base" %}
+
+{% block title %}
+  <title>spin-archive.org - 404</title>
+{% endblock title %}
+
+{% block content %}
+<main class="text-center">
+  <p>
+    404: There's nothing here!
+  </p>
+</main>
+{% endblock content %}
