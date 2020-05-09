@@ -39,6 +39,7 @@ pub struct BuildInfo {
     commit_date: String,
     target_triple: String,
     semver: String,
+    commit_url: String,
 }
 
 #[rocket::get("/")]
@@ -92,14 +93,20 @@ fn main() {
 /// Template function that returns information about the current release build.
 fn build_info() -> GlobalFn {
     Box::new(move |_args| -> TeraResult<TeraValue> {
+        let sha = env::var("VERGEN_SHA").unwrap();
+
         let build_info = BuildInfo {
             build_timestamp: env::var("VERGEN_BUILD_TIMESTAMP").unwrap(),
             build_date: env::var("VERGEN_BUILD_DATE").unwrap(),
-            sha: env::var("VERGEN_SHA").unwrap(),
             sha_short: env::var("VERGEN_SHA_SHORT").unwrap(),
             commit_date: env::var("VERGEN_COMMIT_DATE").unwrap(),
             target_triple: env::var("VERGEN_TARGET_TRIPLE").unwrap(),
             semver: env::var("VERGEN_SEMVER").unwrap(),
+            commit_url: format!(
+                "https://github.com/andrewvy/spin-archive.org/commit/{}",
+                &sha
+            ),
+            sha,
         };
 
         Ok(serde_json::to_value(build_info).unwrap())
