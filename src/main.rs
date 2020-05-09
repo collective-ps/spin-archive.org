@@ -2,12 +2,14 @@
 
 #[macro_use]
 extern crate diesel_migrations;
+#[macro_use]
+extern crate diesel;
 
 use std::collections::HashMap;
 use std::env;
 
+use rocket::request::FlashMessage;
 use rocket::Rocket;
-use rocket_contrib::databases::diesel;
 use rocket_contrib::serve::StaticFiles;
 use rocket_contrib::templates::tera::{
     Context as TeraContext, Result as TeraResult, Value as TeraValue,
@@ -15,12 +17,18 @@ use rocket_contrib::templates::tera::{
 use rocket_contrib::templates::Template;
 use serde::Serialize;
 
+mod config;
+mod context;
+mod database;
+mod models;
+mod routes;
+mod schema;
+
+use database::DatabaseConnection;
+
 embed_migrations!();
 
 type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
-
-#[rocket_contrib::database("spin_archive")]
-struct DatabaseConnection(diesel::PgConnection);
 
 #[derive(Debug, Serialize)]
 pub struct BuildInfo {
@@ -34,8 +42,10 @@ pub struct BuildInfo {
 }
 
 #[rocket::get("/")]
-fn index() -> Template {
-    let context = TeraContext::new();
+fn index(flash: Option<FlashMessage>) -> Template {
+    let mut context: HashMap<String, String> = HashMap::new();
+    context::flash_context(&mut context, flash);
+
     Template::render("index", &context)
 }
 
@@ -67,7 +77,10 @@ fn main() {
             "DB Migrations",
             run_db_migrations,
         ))
-        .mount("/", rocket::routes![index])
+        .mount(
+            "/",
+            rocket::routes![index, routes::login::index, routes::login::post],
+        )
         .mount(
             "/public",
             StaticFiles::from(concat!(env!("CARGO_MANIFEST_DIR"), "/build")),

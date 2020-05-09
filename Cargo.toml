@@ -11,9 +11,11 @@ rocket = "0.4.4"
 rocket_contrib = { version = "0.4.4", default-features = false, features = ["tera_templates", "serve", "diesel_postgres_pool"] }
 serde = { version = "1.0.106", features = ["derive"] }
 serde_json = "1.0.52"
-diesel = { version = "1.4.4", features = ["postgres"] }
+diesel = { version = "1.4.4", features = ["postgres", "chrono"] }
 diesel_migrations = "1.4.0"
 log = "0.4.8"
+rust-argon2 = "0.8.2"
+chrono = { version = "0.4.11", features = ["serde"] }
 
 [build-dependencies]
 vergen = "3.1.0"

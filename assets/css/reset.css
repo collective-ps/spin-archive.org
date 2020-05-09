@@ -23,12 +23,14 @@ p,
 pre,
 blockquote,
 figure,
-hr {
+hr,
+fieldset {
   margin: 0;
   padding: 0;
 }
 
 /* Removes discs from ul */
+ol,
 ul {
   list-style: none;
 }
@@ -81,4 +83,10 @@ noscript {
   display: block;
   margin-bottom: 1em;
   margin-top: 1em;
+}
+
+fieldset {
+  border-color: inherit;
+  border: none;
+  padding: 0.25em;
 }

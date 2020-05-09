@@ -1,6 +1,6 @@
 {% set build_info = build_info() %}
 
 <footer class="text-center">
-  <span>SHA: <em>{{ build_info.sha_short }}</em></span>
-  <span>Build Timestamp: <em>{{ build_info.build_timestamp }}</em></span>
+  <div><small>SHA:</small> <em>{{ build_info.sha_short }}</em></div>
+  <div><small>Build Timestamp:</small> <em>{{ build_info.build_timestamp }}</em></div>
 </footer>

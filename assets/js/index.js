@@ -1,2 +1,3 @@
-import "../css/reset.css";
-import "../css/index.css";
+import '../css/reset.css'
+import 'wingcss'
+import '../css/index.css'

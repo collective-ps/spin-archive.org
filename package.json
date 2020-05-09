@@ -20,7 +20,8 @@
     "style-loader": "^1.2.1",
     "terser-webpack-plugin": "^3.0.1",
     "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.11"
+    "webpack-cli": "^3.3.11",
+    "wingcss": "^1.0.0-beta"
   },
   "dependencies": {
     "clean-webpack-plugin": "^3.0.0"

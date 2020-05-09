@@ -14,7 +14,22 @@
     <link rel="stylesheet" type="text/css" href="/public/app.css" />
   </head>
   <body>
-    {% block content %}{% endblock content %}
+    {% block index %}
+    <header>
+      <nav class="nav left">
+        <a href="/" class="nav-item">Home</a>
+        <a href="/login" class="nav-item">Login</a>
+      </nav>
+    </header>
+    {% endblock index %}
+
+    {% if flash_message %}
+      <div class="flash flash-{{ flash_name }} text-center">{{ flash_message }}</div>
+    {% endif %}
+
+
+    {% block content %}
+    {% endblock content %}
   </body>
 
   <script type="text/javascript" src="/public/app.bundle.js"></script>

@@ -1,0 +1,18 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="text-center">
+  <p>You need an account to be able to contribute to the archive project.</p>
+  <form action="/login" method="post">
+    <fieldset>
+      <label for="username">Username</label>
+      <input type="text" name="username" id="username" required />
+    </fieldset>
+    <fieldset>
+      <label for="password">Password</label>
+      <input type="password" name="password" id="password" required />
+    </fieldset>
+    <input type="submit" value="Login" />
+  </form>
+</main>
+{% endblock content %}

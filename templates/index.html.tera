@@ -1,14 +1,16 @@
 {% extends "base" %}
 
 {% block content %}
-<main class="text-center">
-  <p>
-    spin-archive.org is an internet archive volunteer project dedicated to
-    preserving the history of pen spinning.
-  </p>
+<main class="text-center vertical-align">
+  <div class="welcome">
+    <p>
+      spin-archive.org is an internet archive volunteer project dedicated to
+      preserving the history of pen spinning.
+    </p>
 
-  <p>
-    We are currently building the platform. Thanks! - iColor
-  </p>
+    <p>
+      We are currently building the platform. Thanks! - iColor
+    </p>
+  </div>
 </main>
 {% endblock content %}
