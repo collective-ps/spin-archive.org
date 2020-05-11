@@ -69,6 +69,8 @@ fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
 }
 
 fn main() {
+    dotenv::dotenv().ok();
+
     rocket::ignite()
         .attach(DatabaseConnection::fairing())
         .attach(Template::custom(|engines| {
@@ -80,7 +82,13 @@ fn main() {
         ))
         .mount(
             "/",
-            rocket::routes![index, routes::login::index, routes::login::post],
+            rocket::routes![
+                index,
+                routes::login::index,
+                routes::login::post,
+                routes::register::index,
+                routes::register::post
+            ],
         )
         .mount(
             "/public",

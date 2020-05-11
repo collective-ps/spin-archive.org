@@ -36,6 +36,7 @@ pub struct RegistrationFields {
   email: Option<String>,
   username: String,
   password: String,
+  confirm_password: String,
 }
 
 pub(crate) enum RegistrationError {
@@ -51,6 +52,10 @@ impl TryInto<NewUser> for RegistrationFields {
   type Error = RegistrationError;
 
   fn try_into(self) -> Result<NewUser, Self::Error> {
+    if self.password != self.confirm_password {
+      return Err(RegistrationError::PasswordFailure);
+    }
+
     Ok(NewUser {
       email: self.email,
       username: self.username,
@@ -64,7 +69,7 @@ fn hash_password(password: &str) -> Result<String, RegistrationError> {
   let config = argon2::Config::default();
 
   argon2::hash_encoded(password.as_ref(), salt.as_ref(), &config)
-    .map_err(|e| RegistrationError::PasswordFailure)
+    .map_err(|_| RegistrationError::PasswordFailure)
 }
 
 fn verify_password(password: &str, hash: &str) -> bool {
@@ -98,7 +103,7 @@ pub(crate) fn login(
     .first::<UserModel>(conn)
     .map_err(|_| LoginError::InvalidPasswordOrUser)?;
 
-  if verify_password(&user.password_hash, login_password) {
+  if verify_password(login_password, &user.password_hash) {
     Ok(user)
   } else {
     Err(LoginError::InvalidPasswordOrUser)
