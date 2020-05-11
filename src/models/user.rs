@@ -6,21 +6,42 @@ use chrono::NaiveDateTime;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use diesel::{Identifiable, Queryable};
+use rocket::outcome::IntoOutcome;
+use rocket::request::{FromRequest, Outcome, Request};
 use rocket::FromForm;
 use serde::{Deserialize, Serialize};
 
 use crate::config;
+use crate::database::DatabaseConnection;
 use crate::schema::users;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
 #[table_name = "users"]
-pub struct UserModel {
+pub struct User {
   pub id: i32,
   pub username: String,
   pub password_hash: String,
   pub email: Option<String>,
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
+}
+
+impl<'a, 'r> FromRequest<'a, 'r> for &'a User {
+  type Error = ();
+
+  fn from_request(request: &'a Request<'r>) -> Outcome<&'a User, Self::Error> {
+    let user_result = request.local_cache(|| {
+      let db = request.guard::<DatabaseConnection>().succeeded()?;
+
+      request
+        .cookies()
+        .get_private("user_id")
+        .and_then(|cookie| cookie.value().parse().ok())
+        .and_then(|id| get_user_by_id(&db, id))
+    });
+
+    user_result.as_ref().or_forward(())
+  }
 }
 
 #[derive(Insertable)]
@@ -64,6 +85,12 @@ impl TryInto<NewUser> for RegistrationFields {
   }
 }
 
+fn get_user_by_id(conn: &PgConnection, user_id: i32) -> Option<User> {
+  use crate::schema::users::dsl::*;
+
+  users.filter(id.eq(user_id)).first::<User>(conn).ok()
+}
+
 fn hash_password(password: &str) -> Result<String, RegistrationError> {
   let salt = config::secret_key();
   let config = argon2::Config::default();
@@ -82,7 +109,7 @@ fn verify_password(password: &str, hash: &str) -> bool {
 pub(crate) fn register(
   conn: &PgConnection,
   fields: RegistrationFields,
-) -> Result<UserModel, RegistrationError> {
+) -> Result<User, RegistrationError> {
   let new_user: NewUser = fields.try_into()?;
 
   diesel::insert_into(users::table)
@@ -95,12 +122,12 @@ pub(crate) fn login(
   conn: &PgConnection,
   login_username: &str,
   login_password: &str,
-) -> Result<UserModel, LoginError> {
+) -> Result<User, LoginError> {
   use crate::schema::users::dsl::*;
 
-  let user: UserModel = users
+  let user: User = users
     .filter(username.eq(login_username))
-    .first::<UserModel>(conn)
+    .first::<User>(conn)
     .map_err(|_| LoginError::InvalidPasswordOrUser)?;
 
   if verify_password(login_password, &user.password_hash) {

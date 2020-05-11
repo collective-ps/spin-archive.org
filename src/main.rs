@@ -84,6 +84,7 @@ fn main() {
             "/",
             rocket::routes![
                 index,
+                routes::login::index_redirect,
                 routes::login::index,
                 routes::login::post,
                 routes::register::index,
