@@ -1,19 +1,36 @@
 #![allow(proc_macro_derive_resolution_fallback)]
 
 use std::convert::TryInto;
+use std::io::Write;
 
 use chrono::NaiveDateTime;
-use diesel::prelude::*;
-use diesel::PgConnection;
-use diesel::{Identifiable, Queryable};
-use rocket::outcome::IntoOutcome;
-use rocket::request::{FromRequest, Outcome, Request};
-use rocket::FromForm;
+use diesel::{
+  deserialize::{self, FromSql},
+  expression::{helper_types::AsExprOf, AsExpression},
+  prelude::*,
+  serialize::{self, Output, ToSql},
+  sql_types, Identifiable, PgConnection, Queryable,
+};
+use rocket::{
+  outcome::IntoOutcome,
+  request::{FromRequest, Outcome, Request},
+  FromForm,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::config;
 use crate::database::DatabaseConnection;
 use crate::schema::users;
+
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow)]
+#[repr(i16)]
+pub enum UserRole {
+  Registered = 0,
+  Limited = 1,
+  Contributor = 2,
+  Moderator = 3,
+  Admin = 4,
+}
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
 #[table_name = "users"]
@@ -24,6 +41,42 @@ pub struct User {
   pub email: Option<String>,
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
+  pub role: UserRole,
+}
+
+impl<DB> ToSql<sql_types::SmallInt, DB> for UserRole
+where
+  DB: diesel::backend::Backend,
+  i16: ToSql<sql_types::SmallInt, DB>,
+{
+  fn to_sql<W: Write>(&self, out: &mut Output<W, DB>) -> serialize::Result {
+    (*self as i16).to_sql(out)
+  }
+}
+
+impl<DB> FromSql<sql_types::SmallInt, DB> for UserRole
+where
+  DB: diesel::backend::Backend,
+  i16: FromSql<sql_types::SmallInt, DB>,
+{
+  fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
+    match i16::from_sql(bytes)? {
+      0 => Ok(UserRole::Registered),
+      1 => Ok(UserRole::Limited),
+      2 => Ok(UserRole::Contributor),
+      3 => Ok(UserRole::Moderator),
+      4 => Ok(UserRole::Admin),
+      _ => Err("Unrecognized enum variant".into()),
+    }
+  }
+}
+
+impl AsExpression<sql_types::SmallInt> for UserRole {
+  type Expression = AsExprOf<i16, sql_types::SmallInt>;
+
+  fn as_expression(self) -> Self::Expression {
+    <i16 as AsExpression<sql_types::SmallInt>>::as_expression(self as i16)
+  }
 }
 
 impl<'a, 'r> FromRequest<'a, 'r> for &'a User {

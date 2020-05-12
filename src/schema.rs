@@ -6,5 +6,6 @@ table! {
         email -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        role -> Int2,
     }
 }

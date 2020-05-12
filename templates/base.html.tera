@@ -18,6 +18,7 @@
     <header>
       <nav class="nav row">
         <div class="col">
+          <div class="nav-logo nav-item">spin-archive.org</div>
           <a href="/" class="nav-item">Home</a>
         </div>
         <div class="col reverse">

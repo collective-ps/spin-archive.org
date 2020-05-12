@@ -1,0 +1,4 @@
+-- Your SQL goes here
+
+ALTER TABLE users
+ADD role SMALLINT NOT NULL DEFAULT 0;
