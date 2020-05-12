@@ -16,9 +16,19 @@
   <body>
     {% block index %}
     <header>
-      <nav class="nav left">
-        <a href="/" class="nav-item">Home</a>
-        <a href="/login" class="nav-item">Login</a>
+      <nav class="nav row">
+        <div class="col">
+          <a href="/" class="nav-item">Home</a>
+        </div>
+        <div class="col reverse">
+          {% if user_id %}
+            <form action="/logout" method="POST" class="nav-item">
+              <a class="nav-item" href="javascript:;" onclick="parentNode.submit()">Log out</a>
+            </form>
+          {% else %}
+            <a href="/login" class="nav-item">Login</a>
+          {% endif %}
+        </div>
       </nav>
     </header>
     {% endblock index %}

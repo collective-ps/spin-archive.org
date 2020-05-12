@@ -8,12 +8,12 @@ extern crate diesel;
 use std::collections::HashMap;
 use std::env;
 
+use rocket::http::{Cookie, Cookies};
 use rocket::request::FlashMessage;
+use rocket::response::Redirect;
 use rocket::Rocket;
 use rocket_contrib::serve::StaticFiles;
-use rocket_contrib::templates::tera::{
-    Context as TeraContext, Result as TeraResult, Value as TeraValue,
-};
+use rocket_contrib::templates::tera::{Result as TeraResult, Value as TeraValue};
 use rocket_contrib::templates::Template;
 use serde::Serialize;
 
@@ -25,6 +25,7 @@ mod routes;
 mod schema;
 
 use database::DatabaseConnection;
+use models::user::User;
 
 embed_migrations!();
 
@@ -43,16 +44,30 @@ pub struct BuildInfo {
 }
 
 #[rocket::get("/")]
-fn index(flash: Option<FlashMessage>) -> Template {
+fn index(flash: Option<FlashMessage>, user: Option<&User>) -> Template {
     let mut context: HashMap<String, String> = HashMap::new();
+
     context::flash_context(&mut context, flash);
+    context::user_context(&mut context, user);
 
     Template::render("index", &context)
 }
 
+#[rocket::post("/logout")]
+fn logout(mut cookies: Cookies) -> Redirect {
+    cookies.remove_private(Cookie::named("user_id"));
+    Redirect::to("/")
+}
+
 #[rocket::catch(404)]
-fn not_found(_req: &rocket::Request) -> Template {
-    let context = TeraContext::new();
+fn not_found(req: &rocket::Request) -> Template {
+    let mut context: HashMap<String, String> = HashMap::new();
+    let user = req.guard::<Option<&User>>().succeeded();
+
+    if let Some(user) = user {
+        context::user_context(&mut context, user);
+    }
+
     Template::render("error/404", &context)
 }
 
@@ -84,9 +99,11 @@ fn main() {
             "/",
             rocket::routes![
                 index,
+                logout,
                 routes::login::index_redirect,
                 routes::login::index,
                 routes::login::post,
+                routes::register::index_redirect,
                 routes::register::index,
                 routes::register::post
             ],

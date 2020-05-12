@@ -9,6 +9,11 @@ use crate::database::DatabaseConnection;
 use crate::models::user::{self, RegistrationError, RegistrationFields};
 
 #[rocket::get("/register")]
+pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
+  Redirect::to("/")
+}
+
+#[rocket::get("/register", rank = 2)]
 pub(crate) fn index(flash: Option<FlashMessage>) -> Template {
   let mut context: HashMap<String, String> = HashMap::new();
   context::flash_context(&mut context, flash);

@@ -71,3 +71,8 @@ footer {
   text-decoration: none;
   font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
 }
+
+.reverse {
+  display: flex;
+  flex-direction: row-reverse;
+}
