@@ -9,6 +9,7 @@ table! {
     uploads (id) {
         id -> Int4,
         status -> Int2,
+        file_id -> Text,
         file_size -> Nullable<Int8>,
         file_name -> Nullable<Text>,
         md5_hash -> Nullable<Text>,

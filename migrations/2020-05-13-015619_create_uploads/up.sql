@@ -8,6 +8,7 @@ CREATE TABLE tags (
 CREATE TABLE uploads (
   id SERIAL PRIMARY KEY,
   status SMALLINT NOT NULL DEFAULT 0,
+  file_id TEXT NOT NULL UNIQUE,
   file_size BIGINT,
   file_name TEXT UNIQUE,
   md5_hash TEXT UNIQUE,

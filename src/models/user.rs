@@ -44,6 +44,12 @@ pub struct User {
   pub role: UserRole,
 }
 
+impl User {
+  pub fn can_upload(&self) -> bool {
+    self.role != UserRole::Limited
+  }
+}
+
 impl<DB> ToSql<sql_types::SmallInt, DB> for UserRole
 where
   DB: diesel::backend::Backend,

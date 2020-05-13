@@ -22,7 +22,9 @@ mod context;
 mod database;
 mod models;
 mod routes;
+mod s3_client;
 mod schema;
+mod services;
 
 use database::DatabaseConnection;
 use models::user::User;

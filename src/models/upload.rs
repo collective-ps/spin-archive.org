@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::schema::uploads;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
 #[repr(i16)]
 pub enum UploadStatus {
   Pending = 0,
@@ -24,7 +24,8 @@ pub enum UploadStatus {
 pub struct Upload {
   pub id: i32,
   pub status: UploadStatus,
-  pub file_size: i64,
+  pub file_id: String,
+  pub file_size: Option<i64>,
   pub file_name: Option<String>,
   pub md5_hash: Option<String>,
   pub uploader_user_id: Option<i32>,
@@ -64,4 +65,19 @@ impl AsExpression<sql_types::SmallInt> for UploadStatus {
   fn as_expression(self) -> Self::Expression {
     <i16 as AsExpression<sql_types::SmallInt>>::as_expression(self as i16)
   }
+}
+
+impl AsExpression<sql_types::SmallInt> for &UploadStatus {
+  type Expression = AsExprOf<i16, sql_types::SmallInt>;
+
+  fn as_expression(self) -> Self::Expression {
+    <i16 as AsExpression<sql_types::SmallInt>>::as_expression(*self as i16)
+  }
+}
+
+#[derive(Insertable)]
+#[table_name = "uploads"]
+pub(crate) struct PendingUpload {
+  pub status: UploadStatus,
+  pub file_id: String,
 }
