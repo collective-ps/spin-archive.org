@@ -2,13 +2,14 @@ use diesel::prelude::*;
 use diesel::PgConnection;
 use nanoid::nanoid;
 
-use crate::models::upload::{PendingUpload, Upload, UploadStatus};
+use crate::models::upload::{self, PendingUpload, Upload, UploadStatus};
 use crate::schema::uploads;
 
 #[allow(dead_code)]
 pub(crate) enum UploadError {
   AlreadyExists,
   DatabaseError,
+  NotFound,
 }
 
 /// Creates a new pending upload.
@@ -22,4 +23,27 @@ pub(crate) fn new_pending_upload(conn: &PgConnection) -> Result<Upload, UploadEr
     .values(pending_upload)
     .get_result(conn)
     .map_err(|_| UploadError::DatabaseError)
+}
+
+/// Finalizes a pending upload, which means the user has finished uploading the file and
+/// we can move the upload for later processing.
+pub(crate) fn finalize_upload(conn: &PgConnection, file_id: &str) -> Result<Upload, UploadError> {
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(
+      mut upload @ Upload {
+        status: UploadStatus::Pending,
+        ..
+      },
+    ) => {
+      // @TODO(vy): Anything we need to set here before moving the upload to `Processing`?
+      upload.status = UploadStatus::Processing;
+
+      match upload::update(&conn, &upload) {
+        Ok(upload) => Ok(upload),
+        Err(_) => Err(UploadError::DatabaseError),
+      }
+    }
+    Some(_upload) => Err(UploadError::AlreadyExists),
+    None => Err(UploadError::NotFound),
+  }
 }

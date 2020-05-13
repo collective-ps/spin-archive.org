@@ -4,8 +4,9 @@ use chrono::NaiveDateTime;
 use diesel::{
   deserialize::{self, FromSql},
   expression::{helper_types::AsExprOf, AsExpression},
+  prelude::*,
   serialize::{self, Output, ToSql},
-  sql_types, Identifiable, Queryable,
+  sql_types, AsChangeset, Identifiable, PgConnection, Queryable,
 };
 use serde::{Deserialize, Serialize};
 
@@ -19,7 +20,7 @@ pub enum UploadStatus {
   Completed = 2,
 }
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
 #[table_name = "uploads"]
 pub struct Upload {
   pub id: i32,
@@ -80,4 +81,21 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
 pub(crate) struct PendingUpload {
   pub status: UploadStatus,
   pub file_id: String,
+}
+
+/// Gets an [`Upload`] by `file_id`.
+pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Upload> {
+  use crate::schema::uploads::dsl::*;
+
+  uploads
+    .filter(file_id.eq(search_file_id))
+    .first::<Upload>(conn)
+    .ok()
+}
+
+/// Updates a given [`Upload`] with new column values.
+pub fn update(conn: &PgConnection, upload: &Upload) -> QueryResult<Upload> {
+  diesel::update(uploads::table)
+    .set(upload)
+    .get_result::<Upload>(conn)
 }
