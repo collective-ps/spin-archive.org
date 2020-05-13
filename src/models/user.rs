@@ -22,7 +22,7 @@ use crate::config;
 use crate::database::DatabaseConnection;
 use crate::schema::users;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
 #[repr(i16)]
 pub enum UserRole {
   Limited = 0,
@@ -82,6 +82,14 @@ impl AsExpression<sql_types::SmallInt> for UserRole {
 
   fn as_expression(self) -> Self::Expression {
     <i16 as AsExpression<sql_types::SmallInt>>::as_expression(self as i16)
+  }
+}
+
+impl AsExpression<sql_types::SmallInt> for &UserRole {
+  type Expression = AsExprOf<i16, sql_types::SmallInt>;
+
+  fn as_expression(self) -> Self::Expression {
+    <i16 as AsExpression<sql_types::SmallInt>>::as_expression(*self as i16)
   }
 }
 

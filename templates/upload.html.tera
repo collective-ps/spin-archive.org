@@ -1,0 +1,7 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="text-center">
+  <p>Upload files</p>
+</main>
+{% endblock content %}

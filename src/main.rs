@@ -107,7 +107,10 @@ fn main() {
                 routes::login::post,
                 routes::register::index_redirect,
                 routes::register::index,
-                routes::register::post
+                routes::register::post,
+                routes::upload::index,
+                routes::upload::index_not_logged_in,
+                routes::upload::upload,
             ],
         )
         .mount(
