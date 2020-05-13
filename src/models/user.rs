@@ -25,8 +25,8 @@ use crate::schema::users;
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow)]
 #[repr(i16)]
 pub enum UserRole {
-  Registered = 0,
-  Limited = 1,
+  Limited = 0,
+  Registered = 1,
   Contributor = 2,
   Moderator = 3,
   Admin = 4,
@@ -67,8 +67,8 @@ where
 {
   fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
     match i16::from_sql(bytes)? {
-      0 => Ok(UserRole::Registered),
-      1 => Ok(UserRole::Limited),
+      0 => Ok(UserRole::Limited),
+      1 => Ok(UserRole::Registered),
       2 => Ok(UserRole::Contributor),
       3 => Ok(UserRole::Moderator),
       4 => Ok(UserRole::Admin),
@@ -109,6 +109,7 @@ struct NewUser {
   email: Option<String>,
   username: String,
   password_hash: String,
+  role: UserRole,
 }
 
 #[derive(Debug, FromForm)]
@@ -140,6 +141,7 @@ impl TryInto<NewUser> for RegistrationFields {
       email: self.email,
       username: self.username,
       password_hash: hash_password(&self.password)?,
+      role: UserRole::Registered,
     })
   }
 }
