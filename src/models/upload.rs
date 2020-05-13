@@ -81,6 +81,7 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
 pub(crate) struct PendingUpload {
   pub status: UploadStatus,
   pub file_id: String,
+  pub uploader_user_id: i32,
 }
 
 /// Gets an [`Upload`] by `file_id`.

@@ -3,6 +3,7 @@ use diesel::PgConnection;
 use nanoid::nanoid;
 
 use crate::models::upload::{self, PendingUpload, Upload, UploadStatus};
+use crate::models::user::User;
 use crate::schema::uploads;
 
 #[allow(dead_code)]
@@ -13,10 +14,11 @@ pub(crate) enum UploadError {
 }
 
 /// Creates a new pending upload.
-pub(crate) fn new_pending_upload(conn: &PgConnection) -> Result<Upload, UploadError> {
+pub(crate) fn new_pending_upload(conn: &PgConnection, user: &User) -> Result<Upload, UploadError> {
   let pending_upload = PendingUpload {
     status: UploadStatus::Pending,
     file_id: nanoid!(),
+    uploader_user_id: user.id,
   };
 
   diesel::insert_into(uploads::table)

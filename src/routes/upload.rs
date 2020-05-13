@@ -47,7 +47,7 @@ pub(crate) fn upload(
     return Err(BadRequest(None));
   }
 
-  match upload_service::new_pending_upload(&conn) {
+  match upload_service::new_pending_upload(&conn, &user) {
     Ok(upload) => Ok(Json(UploadResponse {
       id: upload.id.to_string().to_owned(),
       url: generate_signed_url(&upload),
