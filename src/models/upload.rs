@@ -33,6 +33,7 @@ pub struct Upload {
   pub source: Option<String>,
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
+  pub file_ext: String,
 }
 
 impl<DB> ToSql<sql_types::SmallInt, DB> for UploadStatus
@@ -82,6 +83,8 @@ pub(crate) struct PendingUpload {
   pub status: UploadStatus,
   pub file_id: String,
   pub uploader_user_id: i32,
+  pub file_name: String,
+  pub file_ext: String,
 }
 
 /// Gets an [`Upload`] by `file_id`.

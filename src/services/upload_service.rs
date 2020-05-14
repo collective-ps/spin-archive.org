@@ -14,11 +14,18 @@ pub(crate) enum UploadError {
 }
 
 /// Creates a new pending upload.
-pub(crate) fn new_pending_upload(conn: &PgConnection, user: &User) -> Result<Upload, UploadError> {
+pub(crate) fn new_pending_upload(
+  conn: &PgConnection,
+  user: &User,
+  file_name: &str,
+  file_ext: &str,
+) -> Result<Upload, UploadError> {
   let pending_upload = PendingUpload {
     status: UploadStatus::Pending,
     file_id: nanoid!(),
     uploader_user_id: user.id,
+    file_name: file_name.to_owned(),
+    file_ext: file_ext.to_owned(),
   };
 
   diesel::insert_into(uploads::table)

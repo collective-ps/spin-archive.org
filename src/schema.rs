@@ -17,6 +17,7 @@ table! {
         source -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        file_ext -> Text,
     }
 }
 
