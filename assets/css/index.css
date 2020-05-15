@@ -65,17 +65,22 @@ footer {
   justify-content: center;
 }
 
+.nav {
+  padding: 0;
+}
+
+.nav-logo {
+  font-size: 1.25rem;
+}
+
 .nav-item {
   color: #797979;
   text-decoration: none;
   font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+  font-size: 1.25rem;
 }
 
 .reverse {
   display: flex;
   flex-direction: row-reverse;
-}
-
-#upload-page {
-  min-width: 400px;
 }

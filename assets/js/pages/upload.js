@@ -66,8 +66,8 @@ const EditComponent = ({ files, next }) => {
   }
 
   return (
-    <div class='edit-component'>
-      {fileComponents}
+    <div className='edit-component'>
+      <div className='file-grid'>{fileComponents}</div>
       <button onClick={onClick}>Publish</button>
     </div>
   )
