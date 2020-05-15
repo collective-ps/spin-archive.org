@@ -1,9 +1,6 @@
 {% extends "base" %}
 
 {% block content %}
-<main class="text-center">
-  <p>Upload files</p>
-  <div id="uploader">
-  </div>
+<main class="text-center" id="upload-page">
 </main>
 {% endblock content %}

@@ -62,7 +62,7 @@ const generateThumbnailFromFile = async (file) => {
   })
 }
 
-const Uploader = () => {
+const Uploader = ({ handleSubmit }) => {
   const getUploadParams = async ({ file, meta: { name } }) => {
     let thumbnail = null
 
@@ -112,22 +112,6 @@ const Uploader = () => {
         },
       })
     }
-  }
-
-  const handleSubmit = (files, allFiles) => {
-    files.map(async (file) => {
-      const url = `/upload/${file.meta.file_id}/finalize`
-
-      fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          tags: 'new testing spinner:unknown collaboration-video',
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then((response) => response.json())
-    })
   }
 
   return (

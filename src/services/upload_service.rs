@@ -1,7 +1,7 @@
 use diesel::PgConnection;
 use nanoid::nanoid;
 
-use crate::models::upload::{self, PendingUpload, Upload, UploadStatus};
+use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
 
 #[allow(dead_code)]
@@ -31,23 +31,40 @@ pub(crate) fn new_pending_upload(
 
 /// Finalizes a pending upload, which means the user has finished uploading the file and
 /// we can move the upload for later processing.
-pub(crate) fn finalize_upload(conn: &PgConnection, file_id: &str) -> Result<Upload, UploadError> {
+pub(crate) fn finalize_upload(
+  conn: &PgConnection,
+  file_id: &str,
+  tags: &str,
+  source: &str,
+) -> Result<Upload, UploadError> {
   match upload::get_by_file_id(&conn, &file_id) {
     Some(
-      mut upload @ Upload {
+      upload @ Upload {
         status: UploadStatus::Pending,
         ..
       },
     ) => {
-      // @TODO(vy): Anything we need to set here before moving the upload to `Processing`?
-      upload.status = UploadStatus::Processing;
+      let update_upload = UpdateUpload {
+        id: upload.id,
+        status: UploadStatus::Completed,
+        tag_string: sanitize_tags(tags),
+        source: Some(source.to_owned()),
+      };
 
-      match upload::update(&conn, &upload) {
+      match upload::update(&conn, &update_upload) {
         Ok(upload) => Ok(upload),
-        Err(_) => Err(UploadError::DatabaseError),
+        Err(_err) => Err(UploadError::DatabaseError),
       }
     }
     Some(_upload) => Err(UploadError::AlreadyExists),
     None => Err(UploadError::NotFound),
   }
+}
+
+pub fn sanitize_tags<'a>(tags: &'a str) -> String {
+  tags
+    .split_whitespace()
+    .map(|string| string.to_ascii_lowercase())
+    .collect::<Vec<_>>()
+    .join(" ")
 }

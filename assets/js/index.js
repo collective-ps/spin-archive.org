@@ -5,10 +5,9 @@ import '../css/index.css'
 import React from 'react'
 import ReactDOM from 'react-dom'
 
-import Uploader from './components/uploader'
+import UploadPage from './pages/upload'
 
-if (document.getElementById('uploader')) {
-  let uploader = document.getElementById('uploader')
-
-  ReactDOM.render(<Uploader />, uploader)
+if (document.getElementById('upload-page')) {
+  let page = document.getElementById('upload-page')
+  ReactDOM.render(<UploadPage />, page)
 }

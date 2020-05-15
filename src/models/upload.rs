@@ -69,6 +69,15 @@ pub struct Upload {
   pub tag_string: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
+#[table_name = "uploads"]
+pub struct UpdateUpload {
+  pub id: i32,
+  pub status: UploadStatus,
+  pub source: Option<String>,
+  pub tag_string: String,
+}
+
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
 
 impl Upload {
@@ -162,7 +171,7 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
 }
 
 /// Updates a given [`Upload`] with new column values.
-pub fn update(conn: &PgConnection, upload: &Upload) -> QueryResult<Upload> {
+pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
   diesel::update(uploads::table)
     .set(upload)
     .returning(ALL_COLUMNS)

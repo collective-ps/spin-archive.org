@@ -32,6 +32,20 @@ pub enum UserRole {
   Admin = 4,
 }
 
+impl std::fmt::Display for UserRole {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    let role = match self {
+      UserRole::Limited => "limited",
+      UserRole::Registered => "registered",
+      UserRole::Contributor => "contributor",
+      UserRole::Moderator => "moderator",
+      UserRole::Admin => "admin",
+    };
+
+    write!(f, "{}", role)
+  }
+}
+
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
 #[table_name = "users"]
 pub struct User {
