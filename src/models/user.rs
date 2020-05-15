@@ -22,14 +22,28 @@ use crate::config;
 use crate::database::DatabaseConnection;
 use crate::schema::users;
 
-#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow)]
+#[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
 #[repr(i16)]
 pub enum UserRole {
-  Registered = 0,
-  Limited = 1,
+  Limited = 0,
+  Registered = 1,
   Contributor = 2,
   Moderator = 3,
   Admin = 4,
+}
+
+impl std::fmt::Display for UserRole {
+  fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+    let role = match self {
+      UserRole::Limited => "limited",
+      UserRole::Registered => "registered",
+      UserRole::Contributor => "contributor",
+      UserRole::Moderator => "moderator",
+      UserRole::Admin => "admin",
+    };
+
+    write!(f, "{}", role)
+  }
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
@@ -67,8 +81,8 @@ where
 {
   fn from_sql(bytes: Option<&DB::RawValue>) -> deserialize::Result<Self> {
     match i16::from_sql(bytes)? {
-      0 => Ok(UserRole::Registered),
-      1 => Ok(UserRole::Limited),
+      0 => Ok(UserRole::Limited),
+      1 => Ok(UserRole::Registered),
       2 => Ok(UserRole::Contributor),
       3 => Ok(UserRole::Moderator),
       4 => Ok(UserRole::Admin),
@@ -82,6 +96,14 @@ impl AsExpression<sql_types::SmallInt> for UserRole {
 
   fn as_expression(self) -> Self::Expression {
     <i16 as AsExpression<sql_types::SmallInt>>::as_expression(self as i16)
+  }
+}
+
+impl AsExpression<sql_types::SmallInt> for &UserRole {
+  type Expression = AsExprOf<i16, sql_types::SmallInt>;
+
+  fn as_expression(self) -> Self::Expression {
+    <i16 as AsExpression<sql_types::SmallInt>>::as_expression(*self as i16)
   }
 }
 
@@ -109,6 +131,7 @@ struct NewUser {
   email: Option<String>,
   username: String,
   password_hash: String,
+  role: UserRole,
 }
 
 #[derive(Debug, FromForm)]
@@ -140,6 +163,7 @@ impl TryInto<NewUser> for RegistrationFields {
       email: self.email,
       username: self.username,
       password_hash: hash_password(&self.password)?,
+      role: UserRole::Registered,
     })
   }
 }

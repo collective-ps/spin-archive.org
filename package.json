@@ -10,13 +10,19 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@babel/core": "^7.9.6",
+    "@babel/preset-env": "^7.9.6",
+    "@babel/preset-react": "^7.9.4",
     "autoprefixer": "^9.7.6",
+    "babel-loader": "^8.1.0",
     "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.3",
     "mini-css-extract-plugin": "^0.9.0",
     "optimize-css-assets-webpack-plugin": "^5.0.3",
     "postcss-loader": "^3.0.0",
     "postcss-nested": "^4.2.1",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
     "style-loader": "^1.2.1",
     "terser-webpack-plugin": "^3.0.1",
     "webpack": "^4.43.0",
@@ -24,6 +30,7 @@
     "wingcss": "^1.0.0-beta"
   },
   "dependencies": {
-    "clean-webpack-plugin": "^3.0.0"
+    "clean-webpack-plugin": "^3.0.0",
+    "react-dropzone-uploader": "^2.11.0"
   }
 }

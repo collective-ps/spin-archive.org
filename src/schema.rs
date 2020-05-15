@@ -1,11 +1,7 @@
 table! {
-    tags (id) {
-        id -> Int4,
-        name -> Text,
-    }
-}
+    use diesel::sql_types::*;
+    use diesel_full_text_search::*;
 
-table! {
     uploads (id) {
         id -> Int4,
         status -> Int2,
@@ -17,14 +13,9 @@ table! {
         source -> Nullable<Text>,
         created_at -> Timestamp,
         updated_at -> Timestamp,
-    }
-}
-
-table! {
-    uploads_tags (id) {
-        id -> Int4,
-        tag_id -> Nullable<Int4>,
-        upload_id -> Nullable<Int4>,
+        file_ext -> Text,
+        tag_string -> Text,
+        tag_index -> Nullable<TsVector>,
     }
 }
 
@@ -41,12 +32,5 @@ table! {
 }
 
 joinable!(uploads -> users (uploader_user_id));
-joinable!(uploads_tags -> tags (tag_id));
-joinable!(uploads_tags -> uploads (upload_id));
 
-allow_tables_to_appear_in_same_query!(
-    tags,
-    uploads,
-    uploads_tags,
-    users,
-);
+allow_tables_to_appear_in_same_query!(uploads, users,);

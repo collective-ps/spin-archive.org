@@ -90,3 +90,7 @@ fieldset {
   border: none;
   padding: 0.25em;
 }
+
+nav {
+  padding: 0;
+}

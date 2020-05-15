@@ -1,16 +1,11 @@
 use std::time::Duration;
 
 use futures::executor::block_on;
-use rusoto_core::credential::EnvironmentProvider;
 use rusoto_core::Region;
-use rusoto_credential::ProvideAwsCredentials;
+use rusoto_credential::{EnvironmentProvider, ProvideAwsCredentials};
 use rusoto_s3::util::{PreSignedRequest, PreSignedRequestOption};
+use rusoto_s3::PutObjectRequest;
 
-use crate::models::upload::Upload;
-
-const TEMP: &'static str = "temp";
-
-#[allow(dead_code)]
 const UPLOADS: &'static str = "uploads";
 
 fn region() -> Region {
@@ -20,21 +15,33 @@ fn region() -> Region {
   }
 }
 
-/// Generates a pre-signed url for a given `Upload`.
+/// Generates a pre-signed url for a given `file_name`.
 ///
-/// Uploads to `TEMP` bucket.
-pub fn generate_signed_url(upload: &Upload) -> String {
-  let put_request = rusoto_s3::PutObjectRequest {
-    bucket: TEMP.to_owned(),
-    key: upload.file_id.to_owned(),
+/// Uploads to `UPLOADS` bucket.
+pub fn generate_signed_url(file_name: &str) -> String {
+  let bucket = "spin-archive";
+
+  let credentials = block_on(EnvironmentProvider::default().credentials()).unwrap();
+
+  let key = format!(
+    "{folder}/{file_name}",
+    folder = UPLOADS,
+    file_name = file_name
+  );
+
+  let request = PutObjectRequest {
+    bucket: bucket.to_owned(),
+    key: key,
     ..Default::default()
   };
 
-  put_request.get_presigned_url(
+  let url = request.get_presigned_url(
     &region(),
-    &block_on(EnvironmentProvider::default().credentials()).unwrap(),
+    &credentials,
     &PreSignedRequestOption {
-      expires_in: Duration::from_secs(60 * 2),
+      expires_in: Duration::from_secs(60 * 15),
     },
-  )
+  );
+
+  url
 }
