@@ -111,6 +111,7 @@ fn main() {
                 routes::upload::index,
                 routes::upload::index_not_logged_in,
                 routes::upload::upload,
+                routes::upload::finalize,
             ],
         )
         .mount(

@@ -6,11 +6,6 @@ use rusoto_credential::{EnvironmentProvider, ProvideAwsCredentials};
 use rusoto_s3::util::{PreSignedRequest, PreSignedRequestOption};
 use rusoto_s3::PutObjectRequest;
 
-use crate::models::upload::Upload;
-
-const TEMP: &'static str = "temp";
-
-#[allow(dead_code)]
 const UPLOADS: &'static str = "uploads";
 
 fn region() -> Region {
@@ -20,25 +15,23 @@ fn region() -> Region {
   }
 }
 
-/// Generates a pre-signed url for a given `Upload`.
+/// Generates a pre-signed url for a given `file_name`.
 ///
-/// Uploads to `TEMP` bucket.
-pub fn generate_signed_url(upload: &Upload, content_length: i32) -> String {
+/// Uploads to `UPLOADS` bucket.
+pub fn generate_signed_url(file_name: &str) -> String {
   let bucket = "spin-archive";
 
   let credentials = block_on(EnvironmentProvider::default().credentials()).unwrap();
 
   let key = format!(
-    "{folder}/{name}.{ext}",
-    folder = TEMP,
-    name = upload.file_id,
-    ext = upload.file_ext
+    "{folder}/{file_name}",
+    folder = UPLOADS,
+    file_name = file_name
   );
 
   let request = PutObjectRequest {
     bucket: bucket.to_owned(),
     key: key,
-    content_length: Some(content_length.into()),
     ..Default::default()
   };
 

@@ -12,6 +12,38 @@ use serde::{Deserialize, Serialize};
 
 use crate::schema::uploads;
 
+type AllColumns = (
+  uploads::id,
+  uploads::status,
+  uploads::file_id,
+  uploads::file_size,
+  uploads::file_name,
+  uploads::md5_hash,
+  uploads::uploader_user_id,
+  uploads::source,
+  uploads::created_at,
+  uploads::updated_at,
+  uploads::file_ext,
+  uploads::tag_string,
+);
+
+pub const ALL_COLUMNS: AllColumns = (
+  uploads::id,
+  uploads::status,
+  uploads::file_id,
+  uploads::file_size,
+  uploads::file_name,
+  uploads::md5_hash,
+  uploads::uploader_user_id,
+  uploads::source,
+  uploads::created_at,
+  uploads::updated_at,
+  uploads::file_ext,
+  uploads::tag_string,
+);
+
+type All = diesel::dsl::Select<uploads::table, AllColumns>;
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
 #[repr(i16)]
 pub enum UploadStatus {
@@ -34,6 +66,30 @@ pub struct Upload {
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
   pub file_ext: String,
+  pub tag_string: String,
+}
+
+const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
+
+impl Upload {
+  /// Gets a full URL to the thumbnail for this upload. (may not actually exist!)
+  pub fn get_thumbnail_url(&self) -> String {
+    format!(
+      "{host}/{file_id}.jpg",
+      host = ASSET_HOST,
+      file_id = self.file_id
+    )
+  }
+
+  /// Gets the full URL to where the file is stored.
+  pub fn get_file_url(&self) -> String {
+    format!(
+      "{host}/{file_id}.{ext}",
+      host = ASSET_HOST,
+      file_id = self.file_id,
+      ext = self.file_ext
+    )
+  }
 }
 
 impl<DB> ToSql<sql_types::SmallInt, DB> for UploadStatus
@@ -79,12 +135,19 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
 
 #[derive(Insertable)]
 #[table_name = "uploads"]
-pub(crate) struct PendingUpload {
+pub struct PendingUpload {
   pub status: UploadStatus,
   pub file_id: String,
   pub uploader_user_id: i32,
   pub file_name: String,
   pub file_ext: String,
+}
+
+#[derive(Insertable)]
+#[table_name = "uploads"]
+pub struct FinalizeUpload {
+  pub status: UploadStatus,
+  pub tag_string: String,
 }
 
 /// Gets an [`Upload`] by `file_id`.
@@ -93,6 +156,7 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
 
   uploads
     .filter(file_id.eq(search_file_id))
+    .select(ALL_COLUMNS)
     .first::<Upload>(conn)
     .ok()
 }
@@ -101,5 +165,16 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
 pub fn update(conn: &PgConnection, upload: &Upload) -> QueryResult<Upload> {
   diesel::update(uploads::table)
     .set(upload)
+    .returning(ALL_COLUMNS)
     .get_result::<Upload>(conn)
+}
+
+pub fn insert_pending_upload(
+  conn: &PgConnection,
+  pending_upload: &PendingUpload,
+) -> QueryResult<Upload> {
+  diesel::insert_into(uploads::table)
+    .values(pending_upload)
+    .returning(ALL_COLUMNS)
+    .get_result(conn)
 }

@@ -1,10 +1,8 @@
-use diesel::prelude::*;
 use diesel::PgConnection;
 use nanoid::nanoid;
 
 use crate::models::upload::{self, PendingUpload, Upload, UploadStatus};
 use crate::models::user::User;
-use crate::schema::uploads;
 
 #[allow(dead_code)]
 pub(crate) enum UploadError {
@@ -28,10 +26,7 @@ pub(crate) fn new_pending_upload(
     file_ext: file_ext.to_owned(),
   };
 
-  diesel::insert_into(uploads::table)
-    .values(pending_upload)
-    .get_result(conn)
-    .map_err(|_| UploadError::DatabaseError)
+  upload::insert_pending_upload(&conn, &pending_upload).map_err(|_| UploadError::DatabaseError)
 }
 
 /// Finalizes a pending upload, which means the user has finished uploading the file and

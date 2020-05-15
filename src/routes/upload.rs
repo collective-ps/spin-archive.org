@@ -3,7 +3,7 @@ use std::path::Path;
 
 use rocket::request::FlashMessage;
 use rocket::response::status::BadRequest;
-use rocket::response::{Flash, Redirect};
+use rocket::response::Redirect;
 use rocket_contrib::json::Json;
 use rocket_contrib::templates::Template;
 use serde::{Deserialize, Serialize};
@@ -18,12 +18,22 @@ use crate::services::upload_service;
 pub struct UploadResponse {
   id: String,
   url: String,
+  thumbnail_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct UploadRequest {
   file_name: String,
   content_length: i32,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct FinalizeUploadResponse {}
+
+#[allow(dead_code)]
+#[derive(Serialize, Deserialize)]
+pub struct FinalizeUploadRequest {
+  tags: String,
 }
 
 #[rocket::get("/upload")]
@@ -69,10 +79,33 @@ pub(crate) fn upload(
     name.unwrap().to_str().unwrap(),
     ext.unwrap().to_str().unwrap(),
   ) {
-    Ok(upload) => Ok(Json(UploadResponse {
-      id: upload.file_id.to_owned(),
-      url: generate_signed_url(&upload, request.content_length),
-    })),
+    Ok(upload) => {
+      let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);
+      let thumbnail_name = format!("{}.jpg", &upload.file_id);
+
+      Ok(Json(UploadResponse {
+        id: upload.file_id.to_owned(),
+        url: generate_signed_url(&file_name),
+        thumbnail_url: generate_signed_url(&thumbnail_name),
+      }))
+    }
+    Err(_) => Err(BadRequest(None)),
+  }
+}
+
+#[rocket::post("/upload/<file_id>/finalize", format = "json", data = "<request>")]
+pub(crate) fn finalize(
+  conn: DatabaseConnection,
+  user: &User,
+  file_id: String,
+  request: Json<FinalizeUploadRequest>,
+) -> Result<Json<FinalizeUploadResponse>, BadRequest<()>> {
+  if !user.can_upload() {
+    return Err(BadRequest(None));
+  }
+
+  match upload_service::finalize_upload(&conn, &file_id) {
+    Ok(_upload) => Ok(Json(FinalizeUploadResponse {})),
     Err(_) => Err(BadRequest(None)),
   }
 }

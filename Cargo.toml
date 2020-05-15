@@ -23,6 +23,7 @@ rusoto_core = "0.43.0"
 rusoto_s3 = "0.43.0"
 rusoto_credential = "0.43.0"
 futures = "0.3.5"
+diesel_full_text_search = "1.0.1"
 
 
 [build-dependencies]
