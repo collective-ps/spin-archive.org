@@ -13,7 +13,9 @@ use rocket::request::FlashMessage;
 use rocket::response::Redirect;
 use rocket::Rocket;
 use rocket_contrib::serve::StaticFiles;
-use rocket_contrib::templates::tera::{Result as TeraResult, Value as TeraValue};
+use rocket_contrib::templates::tera::{
+    Context as TeraContext, Result as TeraResult, Value as TeraValue,
+};
 use rocket_contrib::templates::Template;
 use serde::Serialize;
 
@@ -21,6 +23,7 @@ mod config;
 mod context;
 mod database;
 mod models;
+mod pagination;
 mod routes;
 mod s3_client;
 mod schema;
@@ -46,11 +49,15 @@ pub struct BuildInfo {
 }
 
 #[rocket::get("/")]
-fn index(flash: Option<FlashMessage>, user: Option<&User>) -> Template {
-    let mut context: HashMap<String, String> = HashMap::new();
+fn index(conn: DatabaseConnection, flash: Option<FlashMessage>, user: Option<&User>) -> Template {
+    let mut context = TeraContext::new();
+    let (uploads, page_count) = models::upload::index(&conn, 1).unwrap();
 
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, user);
+
+    context.insert("uploads", &uploads);
+    context.insert("page_count", &page_count);
 
     Template::render("index", &context)
 }
@@ -63,7 +70,7 @@ fn logout(mut cookies: Cookies) -> Redirect {
 
 #[rocket::catch(404)]
 fn not_found(req: &rocket::Request) -> Template {
-    let mut context: HashMap<String, String> = HashMap::new();
+    let mut context = TeraContext::new();
     let user = req.guard::<Option<&User>>().succeeded();
 
     if let Some(user) = user {

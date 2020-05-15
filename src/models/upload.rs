@@ -10,6 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::pagination::*;
 use crate::schema::uploads;
 
 type AllColumns = (
@@ -178,6 +179,7 @@ pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload>
     .get_result::<Upload>(conn)
 }
 
+/// Inserts a given [`PendingUpload`] into the database.
 pub fn insert_pending_upload(
   conn: &PgConnection,
   pending_upload: &PendingUpload,
@@ -186,4 +188,18 @@ pub fn insert_pending_upload(
     .values(pending_upload)
     .returning(ALL_COLUMNS)
     .get_result(conn)
+}
+
+/// Index query for uploads, fetches completed uploads by the page number provided.
+///
+/// Returns a tuple: (Vec<Upload>, page_count).
+pub fn index(conn: &PgConnection, page: i64) -> QueryResult<(Vec<Upload>, i64)> {
+  let query = uploads::table
+    .order(uploads::updated_at.desc())
+    .filter(uploads::status.eq(UploadStatus::Completed))
+    .select(ALL_COLUMNS)
+    .paginate(page)
+    .per_page(25);
+
+  query.load_and_count_pages::<Upload>(&conn)
 }

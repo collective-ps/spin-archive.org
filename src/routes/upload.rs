@@ -1,10 +1,10 @@
-use std::collections::HashMap;
 use std::path::Path;
 
 use rocket::request::FlashMessage;
 use rocket::response::status::BadRequest;
 use rocket::response::Redirect;
 use rocket_contrib::json::Json;
+use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
 use serde::{Deserialize, Serialize};
 
@@ -40,7 +40,7 @@ pub struct FinalizeUploadRequest {
 #[rocket::get("/upload")]
 pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template, Redirect> {
   if user.can_upload() {
-    let mut context: HashMap<String, String> = HashMap::new();
+    let mut context = TeraContext::new();
 
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, Some(user));

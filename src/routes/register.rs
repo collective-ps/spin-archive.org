@@ -1,7 +1,6 @@
-use std::collections::HashMap;
-
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
+use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
 
 use crate::context;
@@ -15,7 +14,8 @@ pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
 
 #[rocket::get("/register", rank = 2)]
 pub(crate) fn index(flash: Option<FlashMessage>) -> Template {
-  let mut context: HashMap<String, String> = HashMap::new();
+  let mut context = TeraContext::new();
+
   context::flash_context(&mut context, flash);
 
   Template::render("register", &context)
