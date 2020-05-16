@@ -85,6 +85,14 @@ fn logout(mut cookies: Cookies) -> Redirect {
     Redirect::to("/")
 }
 
+#[rocket::get("/about")]
+fn about(user: Option<&User>) -> Template {
+    let mut context = TeraContext::new();
+    context::user_context(&mut context, user);
+
+    Template::render("about", &context)
+}
+
 #[rocket::catch(404)]
 fn not_found(req: &rocket::Request) -> Template {
     let mut context = TeraContext::new();
@@ -138,6 +146,7 @@ fn main() {
             rocket::routes![
                 index,
                 logout,
+                about,
                 routes::login::index_redirect,
                 routes::login::index,
                 routes::login::post,

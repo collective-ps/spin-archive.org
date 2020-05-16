@@ -14,12 +14,12 @@
     <link rel="stylesheet" type="text/css" href="/public/app.css" />
 
     <meta property="og:title" content="spin-archive.org" />
-    <meta
-      name="og:description"
-      content="Internet archive project dedicated to preserving the history of pen spinning."
-    />
 
     {% block head %}
+    <meta
+      property="og:description"
+      content="Internet archive project dedicated to preserving the history of pen spinning."
+    />
     {% endblock %}
   </head>
   <body>

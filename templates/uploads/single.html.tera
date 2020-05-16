@@ -6,6 +6,10 @@
 <meta property="og:type" content="video.movie" />
 <meta property="og:video" content="{{ get_file_url(upload=upload) | safe }}" />
 <meta property="og:url" content="https://spin-archive.org/u/{{ upload.file_id }}" />
+<meta
+  property="og:description"
+  content="{{ upload.tag_string }}"
+/>
 {% endif %}
 {% endblock %}
 
