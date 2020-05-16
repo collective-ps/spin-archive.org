@@ -24,8 +24,8 @@ main {
   margin-left: auto;
   margin-right: auto;
   padding-bottom: 2em;
-  padding-top: 1.5em;
   flex: 1;
+  width: 100%;
 }
 
 footer {
@@ -83,4 +83,53 @@ footer {
 .reverse {
   display: flex;
   flex-direction: row-reverse;
+}
+
+.upload-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 180px);
+}
+
+.upload-grid .upload {
+  height: 180px;
+  width: 180px;
+  padding: 0.25em;
+}
+
+.upload-grid .upload .thumbnail {
+  width: 100%;
+}
+
+.two-column-page {
+  display: flex;
+  flex-direction: row;
+}
+
+.two-column-page .sidebar {
+  width: 250px;
+  padding: 1.5em;
+}
+
+.two-column-page .content {
+  flex: 1;
+  padding: 1.5em;
+}
+
+.upload {
+  height: 500px;
+}
+
+.upload .video-player {
+  width: auto;
+  height: 100%;
+}
+
+.upload-metadata .upload-tags ol {
+  list-style: none;
+}
+
+.upload-metadata label {
+  color: #797979;
+  text-decoration: none;
+  font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
 }

@@ -1,0 +1,37 @@
+{% extends "base" %}
+
+{% block content %}
+{% set tags = split_tags(tags=upload.tag_string) %}
+<main class="two-column-page">
+  <div class="sidebar upload-metadata">
+    <div class="upload-tags">
+      <label>Tags</label>
+      <ol>
+        {% for tag in tags%}
+          <li>{{ tag }}</li>
+        {% endfor %}
+      </ol>
+    </div>
+    {% if upload.source %}
+    <div class="upload-source">
+      <label>Source</label>
+      <div>{{ upload.source }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <div class="content">
+    <div class="upload" data-id="{{ upload.file_id }}">
+      {% set is_video = is_video(upload=upload) %}
+      {% if is_video %}
+        <video controls muted autoplay loop class="video-player">
+          <source src="{{ get_file_url(upload=upload) }}">>
+        </video>
+      {% endif %}
+      <a download href="{{ get_file_url(upload=upload) }}">
+        Save this video (right-click and save)
+      </a>
+    </div>
+  </div>
+</main>
+{% endblock content %}

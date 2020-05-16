@@ -100,6 +100,12 @@ impl Upload {
       ext = self.file_ext
     )
   }
+
+  pub fn is_video(&self) -> bool {
+    let mime = mime_guess::from_ext(&self.file_ext).first_or_octet_stream();
+
+    mime.to_string().starts_with("video/")
+  }
 }
 
 impl<DB> ToSql<sql_types::SmallInt, DB> for UploadStatus

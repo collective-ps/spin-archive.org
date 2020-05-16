@@ -1,16 +1,47 @@
 {% extends "base" %}
 
 {% block content %}
-<main class="text-center vertical-align">
-  <div class="welcome">
-    <p>
-      spin-archive.org is an internet archive volunteer project dedicated to
-      preserving the history of pen spinning.
-    </p>
+<main id="index-page" class="two-column-page">
+  <div class="sidebar">
+  </div>
 
-    <p>
-      We are currently building the platform. Thanks! - iColor
-    </p>
+  <div class="content">
+    {% if uploads %}
+    <div class="upload-grid">
+      {% set upload_count = uploads | length %}
+      {% if upload_count == 0 %}
+        <div class="empty text-center vertical-align">
+          No uploads were posted yet.
+        </div>
+      {% endif %}
+
+      {% for upload in uploads %}
+        <div class="upload" id="{{ upload.file_id }}">
+          <a href="/u/{{ upload.file_id }}">
+            <img
+              src="{{ get_thumbnail_url(upload=upload) }}"
+              onerror="this.src='https://bits.spin-archive.org/placeholder.jpg'"
+              class="thumbnail"
+            />
+           </a>
+        </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty text-center vertical-align">
+      No uploads were posted yet.
+    </div>
+    {% endif %}
+
+    {% if page_count %}
+    <div class="pagination">
+      <span>{{page}}</span>
+
+      {% if page_count > page %}
+        <a href="/?page={{ page + 1}}">{{ page + 1}}</a>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
 </main>
 {% endblock content %}

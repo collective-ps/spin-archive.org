@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::context;
 use crate::database::DatabaseConnection;
+use crate::models::upload;
 use crate::models::user::User;
 use crate::s3_client::generate_signed_url;
 use crate::services::upload_service;
@@ -48,6 +49,27 @@ pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template
     Ok(Template::render("upload", &context))
   } else {
     Err(Redirect::to("/"))
+  }
+}
+
+#[rocket::get("/u/<file_id>")]
+pub(crate) fn get(
+  conn: DatabaseConnection,
+  flash: Option<FlashMessage>,
+  user: Option<&User>,
+  file_id: String,
+) -> Result<Template, Redirect> {
+  let mut context = TeraContext::new();
+
+  context::flash_context(&mut context, flash);
+  context::user_context(&mut context, user);
+
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(upload) => {
+      context.insert("upload", &upload);
+      Ok(Template::render("uploads/single", &context))
+    }
+    None => Err(Redirect::to("/404")),
   }
 }
 

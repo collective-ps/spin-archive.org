@@ -8,6 +8,7 @@ extern crate diesel;
 use std::collections::HashMap;
 use std::env;
 
+use rocket::http::RawStr;
 use rocket::http::{Cookie, Cookies};
 use rocket::request::FlashMessage;
 use rocket::response::Redirect;
@@ -48,16 +49,23 @@ pub struct BuildInfo {
     commit_url: String,
 }
 
-#[rocket::get("/")]
-fn index(conn: DatabaseConnection, flash: Option<FlashMessage>, user: Option<&User>) -> Template {
+#[rocket::get("/?<page>")]
+fn index(
+    conn: DatabaseConnection,
+    flash: Option<FlashMessage>,
+    user: Option<&User>,
+    page: Option<&RawStr>,
+) -> Template {
     let mut context = TeraContext::new();
-    let (uploads, page_count) = models::upload::index(&conn, 1).unwrap();
+    let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
+    let (uploads, page_count) = models::upload::index(&conn, current_page).unwrap();
 
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, user);
 
     context.insert("uploads", &uploads);
     context.insert("page_count", &page_count);
+    context.insert("page", &current_page);
 
     Template::render("index", &context)
 }
@@ -99,6 +107,18 @@ fn main() {
         .attach(DatabaseConnection::fairing())
         .attach(Template::custom(|engines| {
             engines.tera.register_function("build_info", build_info());
+            engines
+                .tera
+                .register_function("get_thumbnail_url", context::get_thumbnail_url());
+            engines
+                .tera
+                .register_function("get_file_url", context::get_file_url());
+            engines
+                .tera
+                .register_function("is_video", context::is_video());
+            engines
+                .tera
+                .register_function("split_tags", context::split_tags());
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
@@ -115,6 +135,7 @@ fn main() {
                 routes::register::index_redirect,
                 routes::register::index,
                 routes::register::post,
+                routes::upload::get,
                 routes::upload::index,
                 routes::upload::index_not_logged_in,
                 routes::upload::upload,
