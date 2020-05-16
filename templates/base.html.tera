@@ -8,10 +8,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="spin-archive.org is an internet archive volunteer project dedicated to preserving the history of pen spinning."
+      content="spin-archive.org is an internet archive project dedicated to preserving the history of pen spinning."
     />
 
     <link rel="stylesheet" type="text/css" href="/public/app.css" />
+
+    <meta property="og:title" content="spin-archive.org" />
+    <meta
+      name="og:description"
+      content="Internet archive project dedicated to preserving the history of pen spinning."
+    />
 
     {% block head %}
     {% endblock %}

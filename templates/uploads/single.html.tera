@@ -3,7 +3,9 @@
 {% block head %}
 {% set is_video = is_video(upload=upload) %}
 {% if is_video %}
+<meta property="og:type" content="video.movie" />
 <meta property="og:video" content="{{ get_file_url(upload=upload) | safe }}" />
+<meta property="og:url" content="https://spin-archive.org/u/{{ upload.file_id }}" />
 {% endif %}
 {% endblock %}
 
