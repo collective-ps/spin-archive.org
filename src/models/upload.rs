@@ -179,7 +179,7 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
 
 /// Updates a given [`Upload`] with new column values.
 pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
-  diesel::update(uploads::table)
+  diesel::update(uploads::table.filter(uploads::id.eq(upload.id)))
     .set(upload)
     .returning(ALL_COLUMNS)
     .get_result::<Upload>(conn)
