@@ -6,6 +6,12 @@
   <div class="sidebar upload-metadata">
     <div class="upload-tags">
       <label>Tags</label>
+      {% set tag_count = tags | length %}
+      {% if tag_count == 0 %}
+      <div>
+        No tags were found.
+      </div>
+      {% endif %}
       <ol>
         {% for tag in tags%}
           <li>{{ tag }}</li>

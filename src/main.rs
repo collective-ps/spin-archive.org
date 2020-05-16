@@ -60,12 +60,20 @@ fn index(
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let (uploads, page_count) = models::upload::index(&conn, current_page).unwrap();
 
+    let mut tags: Vec<&str> = uploads
+        .iter()
+        .flat_map(|upload| upload.tag_string.split_whitespace().collect::<Vec<&str>>())
+        .collect();
+
+    tags.dedup();
+
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, user);
 
     context.insert("uploads", &uploads);
     context.insert("page_count", &page_count);
     context.insert("page", &current_page);
+    context.insert("tags", &tags);
 
     Template::render("index", &context)
 }
