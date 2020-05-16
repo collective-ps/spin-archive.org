@@ -65,6 +65,7 @@ fn index(
         .flat_map(|upload| upload.tag_string.split_whitespace().collect::<Vec<&str>>())
         .collect();
 
+    tags.sort();
     tags.dedup();
 
     context::flash_context(&mut context, flash);
