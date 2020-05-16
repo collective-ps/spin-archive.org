@@ -12,6 +12,9 @@
     />
 
     <link rel="stylesheet" type="text/css" href="/public/app.css" />
+
+    {% block head %}
+    {% endblock %}
   </head>
   <body>
     {% block index %}

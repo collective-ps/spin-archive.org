@@ -1,5 +1,12 @@
 {% extends "base" %}
 
+{% block head %}
+{% set is_video = is_video(upload=upload) %}
+{% if is_video %}
+<meta property="og:video" content="{{ get_file_url(upload=upload) | safe }}" />
+{% endif %}
+{% endblock %}
+
 {% block content %}
 {% set tags = split_tags(tags=upload.tag_string) %}
 <main class="two-column-page">
@@ -31,10 +38,10 @@
       {% set is_video = is_video(upload=upload) %}
       {% if is_video %}
         <video controls muted autoplay loop class="video-player">
-          <source src="{{ get_file_url(upload=upload) }}">>
+          <source src="{{ get_file_url(upload=upload) | safe }}">>
         </video>
       {% endif %}
-      <a download href="{{ get_file_url(upload=upload) }}">
+      <a download href="{{ get_file_url(upload=upload) | safe }}">
         Save this video (right-click and save)
       </a>
     </div>
