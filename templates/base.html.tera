@@ -48,5 +48,5 @@
 
   <script type="text/javascript" src="/public/app.bundle.js"></script>
 
-  {% include "footer" %}
+  {% include "partials/footer" %}
 </html>

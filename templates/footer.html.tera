@@ -1,5 +1,0 @@
-{% set build_info = build_info() %}
-
-<footer class="text-center">
-  <div><small>spin-archive.org (<a href="{{ build_info.commit_url }}"><em>{{ build_info.sha_short }}</em></a>)</small></div>
-</footer>
