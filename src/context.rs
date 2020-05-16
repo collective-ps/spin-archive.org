@@ -77,3 +77,13 @@ pub fn split_tags() -> GlobalFn {
     }
   })
 }
+
+pub fn tag_url(value: TeraValue, _args: HashMap<String, TeraValue>) -> TeraResult<TeraValue> {
+  match serde_json::from_value::<String>(value.clone()) {
+    Ok(tag) => {
+      let url = format!("/?q={}", tag);
+      Ok(serde_json::to_value(url).unwrap())
+    }
+    Err(_) => Err("Could not get tags".into()),
+  }
+}

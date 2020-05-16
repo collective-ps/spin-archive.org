@@ -199,13 +199,26 @@ pub fn insert_pending_upload(
 /// Index query for uploads, fetches completed uploads by the page number provided.
 ///
 /// Returns a tuple: (Vec<Upload>, page_count).
-pub fn index(conn: &PgConnection, page: i64) -> QueryResult<(Vec<Upload>, i64)> {
-  let query = uploads::table
-    .order(uploads::updated_at.desc())
+pub fn index(
+  conn: &PgConnection,
+  page: i64,
+  q_string: Option<String>,
+) -> QueryResult<(Vec<Upload>, i64)> {
+  use diesel_full_text_search::*;
+
+  let mut sql_query = uploads::table
     .filter(uploads::status.eq(UploadStatus::Completed))
     .select(ALL_COLUMNS)
-    .paginate(page)
-    .per_page(25);
+    .into_boxed();
 
-  query.load_and_count_pages::<Upload>(&conn)
+  if let Some(query) = q_string {
+    let tsquery = plainto_tsquery(query);
+    sql_query = sql_query.filter(tsquery.matches(uploads::tag_index));
+  }
+
+  sql_query
+    .order(uploads::updated_at.desc())
+    .paginate(page)
+    .per_page(25)
+    .load_and_count_pages::<Upload>(&conn)
 }

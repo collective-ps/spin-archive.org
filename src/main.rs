@@ -49,16 +49,17 @@ pub struct BuildInfo {
     commit_url: String,
 }
 
-#[rocket::get("/?<page>")]
+#[rocket::get("/?<page>&<q>")]
 fn index(
     conn: DatabaseConnection,
     flash: Option<FlashMessage>,
     user: Option<&User>,
     page: Option<&RawStr>,
+    q: Option<String>,
 ) -> Template {
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
-    let (uploads, page_count) = models::upload::index(&conn, current_page).unwrap();
+    let (uploads, page_count) = models::upload::index(&conn, current_page, q).unwrap();
 
     let mut tags: Vec<&str> = uploads
         .iter()
@@ -136,6 +137,8 @@ fn main() {
             engines
                 .tera
                 .register_function("split_tags", context::split_tags());
+
+            engines.tera.register_filter("tag_url", context::tag_url);
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
