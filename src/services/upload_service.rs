@@ -62,9 +62,5 @@ pub(crate) fn finalize_upload(
 }
 
 pub fn sanitize_tags<'a>(tags: &'a str) -> String {
-  tags
-    .split_whitespace()
-    .map(|string| string.to_ascii_lowercase())
-    .collect::<Vec<_>>()
-    .join(" ")
+  tags.split_whitespace().collect::<Vec<_>>().join(" ")
 }
