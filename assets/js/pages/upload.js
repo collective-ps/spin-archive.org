@@ -127,7 +127,7 @@ const UploadPage = () => {
   } else if (state == STATE.done) {
     return (
       <div>
-        <div>Published successfully!</div>
+        <div>Videos are now processing. They should be published shortly.</div>
         <button onClick={reset}>Upload more</button>
       </div>
     )

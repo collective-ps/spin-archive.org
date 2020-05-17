@@ -6,8 +6,6 @@ use rusoto_credential::{EnvironmentProvider, ProvideAwsCredentials};
 use rusoto_s3::util::{PreSignedRequest, PreSignedRequestOption};
 use rusoto_s3::PutObjectRequest;
 
-const UPLOADS: &'static str = "uploads";
-
 fn region() -> Region {
   Region::Custom {
     name: "nyc3".to_owned(),
@@ -18,14 +16,14 @@ fn region() -> Region {
 /// Generates a pre-signed url for a given `file_name`.
 ///
 /// Uploads to `UPLOADS` bucket.
-pub fn generate_signed_url(file_name: &str) -> String {
+pub fn generate_signed_url(bucket_name: &str, file_name: &str) -> String {
   let bucket = "spin-archive";
 
   let credentials = block_on(EnvironmentProvider::default().credentials()).unwrap();
 
   let key = format!(
     "{folder}/{file_name}",
-    folder = UPLOADS,
+    folder = bucket_name,
     file_name = file_name
   );
 
