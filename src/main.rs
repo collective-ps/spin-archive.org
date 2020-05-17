@@ -133,6 +133,9 @@ fn main() {
                 .register_function("get_file_url", context::get_file_url());
             engines
                 .tera
+                .register_function("get_video_url", context::get_video_url());
+            engines
+                .tera
                 .register_function("is_video", context::is_video());
             engines
                 .tera
@@ -161,6 +164,7 @@ fn main() {
                 routes::upload::index_not_logged_in,
                 routes::upload::upload,
                 routes::upload::finalize,
+                routes::webhooks::video::webhook
             ],
         )
         .mount(

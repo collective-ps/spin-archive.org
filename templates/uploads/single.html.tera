@@ -44,7 +44,7 @@
       {% set is_video = is_video(upload=upload) %}
       {% if is_video %}
         <video controls muted autoplay loop class="video-player">
-          <source src="{{ get_file_url(upload=upload) | safe }}">>
+          <source src="{{ get_video_url(upload=upload) | safe }}">>
         </video>
       {% endif %}
       <a download href="{{ get_file_url(upload=upload) | safe }}">

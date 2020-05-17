@@ -26,6 +26,9 @@ type AllColumns = (
   uploads::updated_at,
   uploads::file_ext,
   uploads::tag_string,
+  uploads::video_encoding_key,
+  uploads::thumbnail_url,
+  uploads::video_url,
 );
 
 pub const ALL_COLUMNS: AllColumns = (
@@ -41,8 +44,12 @@ pub const ALL_COLUMNS: AllColumns = (
   uploads::updated_at,
   uploads::file_ext,
   uploads::tag_string,
+  uploads::video_encoding_key,
+  uploads::thumbnail_url,
+  uploads::video_url,
 );
 
+#[allow(dead_code)]
 type All = diesel::dsl::Select<uploads::table, AllColumns>;
 
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
@@ -51,6 +58,7 @@ pub enum UploadStatus {
   Pending = 0,
   Processing = 1,
   Completed = 2,
+  Failed = 3,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
@@ -68,6 +76,9 @@ pub struct Upload {
   pub updated_at: NaiveDateTime,
   pub file_ext: String,
   pub tag_string: String,
+  pub video_encoding_key: String,
+  pub thumbnail_url: Option<String>,
+  pub video_url: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
@@ -82,15 +93,6 @@ pub struct UpdateUpload {
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
 
 impl Upload {
-  /// Gets a full URL to the thumbnail for this upload. (may not actually exist!)
-  pub fn get_thumbnail_url(&self) -> String {
-    format!(
-      "{host}/{file_id}.jpg",
-      host = ASSET_HOST,
-      file_id = self.file_id
-    )
-  }
-
   /// Gets the full URL to where the file is stored.
   pub fn get_file_url(&self) -> String {
     format!(
@@ -128,6 +130,7 @@ where
       0 => Ok(UploadStatus::Pending),
       1 => Ok(UploadStatus::Processing),
       2 => Ok(UploadStatus::Completed),
+      3 => Ok(UploadStatus::Failed),
       _ => Err("Unrecognized enum variant".into()),
     }
   }
@@ -154,6 +157,7 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
 pub struct PendingUpload {
   pub status: UploadStatus,
   pub file_id: String,
+  pub video_encoding_key: String,
   pub uploader_user_id: i32,
   pub file_name: String,
   pub file_ext: String,
@@ -164,6 +168,14 @@ pub struct PendingUpload {
 pub struct FinalizeUpload {
   pub status: UploadStatus,
   pub tag_string: String,
+}
+
+#[derive(AsChangeset)]
+#[table_name = "uploads"]
+pub struct FinishedEncodingUpload {
+  pub status: UploadStatus,
+  pub thumbnail_url: String,
+  pub video_url: String,
 }
 
 /// Gets an [`Upload`] by `file_id`.
@@ -177,9 +189,32 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
     .ok()
 }
 
+/// Gets an [`Upload`] by `video_encoding_key`.
+pub fn get_by_video_encoding_key(conn: &PgConnection, search_key: &str) -> Option<Upload> {
+  use crate::schema::uploads::dsl::*;
+
+  uploads
+    .filter(video_encoding_key.eq(search_key))
+    .select(ALL_COLUMNS)
+    .first::<Upload>(conn)
+    .ok()
+}
+
 /// Updates a given [`Upload`] with new column values.
 pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
   diesel::update(uploads::table.filter(uploads::id.eq(upload.id)))
+    .set(upload)
+    .returning(ALL_COLUMNS)
+    .get_result::<Upload>(conn)
+}
+
+/// Updates a given [`Upload`] based on encoding response.
+pub fn update_encoding(
+  conn: &PgConnection,
+  id: i32,
+  upload: &FinishedEncodingUpload,
+) -> QueryResult<Upload> {
+  diesel::update(uploads::table.filter(uploads::id.eq(id)))
     .set(upload)
     .returning(ALL_COLUMNS)
     .get_result::<Upload>(conn)

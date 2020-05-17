@@ -16,6 +16,9 @@ table! {
         file_ext -> Text,
         tag_string -> Text,
         tag_index -> Tsvector,
+        video_encoding_key -> Text,
+        thumbnail_url -> Nullable<Text>,
+        video_url -> Nullable<Text>,
     }
 }
 

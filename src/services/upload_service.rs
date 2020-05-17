@@ -1,8 +1,10 @@
 use diesel::PgConnection;
+use log::{debug, warn};
 use nanoid::nanoid;
 
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
+use crate::services::encoder_service;
 
 #[allow(dead_code)]
 pub(crate) enum UploadError {
@@ -21,6 +23,7 @@ pub(crate) fn new_pending_upload(
   let pending_upload = PendingUpload {
     status: UploadStatus::Pending,
     file_id: nanoid!(),
+    video_encoding_key: nanoid!(),
     uploader_user_id: user.id,
     file_name: file_name.to_owned(),
     file_ext: file_ext.to_owned(),
@@ -46,13 +49,27 @@ pub(crate) fn finalize_upload(
     ) => {
       let update_upload = UpdateUpload {
         id: upload.id,
-        status: UploadStatus::Completed,
+        status: UploadStatus::Processing,
         tag_string: sanitize_tags(tags),
         source: Some(source.to_owned()),
       };
 
       match upload::update(&conn, &update_upload) {
-        Ok(upload) => Ok(upload),
+        Ok(upload) => {
+          match encoder_service::enqueue_upload(&upload) {
+            Ok(_job) => {
+              debug!("[encoding] Started job id {}", upload.video_encoding_key);
+            }
+            Err(e) => {
+              warn!(
+                "[encoding] Job error: {:?} for job id {}",
+                e, upload.video_encoding_key
+              );
+            }
+          }
+
+          Ok(upload)
+        }
         Err(_err) => Err(UploadError::DatabaseError),
       }
     }

@@ -19,7 +19,6 @@ use crate::services::upload_service;
 pub struct UploadResponse {
   id: String,
   url: String,
-  thumbnail_url: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -104,12 +103,10 @@ pub(crate) fn upload(
   ) {
     Ok(upload) => {
       let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);
-      let thumbnail_name = format!("{}.jpg", &upload.file_id);
 
       Ok(Json(UploadResponse {
         id: upload.file_id.to_owned(),
-        url: generate_signed_url(&file_name),
-        thumbnail_url: generate_signed_url(&thumbnail_name),
+        url: generate_signed_url("uploads", &file_name),
       }))
     }
     Err(_) => Err(BadRequest(None)),

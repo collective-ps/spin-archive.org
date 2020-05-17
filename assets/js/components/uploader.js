@@ -74,7 +74,7 @@ const Uploader = ({ handleSubmit }) => {
       }
     }
 
-    const { id, url, thumbnail_url } = await fetch('/upload', {
+    const { id, url } = await fetch('/upload', {
       method: 'POST',
       body: JSON.stringify({
         file_name: name,
@@ -94,25 +94,13 @@ const Uploader = ({ handleSubmit }) => {
       },
       meta: {
         file_id: id,
-        thumbnail_url,
         thumbnail,
       },
       url,
     }
   }
 
-  const handleChangeStatus = ({ meta, file }, status) => {
-    if (status == 'done' && meta.thumbnail && meta.thumbnail_url) {
-      fetch(meta.thumbnail_url, {
-        method: 'PUT',
-        body: meta.thumbnail,
-        headers: {
-          'x-amz-acl': 'public-read',
-          'x-amz-content-sha256': 'UNSIGNED-PAYLOAD',
-        },
-      })
-    }
-  }
+  const handleChangeStatus = ({ meta, file }, status) => {}
 
   return (
     <Dropzone
