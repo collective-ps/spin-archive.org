@@ -86,8 +86,8 @@ pub fn accept_webhook(
     Some(upload) => {
       if job.event == Some("job.completed".to_string()) {
         let output_filename = format!("{file_id}.mp4", file_id = upload.file_id,);
-        let video_url = output_url("e", &output_filename);
-        let thumbnail_url = output_url("t", &format!("{}.jpg", upload.file_id));
+        let video_url = format!("https://bits.spin-archive.org/e/{}", output_filename);
+        let thumbnail_url = format!("https://bits.spin-archive.org/t/{}.jpg", upload.file_id);
 
         let finished_encoding = FinishedEncodingUpload {
           status: UploadStatus::Completed,
