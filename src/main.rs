@@ -133,6 +133,9 @@ fn main() {
                 .register_function("get_file_url", context::get_file_url());
             engines
                 .tera
+                .register_function("get_video_url", context::get_video_url());
+            engines
+                .tera
                 .register_function("is_video", context::is_video());
             engines
                 .tera
