@@ -13,7 +13,11 @@ const Uploader = ({ handleSubmit }) => {
       headers: {
         'Content-Type': 'application/json',
       },
-    }).then((response) => response.json())
+    })
+      .then((response) => response.json())
+      .catch(() => {
+        return { id: null, url: null }
+      })
 
     return {
       body: file,
