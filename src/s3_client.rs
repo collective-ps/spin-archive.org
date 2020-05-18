@@ -1,8 +1,8 @@
+use std::env;
 use std::time::Duration;
 
-use futures::executor::block_on;
 use rusoto_core::Region;
-use rusoto_credential::{EnvironmentProvider, ProvideAwsCredentials};
+use rusoto_credential::AwsCredentials;
 use rusoto_s3::util::{PreSignedRequest, PreSignedRequestOption};
 use rusoto_s3::PutObjectRequest;
 
@@ -17,9 +17,10 @@ fn region() -> Region {
 ///
 /// Uploads to `UPLOADS` bucket.
 pub fn generate_signed_url(bucket_name: &str, file_name: &str) -> String {
+  let access_key = env::var("AWS_ACCESS_KEY_ID").unwrap();
+  let secret_key = env::var("AWS_SECRET_ACCESS_KEY").unwrap();
   let bucket = "spin-archive";
-
-  let credentials = block_on(EnvironmentProvider::default().credentials()).unwrap();
+  let credentials = AwsCredentials::new(access_key, secret_key, None, None);
 
   let key = format!(
     "{folder}/{file_name}",
