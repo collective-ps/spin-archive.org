@@ -1,0 +1,6 @@
+target
+Dockerfile
+.dockerignore
+.gitignore
+node_modules
+.env

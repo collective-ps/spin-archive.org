@@ -1,9 +1,7 @@
-{% set build_info = build_info() %}
-
 <footer class="text-center">
   <div>
     <small>
-      <span>spin-archive.org (<a href="{{ build_info.commit_url | safe }}"><em>{{ build_info.sha_short }}</em></a>) |
+      <span>spin-archive.org (<a href="https://github.com/andrewvy/spin-archive.org"><em>git</em></a>) |
       <span><a href="/about">About</a></span> |
       <span><a target="_blank" href="https://discord.gg/NMMWPnA">Discord</a></span>
     </small>
