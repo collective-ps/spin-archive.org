@@ -50,10 +50,6 @@ pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
       "-> jpg:300x = {}",
       output_url("t", &format!("{}.jpg", upload.file_id))
     ),
-    format!(
-      "-> gif:300x = {}",
-      output_url("t", &format!("{}.gif", upload.file_id)),
-    ),
   ]
   .join("\n");
 
