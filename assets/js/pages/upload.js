@@ -21,13 +21,6 @@ const useInput = (initialValue) => {
 const File = ({ file }) => {
   const { value: tags, bind: bindTags } = useInput('')
   const { value: source, bind: bindSource } = useInput('')
-  const [thumbnailUrl, setThumbnailUrl] = useState(null)
-
-  useEffect(() => {
-    if (file.meta.thumbnail) {
-      setThumbnailUrl(URL.createObjectURL(file.meta.thumbnail))
-    }
-  }, [])
 
   useEffect(() => {
     file.meta.tags = tags
@@ -37,8 +30,6 @@ const File = ({ file }) => {
   return (
     <div className='file'>
       <label>{file.meta.name}</label>
-
-      {thumbnailUrl && <img src={thumbnailUrl} />}
 
       <fieldset>
         <label>
