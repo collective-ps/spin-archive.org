@@ -45,7 +45,10 @@ pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
   let config = vec![
     format!("set source = {}", source),
     format!("set webhook = {}", webhook_url),
-    format!("-> mp4 = {}", output_url("e", &output_filename)),
+    format!(
+      "-> mp4 = {}, keep=video_bitrate,audio_bitrate",
+      output_url("e", &output_filename)
+    ),
     format!(
       "-> jpg:300x = {}",
       output_url("t", &format!("{}.jpg", upload.file_id))
