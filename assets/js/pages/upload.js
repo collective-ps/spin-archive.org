@@ -21,11 +21,13 @@ const useInput = (initialValue) => {
 const File = ({ file }) => {
   const { value: tags, bind: bindTags } = useInput('')
   const { value: source, bind: bindSource } = useInput('')
+  const { value: description, bind: bindDescription } = useInput('')
 
   useEffect(() => {
     file.meta.tags = tags
     file.meta.source = source
-  }, [file, tags, source])
+    file.meta.description = description
+  }, [file, tags, source, description])
 
   return (
     <div className='file'>
@@ -41,6 +43,12 @@ const File = ({ file }) => {
         <label>
           Source (URL)
           <input type='text' value={source} {...bindSource} />
+        </label>
+      </fieldset>
+      <fieldset>
+        <label>
+          Description
+          <textarea value={source} {...bindDescription} />
         </label>
       </fieldset>
     </div>
@@ -89,6 +97,7 @@ const UploadPage = () => {
         body: JSON.stringify({
           tags: file.meta.tags,
           source: file.meta.source,
+          description: file.meta.description,
         }),
         headers: {
           'Content-Type': 'application/json',

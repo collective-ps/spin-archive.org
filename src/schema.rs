@@ -26,6 +26,7 @@ table! {
         video_encoding_key -> Text,
         thumbnail_url -> Nullable<Text>,
         video_url -> Nullable<Text>,
+        description -> Text,
     }
 }
 

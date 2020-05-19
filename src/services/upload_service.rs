@@ -47,6 +47,7 @@ pub(crate) fn finalize_upload(
   file_id: &str,
   tags: &str,
   source: &str,
+  description: &str,
 ) -> Result<Upload, UploadError> {
   match upload::get_by_file_id(&conn, &file_id) {
     Some(
@@ -60,6 +61,7 @@ pub(crate) fn finalize_upload(
         status: UploadStatus::Processing,
         tag_string: sanitize_tags(tags),
         source: Some(source.to_owned()),
+        description: description.to_string(),
       };
 
       match upload::update(&conn, &update_upload) {

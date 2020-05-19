@@ -55,17 +55,22 @@
   </div>
 
   <div class="content">
+    {% set is_video = is_video(upload=upload) %}
     <div class="upload" data-id="{{ upload.file_id }}">
-      {% set is_video = is_video(upload=upload) %}
       {% if is_video %}
         <video controls muted autoplay loop class="video-player">
           <source src="{{ get_video_url(upload=upload) | safe }}">>
         </video>
       {% endif %}
-      <a download href="{{ get_file_url(upload=upload) | safe }}">
-        Save this video (right-click and save)
-      </a>
     </div>
+    {% if is_video %}
+    <a download href="{{ get_file_url(upload=upload) | safe }}">
+      Save this video (right-click and save)
+    </a>
+    {% endif %}
+    {% if upload.description != '' %}
+    <div class="description"><h5>Description</h5>{{ upload.description }}</div>
+    {% endif %}
   </div>
 </main>
 {% endblock content %}

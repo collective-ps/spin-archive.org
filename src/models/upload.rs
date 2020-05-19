@@ -30,6 +30,7 @@ type AllColumns = (
   uploads::video_encoding_key,
   uploads::thumbnail_url,
   uploads::video_url,
+  uploads::description,
 );
 
 pub const ALL_COLUMNS: AllColumns = (
@@ -48,6 +49,7 @@ pub const ALL_COLUMNS: AllColumns = (
   uploads::video_encoding_key,
   uploads::thumbnail_url,
   uploads::video_url,
+  uploads::description,
 );
 
 #[allow(dead_code)]
@@ -81,6 +83,7 @@ pub struct Upload {
   pub video_encoding_key: String,
   pub thumbnail_url: Option<String>,
   pub video_url: Option<String>,
+  pub description: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
@@ -90,6 +93,7 @@ pub struct UpdateUpload {
   pub status: UploadStatus,
   pub source: Option<String>,
   pub tag_string: String,
+  pub description: String,
 }
 
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";

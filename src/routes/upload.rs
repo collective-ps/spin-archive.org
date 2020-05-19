@@ -35,6 +35,7 @@ pub struct FinalizeUploadResponse {}
 pub struct FinalizeUploadRequest {
   tags: String,
   source: String,
+  description: String,
 }
 
 #[rocket::get("/upload")]
@@ -131,7 +132,13 @@ pub(crate) fn finalize(
     return Err(BadRequest(None));
   }
 
-  match upload_service::finalize_upload(&conn, &file_id, &request.tags, &request.source) {
+  match upload_service::finalize_upload(
+    &conn,
+    &file_id,
+    &request.tags,
+    &request.source,
+    &request.description,
+  ) {
     Ok(_upload) => Ok(Json(FinalizeUploadResponse {})),
     Err(_err) => Err(BadRequest(None)),
   }

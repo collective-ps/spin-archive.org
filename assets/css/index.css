@@ -1,6 +1,6 @@
 :root {
   --color-primary: #1a9f60;
-  --color-lightGrey: #d2d6dd;
+  --color-lightGrey: #f1f1f1;
   --color-grey: #7e818b;
   --color-darkGrey: #3f4144;
   --color-error: #d43939;
@@ -132,4 +132,13 @@ footer {
   color: #797979;
   text-decoration: none;
   font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+}
+
+.content .description {
+  white-space: pre-wrap;
+  background-color: var(--color-lightGrey);
+  padding: 1em;
+  border-radius: 4px;
+  border: 1px solid #7e818b;
+  margin-top: 1rem;
 }
