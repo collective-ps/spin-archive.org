@@ -67,9 +67,7 @@
       {% endif %}
     </div>
     {% if is_video %}
-    <a download href="{{ get_file_url(upload=upload) | safe }}">
-      Save this video (right-click and save)
-    </a>
+    <a download href="{{ get_file_url(upload=upload) | safe }}">Save this video (right-click and save)</a> <a download href="{{ get_video_url(upload=upload) | safe }}">(mp4)</a>
     {% endif %}
     {% if upload.description != '' %}
     <div class="description"><h5>Description</h5>{{ upload.description }}</div>
