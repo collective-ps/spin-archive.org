@@ -3,10 +3,11 @@ use diesel::PgConnection;
 use log::{debug, warn};
 use nanoid::nanoid;
 
+use crate::models::audit_log::{self, AuditLog};
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
 use crate::schema::upload_views;
-use crate::services::encoder_service;
+use crate::services::{audit_service, encoder_service};
 
 #[derive(Insertable)]
 #[table_name = "upload_views"]
@@ -88,16 +89,82 @@ pub(crate) fn finalize_upload(
   }
 }
 
-pub fn sanitize_tags<'a>(tags: &'a str) -> String {
-  tags.split_whitespace().collect::<Vec<_>>().join(" ")
+/// Updates an already published upload.
+pub(crate) fn update_upload(
+  conn: &PgConnection,
+  user_id: i32,
+  file_id: &str,
+  tags: &str,
+  source: &str,
+  description: &str,
+) -> Result<Upload, UploadError> {
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(upload) => {
+      let new_tag_string = sanitize_tags(tags);
+
+      let update_upload = UpdateUpload {
+        id: upload.id,
+        status: upload.status,
+        tag_string: new_tag_string.clone(),
+        source: Some(source.to_owned()),
+        description: description.to_string(),
+      };
+
+      audit_service::create_audit_log(
+        &conn,
+        "uploads",
+        "tag_string",
+        upload.id,
+        user_id,
+        &upload.tag_string,
+        &new_tag_string,
+      );
+
+      audit_service::create_audit_log(
+        &conn,
+        "uploads",
+        "source",
+        upload.id,
+        user_id,
+        &upload.source.unwrap_or("".to_string()),
+        &source,
+      );
+
+      audit_service::create_audit_log(
+        &conn,
+        "uploads",
+        "description",
+        upload.id,
+        user_id,
+        &upload.description,
+        &description,
+      );
+
+      match upload::update(&conn, &update_upload) {
+        Ok(upload) => Ok(upload),
+        Err(_err) => Err(UploadError::DatabaseError),
+      }
+    }
+    None => Err(UploadError::NotFound),
+  }
 }
 
+pub fn sanitize_tags<'a>(tags: &'a str) -> String {
+  tags
+    .split_whitespace()
+    .map(|str| str.to_lowercase())
+    .collect::<Vec<_>>()
+    .join(" ")
+}
+
+/// Increments the view count for an upload.
 pub fn increment_view_count(conn: &PgConnection, upload_id: i32) {
   let view = View { upload_id };
 
   let _ = view.insert_into(upload_views::table).execute(conn);
 }
 
+/// Gets the view count for an upload.
 pub fn get_view_count(conn: &PgConnection, upload_id: i32) -> i64 {
   use diesel::prelude::*;
 
@@ -108,8 +175,14 @@ pub fn get_view_count(conn: &PgConnection, upload_id: i32) -> i64 {
     .unwrap_or(0)
 }
 
+/// Gets the associated uploader user.
 pub fn get_uploader_user(conn: &PgConnection, upload: &Upload) -> User {
   use crate::models::user;
 
   user::get_user_by_id(&conn, upload.uploader_user_id.expect("No uploader user")).unwrap()
+}
+
+/// Gets an audit log for a particular upload.
+pub fn get_audit_log(conn: &PgConnection, upload: &Upload) -> Vec<(AuditLog, User)> {
+  audit_log::get_by_row_id(conn, "uploads", upload.id).unwrap_or_default()
 }

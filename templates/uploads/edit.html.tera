@@ -1,0 +1,27 @@
+{% extends "base" %}
+
+{% block content %}
+{% set tags = split_tags(tags=upload.tag_string) %}
+<main class="two-column-page">
+  <div class="sidebar upload-metadata">
+  </div>
+
+  <div class="content">
+    <form action="/upload/{{ upload.file_id }}" method="POST">
+      <fieldset>
+        <label for="tags">Tags (space-separated)</label>
+        <input type="text" id="tags" name="tags" value="{{ upload.tag_string }}" required>
+      </fieldset>
+      <fieldset>
+        <label for="source">Source (URL)</label>
+        <input type="text" id="source" name="source" value="{{ upload.source }}">
+      </fieldset>
+      <fieldset>
+        <label for="description">Description</label>
+        <textarea id="description" name="description">{{ upload.description }}</textarea>
+      </fieldset>
+      <input type="submit" value="Update">
+    </form>
+  </div>
+</main>
+{% endblock content %}

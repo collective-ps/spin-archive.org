@@ -55,29 +55,22 @@
     <div class="original-filename">
       <small>Original Filename: {{ upload.file_name }}</small>
     </div>
-
-    {% if user_can_upload %}
-      <a href="/u/{{ upload.file_id }}/edit" class="nav-item">Edit</a>
-    {% endif %}
-
-    <a href="/u/{{ upload.file_id }}/log" class="nav-item">Log</a>
   </div>
 
   <div class="content">
-    {% set is_video = is_video(upload=upload) %}
-    <div class="upload" data-id="{{ upload.file_id }}">
-      {% if is_video %}
-        <video controls muted autoplay loop class="video-player">
-          <source src="{{ get_video_url(upload=upload) | safe }}">>
-        </video>
-      {% endif %}
-    </div>
-    {% if is_video %}
-    <a download href="{{ get_file_url(upload=upload) | safe }}">Save this video (right-click and save)</a> <a download href="{{ get_video_url(upload=upload) | safe }}">(mp4)</a>
-    {% endif %}
-    {% if upload.description != '' %}
-    <div class="description"><h5>Description</h5>{{ upload.description }}</div>
-    {% endif %}
+    <ol class="audit-log">
+      {% for tuple in audit_log %}
+        {% set log = tuple.0 %}
+        {% set user = tuple.1 %}
+        <li>
+          <span><em>{{ log.column_name }}</em></span>
+          <span><strong>Old: </strong>{{ log.old_value }}</span>
+          <span><strong>New: </strong>{{ log.new_value }}</span>
+          <span>Changed by: {{ user.username }}</span>
+          <span>({{ log.changed_date | date(format="%Y-%m-%d %H:%M") }})</span>
+        </li>
+      {% endfor %}
+    </ol>
   </div>
 </main>
 {% endblock content %}

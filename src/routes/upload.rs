@@ -1,8 +1,9 @@
 use std::path::Path;
 
-use rocket::request::FlashMessage;
+use rocket::request::{FlashMessage, Form};
 use rocket::response::status::BadRequest;
-use rocket::response::Redirect;
+use rocket::response::{Flash, Redirect};
+use rocket::FromForm;
 use rocket_contrib::json::Json;
 use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
@@ -30,11 +31,17 @@ pub struct UploadRequest {
 #[derive(Serialize, Deserialize)]
 pub struct FinalizeUploadResponse {}
 
-#[allow(dead_code)]
 #[derive(Serialize, Deserialize)]
 pub struct FinalizeUploadRequest {
   tags: String,
   source: String,
+  description: String,
+}
+
+#[derive(Debug, FromForm)]
+pub struct UpdateUploadRequest {
+  tags: String,
+  source: Option<String>,
   description: String,
 }
 
@@ -75,6 +82,66 @@ pub(crate) fn get(
       context.insert("uploader", &uploader_user);
 
       Ok(Template::render("uploads/single", &context))
+    }
+    None => Err(Redirect::to("/404")),
+  }
+}
+
+#[rocket::get("/u/<file_id>/edit")]
+pub(crate) fn edit(
+  conn: DatabaseConnection,
+  flash: Option<FlashMessage>,
+  user: &User,
+  file_id: String,
+) -> Result<Template, Redirect> {
+  let mut context = TeraContext::new();
+
+  context::flash_context(&mut context, flash);
+  context::user_context(&mut context, Some(user));
+
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(upload) => {
+      if !user.can_upload() {
+        return Err(Redirect::to(format!("/u/{}", upload.file_id)));
+      }
+
+      let view_count = upload_service::get_view_count(&conn, upload.id.into());
+      let uploader_user = upload_service::get_uploader_user(&conn, &upload);
+
+      context.insert("upload", &upload);
+      context.insert("view_count", &view_count);
+      context.insert("uploader", &uploader_user);
+
+      Ok(Template::render("uploads/edit", &context))
+    }
+    None => Err(Redirect::to("/404")),
+  }
+}
+
+#[rocket::get("/u/<file_id>/log")]
+pub(crate) fn log(
+  conn: DatabaseConnection,
+  flash: Option<FlashMessage>,
+  user: Option<&User>,
+  file_id: String,
+) -> Result<Template, Redirect> {
+  let mut context = TeraContext::new();
+
+  context::flash_context(&mut context, flash);
+  context::user_context(&mut context, user);
+
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(upload) => {
+      let view_count = upload_service::get_view_count(&conn, upload.id.into());
+      let uploader_user = upload_service::get_uploader_user(&conn, &upload);
+      let audit_log = upload_service::get_audit_log(&conn, &upload);
+
+      context.insert("upload", &upload);
+      context.insert("view_count", &view_count);
+      context.insert("uploader", &uploader_user);
+      context.insert("audit_log", &audit_log);
+
+      Ok(Template::render("uploads/log", &context))
     }
     None => Err(Redirect::to("/404")),
   }
@@ -141,5 +208,38 @@ pub(crate) fn finalize(
   ) {
     Ok(_upload) => Ok(Json(FinalizeUploadResponse {})),
     Err(_err) => Err(BadRequest(None)),
+  }
+}
+
+#[rocket::post("/upload/<file_id>", data = "<request>")]
+pub(crate) fn update(
+  conn: DatabaseConnection,
+  user: &User,
+  file_id: String,
+  request: Form<UpdateUploadRequest>,
+) -> Flash<Redirect> {
+  let path = format!("/u/{}", file_id);
+
+  if !user.can_upload() {
+    return Flash::error(Redirect::to(path), "");
+  }
+
+  dbg!(&request);
+
+  let source = request.source.as_ref().unwrap_or(&"".to_string()).clone();
+
+  match upload_service::update_upload(
+    &conn,
+    user.id,
+    &file_id,
+    &request.tags,
+    &source,
+    &request.description,
+  ) {
+    Ok(_upload) => Flash::success(Redirect::to(path), "Edited!"),
+    Err(_err) => Flash::error(
+      Redirect::to(format!("{}/edit", path)),
+      "Could not edit upload.",
+    ),
   }
 }

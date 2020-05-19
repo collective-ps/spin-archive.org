@@ -1,4 +1,17 @@
 table! {
+    audit_log (id) {
+        id -> Int8,
+        table_name -> Text,
+        column_name -> Text,
+        row_id -> Int4,
+        changed_date -> Timestamp,
+        changed_by -> Int4,
+        old_value -> Text,
+        new_value -> Text,
+    }
+}
+
+table! {
     upload_views (id) {
         id -> Int8,
         upload_id -> Int4,
@@ -42,7 +55,8 @@ table! {
     }
 }
 
+joinable!(audit_log -> users (changed_by));
 joinable!(upload_views -> uploads (upload_id));
 joinable!(uploads -> users (uploader_user_id));
 
-allow_tables_to_appear_in_same_query!(upload_views, uploads, users,);
+allow_tables_to_appear_in_same_query!(audit_log, upload_views, uploads, users,);
