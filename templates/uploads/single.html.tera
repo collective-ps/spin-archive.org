@@ -52,6 +52,9 @@
     <div class="upload-date">
       <small>Upload Date: {{ upload.created_at | date(format="%Y-%m-%d %H:%M") }}</small>
     </div>
+    <div class="original-filename">
+      <small>Original Filename: {{ upload.file_name }}</small>
+    </div>
   </div>
 
   <div class="content">
