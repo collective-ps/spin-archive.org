@@ -168,7 +168,7 @@ impl TryInto<NewUser> for RegistrationFields {
   }
 }
 
-fn get_user_by_id(conn: &PgConnection, user_id: i32) -> Option<User> {
+pub fn get_user_by_id(conn: &PgConnection, user_id: i32) -> Option<User> {
   use crate::schema::users::dsl::*;
 
   users.filter(id.eq(user_id)).first::<User>(conn).ok()

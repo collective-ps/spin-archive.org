@@ -40,6 +40,15 @@
       <div>{{ upload.source }}</div>
     </div>
     {% endif %}
+    {% if view_count %}
+    <label>Information</label>
+    <div class="view_count">
+      <small>Views:</small> {{ view_count }}
+    </div>
+    {% endif %}
+    <div class="uploader">
+      <small>Uploader:</small> <a href="#">{{ uploader.username }}</a>
+    </div>
   </div>
 
   <div class="content">

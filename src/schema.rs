@@ -1,4 +1,11 @@
 table! {
+    upload_views (id) {
+        id -> Int8,
+        upload_id -> Int4,
+    }
+}
+
+table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
 
@@ -34,6 +41,7 @@ table! {
     }
 }
 
+joinable!(upload_views -> uploads (upload_id));
 joinable!(uploads -> users (uploader_user_id));
 
-allow_tables_to_appear_in_same_query!(uploads, users,);
+allow_tables_to_appear_in_same_query!(upload_views, uploads, users,);

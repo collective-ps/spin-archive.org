@@ -1,10 +1,18 @@
+use diesel::prelude::*;
 use diesel::PgConnection;
 use log::{debug, warn};
 use nanoid::nanoid;
 
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
+use crate::schema::upload_views;
 use crate::services::encoder_service;
+
+#[derive(Insertable)]
+#[table_name = "upload_views"]
+pub struct View {
+  pub upload_id: i32,
+}
 
 #[allow(dead_code)]
 pub(crate) enum UploadError {
@@ -80,4 +88,26 @@ pub(crate) fn finalize_upload(
 
 pub fn sanitize_tags<'a>(tags: &'a str) -> String {
   tags.split_whitespace().collect::<Vec<_>>().join(" ")
+}
+
+pub fn increment_view_count(conn: &PgConnection, upload_id: i32) {
+  let view = View { upload_id };
+
+  let _ = view.insert_into(upload_views::table).execute(conn);
+}
+
+pub fn get_view_count(conn: &PgConnection, upload_id: i32) -> i64 {
+  use diesel::prelude::*;
+
+  upload_views::table
+    .select(diesel::dsl::count_star())
+    .filter(upload_views::upload_id.eq(upload_id))
+    .first(conn)
+    .unwrap_or(0)
+}
+
+pub fn get_uploader_user(conn: &PgConnection, upload: &Upload) -> User {
+  use crate::models::user;
+
+  user::get_user_by_id(&conn, upload.uploader_user_id.expect("No uploader user")).unwrap()
 }

@@ -10,6 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::models::user::User;
 use crate::pagination::*;
 use crate::schema::uploads;
 
@@ -61,7 +62,8 @@ pub enum UploadStatus {
   Failed = 3,
 }
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset, Associations)]
+#[belongs_to(User, foreign_key = "uploader_user_id")]
 #[table_name = "uploads"]
 pub struct Upload {
   pub id: i32,

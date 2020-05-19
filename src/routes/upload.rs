@@ -65,7 +65,14 @@ pub(crate) fn get(
 
   match upload::get_by_file_id(&conn, &file_id) {
     Some(upload) => {
+      upload_service::increment_view_count(&conn, upload.id.into());
+      let view_count = upload_service::get_view_count(&conn, upload.id.into());
+      let uploader_user = upload_service::get_uploader_user(&conn, &upload);
+
       context.insert("upload", &upload);
+      context.insert("view_count", &view_count);
+      context.insert("uploader", &uploader_user);
+
       Ok(Template::render("uploads/single", &context))
     }
     None => Err(Redirect::to("/404")),
