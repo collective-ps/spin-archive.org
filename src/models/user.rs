@@ -60,7 +60,7 @@ pub struct User {
 
 impl User {
   pub fn can_upload(&self) -> bool {
-    self.role != UserRole::Limited
+    vec![UserRole::Contributor, UserRole::Moderator, UserRole::Admin].contains(&self.role)
   }
 }
 
