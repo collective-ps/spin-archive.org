@@ -11,8 +11,8 @@
       content="spin-archive.org is an internet archive project dedicated to preserving the history of pen spinning."
     />
 
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.2/plyr.css" />
     <link rel="stylesheet" type="text/css" href="/public/app.css" />
-
 
     {% block head %}
     <meta property="og:title" content="spin-archive.org" />
