@@ -1,7 +1,7 @@
 {% extends "base" %}
 
 {% block content %}
-<main class="text-center">
+<main class="text-center" id="login-page">
   <p>You need an account to be able to contribute to the archive project.</p>
   <form action="/login" method="post">
     <fieldset>
@@ -13,6 +13,7 @@
       <input type="password" name="password" id="password" required />
     </fieldset>
     <input type="submit" value="Login" />
+    <a class="register" href="/register">Create an account</a>
   </form>
 </main>
 {% endblock content %}

@@ -7,6 +7,7 @@
   </div>
 
   <div class="content">
+    <a href="/u/{{ upload.file_id }}">Back to upload</a>
     <form action="/upload/{{ upload.file_id }}" method="POST">
       <fieldset>
         <label for="tags">Tags (space-separated)</label>

@@ -1,6 +1,7 @@
 import '../css/reset.css'
 import 'wingcss'
 import '../css/index.css'
+import '../css/login.css'
 
 import React from 'react'
 import ReactDOM from 'react-dom'

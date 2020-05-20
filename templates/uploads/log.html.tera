@@ -58,6 +58,7 @@
   </div>
 
   <div class="content">
+    <a href="/u/{{ upload.file_id }}">Back to upload</a>
     <ol class="audit-log">
       {% for tuple in audit_log %}
         {% set log = tuple.0 %}

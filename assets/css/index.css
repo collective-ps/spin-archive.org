@@ -31,7 +31,6 @@ main {
 footer {
   margin-left: auto;
   margin-right: auto;
-  min-width: 600px;
   max-width: 900px;
   padding-bottom: 2em;
 
@@ -66,7 +65,12 @@ footer {
 }
 
 .nav {
+  padding: 0 2rem;
+}
+
+.nav .col {
   padding: 0;
+  margin: 0;
 }
 
 .nav-logo {
@@ -78,6 +82,8 @@ footer {
   text-decoration: none;
   font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
   font-size: 1.25rem;
+  display: inline-block;
+  padding: 0.5rem;
 }
 
 .reverse {
@@ -141,4 +147,41 @@ footer {
   border-radius: 4px;
   border: 1px solid #7e818b;
   margin-top: 1rem;
+}
+
+#login-page,
+#registration-page {
+  max-width: 600px;
+  padding-top: 5em;
+}
+
+@media only screen and (max-width: 500px) {
+  .nav .col {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .two-column-page {
+    flex-direction: column;
+  }
+
+  .two-column-page .sidebar {
+    width: 100%;
+    text-align: center;
+  }
+
+  .upload-grid {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .upload-grid .upload {
+    width: 100%;
+    height: auto;
+  }
+
+  .pagination {
+    text-align: center;
+  }
 }
