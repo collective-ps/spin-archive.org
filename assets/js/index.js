@@ -15,7 +15,48 @@ if (document.getElementById('upload-page')) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-  if (document.getElementById('video-player')) {
-    const player = new Plyr('#video-player')
+  const frameTime = 1 / 30
+  let $video = document.getElementById('video-player')
+
+  if ($video) {
+    const player = new Plyr('#video-player', {
+      speed: {
+        selected: 1,
+        options: [0.1, 0.25, 0.5, 0.75, 1],
+      },
+      keyboard: {
+        focused: true,
+        global: true,
+      },
+      controls: [
+        'restart', // Restart playback
+        'play', // Play/pause playback
+        'progress', // The progress bar and scrubber for playback and buffering
+        'current-time', // The current time of playback
+        'duration', // The full duration of the media
+        'mute', // Toggle mute
+        'volume', // Volume control
+        'captions', // Toggle captions
+        'settings', // Settings menu
+        'pip', // Picture-in-picture (currently Safari only)
+        'airplay', // Airplay (currently Safari only)
+        'fullscreen', // Toggle fullscreen
+      ],
+    })
+
+    window.addEventListener('keypress', function (evt) {
+      if (player.paused) {
+        if (evt.keyCode === 44) {
+          // ',' = back one frame
+          player.currentTime = Math.max(0, player.currentTime - frameTime)
+        } else if (evt.keyCode === 46) {
+          // '.' = forward one frame
+          player.currentTime = Math.min(
+            player.duration,
+            player.currentTime + frameTime
+          )
+        }
+      }
+    })
   }
 })
