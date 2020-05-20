@@ -9,8 +9,8 @@ use serde_json::Value;
 use crate::database::DatabaseConnection;
 use crate::models::upload::{self, FinishedEncodingUpload, Upload, UploadStatus};
 
-const HOST: &'static str = "https://nyc3.digitaloceanspaces.com";
-const BUCKET: &'static str = "spin-archive";
+const HOST: &'static str = "https://s3.us-west-1.wasabisys.com";
+const BUCKET: &'static str = "bits.spin-archive.org";
 const WEBHOOK_BASE: &'static str = "https://spin-archive.org/webhooks/video";
 
 #[derive(Debug, Serialize, Deserialize)]
