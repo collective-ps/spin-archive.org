@@ -3,6 +3,11 @@
 {% block content %}
 <main id="index-page" class="two-column-page">
   <div class="sidebar upload-metadata">
+    <div class="search">
+      <form action="/" method="GET">
+        <input type="text" name="q" value="{{ query }}">
+      </form>
+    </div>
     <div class="upload-tags">
       <label>Tags</label>
       {% if tags %}
@@ -55,10 +60,28 @@
 
     {% if page_count %}
     <div class="pagination">
+      {% for i in range(start=1, end=5) | reverse %}
+        {% if page - i > 0 %}
+          {% if query %}
+            <a href="/?q={{ query }}&page={{ page - i}}">{{ page - i}}</a>
+          {% else %}
+            <a href="/?page={{ page - i}}">{{ page - i}}</a>
+          {% endif %}
+        {% endif %}
+      {% endfor %}
+
       <span>{{page}}</span>
 
       {% if page_count > page %}
-        <a href="/?page={{ page + 1}}">{{ page + 1}}</a>
+        {% for i in range(start=1, end=5) %}
+          {% if page + i <= page_count %}
+            {% if query %}
+              <a href="/?q={{ query }}&page={{ page + i}}">{{ page + i}}</a>
+            {% else %}
+              <a href="/?page={{ page + i}}">{{ page + i}}</a>
+            {% endif %}
+          {% endif %}
+        {% endfor %}
       {% endif %}
     </div>
     {% endif %}

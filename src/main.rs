@@ -46,7 +46,8 @@ fn index(
 ) -> Template {
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
-    let (uploads, page_count) = models::upload::index(&conn, current_page, q).unwrap();
+    let (uploads, page_count) = models::upload::index(&conn, current_page, q.clone()).unwrap();
+    let query = q.unwrap_or_default();
 
     let mut tags: Vec<&str> = uploads
         .iter()
@@ -63,6 +64,7 @@ fn index(
     context.insert("page_count", &page_count);
     context.insert("page", &current_page);
     context.insert("tags", &tags);
+    context.insert("query", &query);
 
     Template::render("index", &context)
 }

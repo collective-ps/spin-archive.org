@@ -16,6 +16,7 @@ body {
 
 body {
   height: 100vh;
+  min-height: -webkit-fill-available;
   display: flex;
   flex-direction: column;
 }
@@ -156,6 +157,10 @@ footer {
 }
 
 @media only screen and (max-width: 500px) {
+  .nav-logo {
+    padding: 1.5em;
+  }
+
   .nav .col {
     display: flex;
     flex-direction: column;
