@@ -85,10 +85,10 @@
             {% endif %}
           {% endif %}
         {% endfor %}
-        <span>...</span>
 
-        {% if page + 1 < page_count %}
-        <a href="/?page={{ page_count - 1 }}">{{ page_count - 1}}</a>
+        {% if page + 5 <= page_count %}
+        <span>...</span>
+        <a href="/?page={{ page_count }}">{{ page_count }}</a>
         {% endif %}
       {% endif %}
 
