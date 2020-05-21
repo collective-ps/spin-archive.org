@@ -10,7 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::models::user::User;
+use crate::models::user::{self, User};
 use crate::pagination::*;
 use crate::schema::uploads;
 
@@ -244,7 +244,7 @@ pub fn index(
   conn: &PgConnection,
   page: i64,
   q_string: Option<String>,
-) -> QueryResult<(Vec<Upload>, i64)> {
+) -> (Vec<Upload>, Vec<User>, i64) {
   use diesel_full_text_search::*;
 
   let mut sql_query = uploads::table
@@ -257,9 +257,24 @@ pub fn index(
     sql_query = sql_query.filter(tsquery.matches(uploads::tag_index));
   }
 
-  sql_query
+  match sql_query
     .order(uploads::updated_at.desc())
     .paginate(page)
     .per_page(25)
     .load_and_count_pages::<Upload>(&conn)
+    .ok()
+  {
+    Some((uploads, page_count)) => {
+      let mut user_ids = uploads
+        .iter()
+        .filter(|upload| upload.uploader_user_id.is_some())
+        .map(|upload| upload.uploader_user_id.unwrap())
+        .collect::<Vec<i32>>();
+
+      user_ids.dedup();
+
+      (uploads, user::by_ids(&conn, user_ids), page_count)
+    }
+    None => (Vec::default(), Vec::default(), 0),
+  }
 }

@@ -219,3 +219,10 @@ pub(crate) fn login(
     Err(LoginError::InvalidPasswordOrUser)
   }
 }
+
+pub(crate) fn by_ids(conn: &PgConnection, ids: Vec<i32>) -> Vec<User> {
+  users::table
+    .filter(users::id.eq_any(ids))
+    .load::<User>(conn)
+    .unwrap_or_default()
+}

@@ -41,11 +41,14 @@
       {% endif %}
 
       {% for upload in uploads %}
-        <div class="upload" id="{{ upload.file_id }}">
+        {% set uploader = users | filter(attribute="id", value=upload.uploader_user_id) | first %}
+        {% set uploader_username = uploader.username | default(value="unknown") %}
+        <div class="upload" id="{{ upload.file_id }}" data-tags="{{ upload.tag_string }}" data-uploader="{{ uploader_username }}">
           <a href="/u/{{ upload.file_id }}">
             <img
               src="{{ get_thumbnail_url(upload=upload) }}"
               onerror="this.src='https://bits.spin-archive.org/placeholder.jpg'"
+              title="uploader:{{ uploader.username }} {{ upload.tag_string }}"
               class="thumbnail"
             />
            </a>
