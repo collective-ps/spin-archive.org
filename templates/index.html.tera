@@ -86,8 +86,13 @@
           {% endif %}
         {% endfor %}
         <span>...</span>
+
+        {% if page + 1 < page_count %}
         <a href="/?page={{ page_count - 1 }}">{{ page_count - 1}}</a>
+        {% endif %}
       {% endif %}
+
+      <span><small><em>({{ total_count }} results)</em></small></span>
     </div>
     {% endif %}
   </div>

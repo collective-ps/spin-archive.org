@@ -243,6 +243,7 @@ pub fn insert_pending_upload(
 pub fn index(
   conn: &PgConnection,
   page: i64,
+  per_page: i64,
   q_string: Option<String>,
 ) -> (Vec<Upload>, Vec<User>, i64) {
   use diesel_full_text_search::*;
@@ -260,7 +261,7 @@ pub fn index(
   match sql_query
     .order(uploads::updated_at.desc())
     .paginate(page)
-    .per_page(25)
+    .per_page(per_page)
     .load_and_count_pages::<Upload>(&conn)
     .ok()
   {
