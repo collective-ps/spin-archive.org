@@ -15,6 +15,7 @@ table! {
     upload_views (id) {
         id -> Int8,
         upload_id -> Int4,
+        viewed_at -> Timestamp,
     }
 }
 

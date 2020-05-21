@@ -82,6 +82,8 @@
             {% endif %}
           {% endif %}
         {% endfor %}
+        <span>...</span>
+        <a href="/?page={{ page_count - 1 }}">{{ page_count - 1}}</a>
       {% endif %}
     </div>
     {% endif %}
