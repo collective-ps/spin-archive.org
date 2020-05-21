@@ -23,6 +23,7 @@
     {% endblock %}
   </head>
   <body>
+    <span id="top"></span>
     {% block index %}
     <header>
       <nav class="nav row">
