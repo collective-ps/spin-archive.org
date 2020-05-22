@@ -1,3 +1,4 @@
+use chrono::NaiveDate;
 use diesel::prelude::*;
 use diesel::PgConnection;
 use log::{debug, warn};
@@ -49,6 +50,7 @@ pub(crate) fn finalize_upload(
   tags: &str,
   source: &str,
   description: &str,
+  original_upload_date: Option<NaiveDate>,
 ) -> Result<Upload, UploadError> {
   match upload::get_by_file_id(&conn, &file_id) {
     Some(
@@ -63,6 +65,7 @@ pub(crate) fn finalize_upload(
         tag_string: sanitize_tags(tags),
         source: Some(source.to_owned()),
         description: description.to_string(),
+        original_upload_date,
       };
 
       match upload::update(&conn, &update_upload) {
@@ -97,6 +100,7 @@ pub(crate) fn update_upload(
   tags: &str,
   source: &str,
   description: &str,
+  original_upload_date: Option<NaiveDate>,
 ) -> Result<Upload, UploadError> {
   match upload::get_by_file_id(&conn, &file_id) {
     Some(upload) => {
@@ -108,6 +112,7 @@ pub(crate) fn update_upload(
         tag_string: new_tag_string.clone(),
         source: Some(source.to_owned()),
         description: description.to_string(),
+        original_upload_date,
       };
 
       audit_service::create_audit_log(

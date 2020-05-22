@@ -63,6 +63,11 @@
     <div class="edit-date">
       <small>Last Edited: {{ upload.updated_at | date(format="%Y-%m-%d %H:%M") }}</small>
     </div>
+    {% if upload.original_upload_date %}
+    <div class="upload-date">
+      <small>Original Upload Date: {{ upload.original_upload_date }}</small>
+    </div>
+    {% endif %}
     <div class="original-filename">
       <small>Original Filename: {{ upload.file_name }}</small>
     </div>

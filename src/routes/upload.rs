@@ -36,6 +36,7 @@ pub struct FinalizeUploadRequest {
   tags: String,
   source: String,
   description: String,
+  original_upload_date: Option<String>,
 }
 
 #[derive(Debug, FromForm)]
@@ -43,6 +44,7 @@ pub struct UpdateUploadRequest {
   tags: String,
   source: Option<String>,
   description: String,
+  original_upload_date: Option<String>,
 }
 
 #[rocket::get("/upload")]
@@ -227,12 +229,23 @@ pub(crate) fn finalize(
     return Err(BadRequest(None));
   }
 
+  let parsed_original_date = match &request.original_upload_date {
+    Some(date) if date.is_empty() => Ok(None),
+    Some(date) => chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d").map(|result| Some(result)),
+    _ => Ok(None),
+  };
+
+  if let Err(_) = parsed_original_date {
+    return Err(BadRequest(None));
+  }
+
   match upload_service::finalize_upload(
     &conn,
     &file_id,
     &request.tags,
     &request.source,
     &request.description,
+    parsed_original_date.unwrap(),
   ) {
     Ok(_upload) => Ok(Json(FinalizeUploadResponse {})),
     Err(_err) => Err(BadRequest(None)),
@@ -252,9 +265,16 @@ pub(crate) fn update(
     return Flash::error(Redirect::to(path), "");
   }
 
-  dbg!(&request);
-
   let source = request.source.as_ref().unwrap_or(&"".to_string()).clone();
+  let parsed_original_date = match &request.original_upload_date {
+    Some(date) if date.is_empty() => Ok(None),
+    Some(date) => chrono::NaiveDate::parse_from_str(&date, "%Y-%m-%d").map(|result| Some(result)),
+    _ => Ok(None),
+  };
+
+  if let Err(_) = parsed_original_date {
+    return Flash::error(Redirect::to(path), "Invalid original upload date");
+  }
 
   match upload_service::update_upload(
     &conn,
@@ -263,6 +283,7 @@ pub(crate) fn update(
     &request.tags,
     &source,
     &request.description,
+    parsed_original_date.unwrap(),
   ) {
     Ok(_upload) => Flash::success(Redirect::to(path), "Edited!"),
     Err(_err) => Flash::error(

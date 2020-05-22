@@ -18,6 +18,10 @@
         <input type="text" id="source" name="source" value="{{ upload.source }}">
       </fieldset>
       <fieldset>
+        <label for="original_upload_date">Original Upload Date <small>(if uncertain, use first day of month / year approximately)</small></label>
+        <input type="date" id="original_upload_date" name="original_upload_date" value="{{ upload.original_upload_date }}">
+      </fieldset>
+      <fieldset>
         <label for="description">Description</label>
         <textarea id="description" name="description">{{ upload.description }}</textarea>
       </fieldset>

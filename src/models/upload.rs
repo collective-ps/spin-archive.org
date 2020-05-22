@@ -1,6 +1,6 @@
 use std::io::Write;
 
-use chrono::NaiveDateTime;
+use chrono::{NaiveDate, NaiveDateTime};
 use diesel::{
   deserialize::{self, FromSql},
   expression::{helper_types::AsExprOf, AsExpression},
@@ -31,6 +31,7 @@ type AllColumns = (
   uploads::thumbnail_url,
   uploads::video_url,
   uploads::description,
+  uploads::original_upload_date,
 );
 
 pub const ALL_COLUMNS: AllColumns = (
@@ -50,6 +51,7 @@ pub const ALL_COLUMNS: AllColumns = (
   uploads::thumbnail_url,
   uploads::video_url,
   uploads::description,
+  uploads::original_upload_date,
 );
 
 #[allow(dead_code)]
@@ -84,6 +86,7 @@ pub struct Upload {
   pub thumbnail_url: Option<String>,
   pub video_url: Option<String>,
   pub description: String,
+  pub original_upload_date: Option<NaiveDate>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
@@ -94,6 +97,34 @@ pub struct UpdateUpload {
   pub source: Option<String>,
   pub tag_string: String,
   pub description: String,
+  pub original_upload_date: Option<NaiveDate>,
+}
+
+#[derive(Insertable)]
+#[table_name = "uploads"]
+pub struct PendingUpload {
+  pub status: UploadStatus,
+  pub file_id: String,
+  pub video_encoding_key: String,
+  pub uploader_user_id: i32,
+  pub file_name: String,
+  pub file_ext: String,
+}
+
+#[derive(Insertable)]
+#[table_name = "uploads"]
+pub struct FinalizeUpload {
+  pub status: UploadStatus,
+  pub tag_string: String,
+  pub original_upload_date: Option<NaiveDate>,
+}
+
+#[derive(AsChangeset)]
+#[table_name = "uploads"]
+pub struct FinishedEncodingUpload {
+  pub status: UploadStatus,
+  pub thumbnail_url: String,
+  pub video_url: String,
 }
 
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
@@ -156,32 +187,6 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
   fn as_expression(self) -> Self::Expression {
     <i16 as AsExpression<sql_types::SmallInt>>::as_expression(*self as i16)
   }
-}
-
-#[derive(Insertable)]
-#[table_name = "uploads"]
-pub struct PendingUpload {
-  pub status: UploadStatus,
-  pub file_id: String,
-  pub video_encoding_key: String,
-  pub uploader_user_id: i32,
-  pub file_name: String,
-  pub file_ext: String,
-}
-
-#[derive(Insertable)]
-#[table_name = "uploads"]
-pub struct FinalizeUpload {
-  pub status: UploadStatus,
-  pub tag_string: String,
-}
-
-#[derive(AsChangeset)]
-#[table_name = "uploads"]
-pub struct FinishedEncodingUpload {
-  pub status: UploadStatus,
-  pub thumbnail_url: String,
-  pub video_url: String,
 }
 
 /// Gets an [`Upload`] by `file_id`.

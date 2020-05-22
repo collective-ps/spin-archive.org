@@ -41,6 +41,7 @@ table! {
         thumbnail_url -> Nullable<Text>,
         video_url -> Nullable<Text>,
         description -> Text,
+        original_upload_date -> Nullable<Date>,
     }
 }
 

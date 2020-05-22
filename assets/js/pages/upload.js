@@ -22,12 +22,16 @@ const File = ({ file }) => {
   const { value: tags, bind: bindTags } = useInput('')
   const { value: source, bind: bindSource } = useInput('')
   const { value: description, bind: bindDescription } = useInput('')
+  const { value: originalUploadDate, bind: bindOriginalUploadDate } = useInput(
+    ''
+  )
 
   useEffect(() => {
     file.meta.tags = tags
     file.meta.source = source
     file.meta.description = description
-  }, [file, tags, source, description])
+    file.meta.originalUploadDate = originalUploadDate
+  }, [file, tags, source, description, originalUploadDate])
 
   return (
     <div className='file'>
@@ -47,8 +51,21 @@ const File = ({ file }) => {
       </fieldset>
       <fieldset>
         <label>
+          Original Upload Date{' '}
+          <small>
+            (if uncertain, use first day of month / year approximately)
+          </small>
+          <input
+            type='date'
+            value={originalUploadDate}
+            {...bindOriginalUploadDate}
+          />
+        </label>
+      </fieldset>
+      <fieldset>
+        <label>
           Description
-          <textarea value={source} {...bindDescription} />
+          <textarea value={description} {...bindDescription} />
         </label>
       </fieldset>
     </div>
@@ -98,6 +115,7 @@ const UploadPage = () => {
           tags: file.meta.tags,
           source: file.meta.source,
           description: file.meta.description,
+          original_upload_date: file.meta.originalUploadDate,
         }),
         headers: {
           'Content-Type': 'application/json',
