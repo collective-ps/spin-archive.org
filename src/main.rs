@@ -136,6 +136,9 @@ fn main() {
                 .register_function("split_tags", context::split_tags());
 
             engines.tera.register_filter("tag_url", context::tag_url);
+            engines
+                .tera
+                .register_filter("humanized_past", context::humanized_past);
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
@@ -162,6 +165,9 @@ fn main() {
                 routes::upload::log,
                 routes::upload::update,
                 routes::upload::upload,
+                routes::upload::create_comment,
+                routes::upload::edit_comment,
+                routes::upload::edit_comment_page,
                 routes::webhooks::video::webhook
             ],
         )

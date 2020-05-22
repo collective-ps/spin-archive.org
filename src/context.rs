@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use chrono::{NaiveDateTime, Utc};
 use rocket::request::FlashMessage;
 use rocket_contrib::templates::tera::{
   Context as TeraContext, Result as TeraResult, Value as TeraValue,
@@ -19,7 +20,7 @@ pub(crate) fn flash_context(context: &mut TeraContext, flash: Option<FlashMessag
 
 pub(crate) fn user_context(context: &mut TeraContext, user: Option<&User>) {
   if let Some(user) = user {
-    context.insert("user_id", &user.id.to_string());
+    context.insert("user_id", &user.id);
     context.insert("user_role", &user.role.to_string());
     context.insert("user_can_upload", &user.can_upload());
     context.insert("username", &user.username.clone());
@@ -99,5 +100,21 @@ pub fn tag_url(value: TeraValue, _args: HashMap<String, TeraValue>) -> TeraResul
       Ok(serde_json::to_value(url).unwrap())
     }
     Err(_) => Err("Could not get tags".into()),
+  }
+}
+
+pub fn humanized_past(
+  value: TeraValue,
+  _args: HashMap<String, TeraValue>,
+) -> TeraResult<TeraValue> {
+  match serde_json::from_value::<NaiveDateTime>(value.clone()) {
+    Ok(date) => {
+      let now = Utc::now().naive_utc();
+      let duration = now - date;
+      let formatter = timeago::Formatter::new();
+      let humanized_date = formatter.convert(duration.to_std().unwrap());
+      Ok(serde_json::to_value(humanized_date).unwrap())
+    }
+    Err(_) => Err("Could not get datetime".into()),
   }
 }

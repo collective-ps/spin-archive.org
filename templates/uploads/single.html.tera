@@ -94,6 +94,53 @@
     {% if upload.description != '' %}
     <div class="description"><h5>Description</h5>{{ upload.description }}</div>
     {% endif %}
+    <div class="comments">
+      <ol class="comment-list">
+        {% for comment_author in comments_with_authors %}
+          {% set comment = comment_author.0 %}
+          {% set author = comment_author.1 %}
+          {% set show_user_role = author.role != "Registered" %}
+          {% set is_author = author.id == user_id %}
+          {% set edited = comment.created_at != comment.updated_at %}
+
+          <li class="comment">
+            <div class="author">
+              <div class="username">{{ author.username }}</div>
+              {% if show_user_role %}
+                <div class="role" data-role="{{ author.role | lower }}">[{{ author.role }}]</div>
+              {% endif %}
+              <div class="date"><small><em>({{ comment.created_at | humanized_past }})</em></small></div>
+              {% if edited%}
+              <span>*</span>
+              {% endif %}
+            </div>
+            <div class="comment-content">{{ comment.comment }}</div>
+            <div class="actions">
+              {% if is_author %}
+              <a href="/u/{{ upload.file_id }}/comments/{{ comment.id }}/edit">Edit</a>
+              {% endif %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+      {% if comments_with_authors | length == 0 %}
+      <div class="no-comments">No comments posted.</div>
+      {% endif %}
+      <hr />
+      <div class="comment-composer">
+        {% if user_id %}
+        <form action="/u/{{ upload.file_id}}/comments" method="POST">
+          <fieldset>
+            <label for="comment"><em>Post a comment</em></label>
+            <textarea id="comment" name="comment"></textarea>
+          </fieldset>
+          <input type="submit" value="Submit">
+        </form>
+        {% else %}
+        <span>You must be logged in to comment.</span>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </main>
 {% endblock content %}

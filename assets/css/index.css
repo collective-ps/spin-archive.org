@@ -5,6 +5,9 @@
   --color-darkGrey: #3f4144;
   --color-error: #d43939;
   --color-success: #28bd14;
+  --color-contributor: #4d98af;
+  --color-moderator: #1a9f60;
+  --color-admin: #a53f2b;
 }
 
 html,
@@ -156,6 +159,62 @@ footer {
   border-radius: 4px;
   border: 1px solid #7e818b;
   margin-top: 1rem;
+}
+
+.no-comments {
+  color: var(--color-grey);
+  margin: 2rem 0;
+}
+
+.comment-list {
+  list-style: none;
+  margin: 2rem 0;
+  border-radius: 4px;
+}
+
+.comment-list .comment {
+  padding: 1rem;
+  background-color: var(--color-lightGrey);
+}
+
+.comment .author .username,
+.comment .author .role,
+.comment .author .date {
+  display: inline-block;
+}
+
+.comment .author .username {
+  text-decoration: none;
+  font-family: Consolas, Monaco, Menlo, monospace;
+}
+
+.comment .author .role {
+  font-weight: 500;
+  font-size: 10pt;
+}
+
+.comment .author .role[data-role='admin'] {
+  color: var(--color-admin);
+}
+
+.comment .author .role[data-role='moderator'] {
+  color: var(--color-moderator);
+}
+
+.comment .author .role[data-role='contributor'] {
+  color: var(--color-contributor);
+}
+
+.comment .author .date {
+  color: var(--color-grey);
+}
+
+.comment .comment-content {
+  white-space: pre-line;
+}
+
+.comment .actions {
+  font-size: 10pt;
 }
 
 #login-page,
