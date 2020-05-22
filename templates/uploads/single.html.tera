@@ -100,7 +100,7 @@
           {% set comment = comment_author.0 %}
           {% set author = comment_author.1 %}
           {% set show_user_role = author.role != "Registered" %}
-          {% set is_author = author.id == user_id %}
+          {% set is_author = user_id and author.id == user_id %}
           {% set edited = comment.created_at != comment.updated_at %}
 
           <li class="comment">
@@ -110,7 +110,7 @@
                 <div class="role" data-role="{{ author.role | lower }}">[{{ author.role }}]</div>
               {% endif %}
               <div class="date"><small><em>({{ comment.created_at | humanized_past }})</em></small></div>
-              {% if edited%}
+              {% if edited %}
               <span>*</span>
               {% endif %}
             </div>
