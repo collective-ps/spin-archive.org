@@ -123,7 +123,8 @@ footer {
 }
 
 .upload {
-  height: 500px;
+  height: 100%;
+  max-height: 750px;
 }
 
 .upload .video-player {

@@ -56,5 +56,7 @@
 
   <script type="text/javascript" src="/public/app.bundle.js"></script>
 
+  {% block footer %}
   {% include "partials/footer" %}
+  {% endblock footer %}
 </html>

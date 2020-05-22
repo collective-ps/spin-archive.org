@@ -87,6 +87,34 @@ pub(crate) fn get(
   }
 }
 
+#[rocket::get("/u/<file_id>/embed")]
+pub(crate) fn embed(
+  conn: DatabaseConnection,
+  flash: Option<FlashMessage>,
+  user: Option<&User>,
+  file_id: String,
+) -> Result<Template, Redirect> {
+  let mut context = TeraContext::new();
+
+  context::flash_context(&mut context, flash);
+  context::user_context(&mut context, user);
+
+  match upload::get_by_file_id(&conn, &file_id) {
+    Some(upload) => {
+      upload_service::increment_view_count(&conn, upload.id.into());
+      let view_count = upload_service::get_view_count(&conn, upload.id.into());
+      let uploader_user = upload_service::get_uploader_user(&conn, &upload);
+
+      context.insert("upload", &upload);
+      context.insert("view_count", &view_count);
+      context.insert("uploader", &uploader_user);
+
+      Ok(Template::render("uploads/embed", &context))
+    }
+    None => Err(Redirect::to("/404")),
+  }
+}
+
 #[rocket::get("/u/<file_id>/edit")]
 pub(crate) fn edit(
   conn: DatabaseConnection,

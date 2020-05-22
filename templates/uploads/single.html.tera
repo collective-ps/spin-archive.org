@@ -13,6 +13,14 @@
   property="og:description"
   content="{{ upload.tag_string }}"
 />
+<meta name="twitter:card" content="player" />
+<meta name="twitter:site" content="@spin_archive" />
+<meta name="twitter:title" content="spin-archive.org" />
+<meta name="twitter:description" content="{{ upload.tag_string }}" />
+<meta name="twitter:image" content="{{ get_thumbnail_url(upload=upload) | safe }}" />
+<meta name="twitter:player" content="https://spin-archive.org/u/{{ upload.file_id }}/embed" />
+<meta name="twitter:player:width" content="480" />
+<meta name="twitter:player:height" content="347" />
 {% endif %}
 {% endblock %}
 
