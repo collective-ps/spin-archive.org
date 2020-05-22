@@ -21,6 +21,10 @@ input[type='date'] {
   display: block;
 }
 
+textarea {
+  padding: 1rem;
+}
+
 body {
   height: 100%;
   min-height: -webkit-fill-available;
