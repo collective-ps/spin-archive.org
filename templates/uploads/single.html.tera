@@ -45,7 +45,7 @@
     {% if upload.source %}
     <div class="upload-source">
       <label>Source</label>
-      <div>{{ upload.source }}</div>
+      <a rel="noreferrer noopener" target="_blank" href="{{ upload.source }}">{{ upload.source }}</a>
     </div>
     {% endif %}
     {% if view_count %}
@@ -92,7 +92,7 @@
     <a download href="{{ get_file_url(upload=upload) | safe }}">Save this video (right-click and save)</a> <a download href="{{ get_video_url(upload=upload) | safe }}">(mp4)</a>
     {% endif %}
     {% if upload.description != '' %}
-    <div class="description"><h5>Description</h5>{{ upload.description }}</div>
+    <div class="description"><h5>Description</h5>{{ upload.description | from_markdown }}</div>
     {% endif %}
     <div class="comments">
       <ol class="comment-list">
@@ -114,7 +114,7 @@
               <span>*</span>
               {% endif %}
             </div>
-            <div class="comment-content">{{ comment.comment }}</div>
+            <div class="comment-content">{{ comment.comment | from_markdown }}</div>
             <div class="actions">
               {% if is_author %}
               <a href="/u/{{ upload.file_id }}/comments/{{ comment.id }}/edit">Edit</a>

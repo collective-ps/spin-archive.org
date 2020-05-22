@@ -139,6 +139,10 @@ fn main() {
             engines
                 .tera
                 .register_filter("humanized_past", context::humanized_past);
+
+            engines
+                .tera
+                .register_filter("from_markdown", context::from_markdown);
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",

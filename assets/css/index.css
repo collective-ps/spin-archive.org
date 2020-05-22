@@ -209,10 +209,6 @@ footer {
   color: var(--color-grey);
 }
 
-.comment .comment-content {
-  white-space: pre-line;
-}
-
 .comment .actions {
   font-size: 10pt;
 }
