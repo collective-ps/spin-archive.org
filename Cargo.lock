@@ -2073,6 +2073,7 @@ dependencies = [
  "log 0.4.8",
  "mime_guess",
  "nanoid",
+ "regex",
  "reqwest",
  "rocket",
  "rocket_contrib",

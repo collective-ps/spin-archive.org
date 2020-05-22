@@ -12,6 +12,17 @@ table! {
 }
 
 table! {
+    upload_comments (id) {
+        id -> Int8,
+        upload_id -> Int4,
+        user_id -> Int4,
+        comment -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
     upload_views (id) {
         id -> Int8,
         upload_id -> Int4,
@@ -58,7 +69,9 @@ table! {
 }
 
 joinable!(audit_log -> users (changed_by));
+joinable!(upload_comments -> uploads (upload_id));
+joinable!(upload_comments -> users (user_id));
 joinable!(upload_views -> uploads (upload_id));
 joinable!(uploads -> users (uploader_user_id));
 
-allow_tables_to_appear_in_same_query!(audit_log, upload_views, uploads, users,);
+allow_tables_to_appear_in_same_query!(audit_log, upload_comments, upload_views, uploads, users,);

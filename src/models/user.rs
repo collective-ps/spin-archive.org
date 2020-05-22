@@ -137,7 +137,7 @@ struct NewUser {
 #[derive(Debug, FromForm)]
 pub struct RegistrationFields {
   email: Option<String>,
-  username: String,
+  pub username: String,
   password: String,
   confirm_password: String,
 }

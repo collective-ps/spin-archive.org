@@ -23,8 +23,18 @@ pub(crate) fn index(flash: Option<FlashMessage>) -> Template {
 
 #[rocket::post("/register", data = "<form>")]
 pub(crate) fn post(conn: DatabaseConnection, form: Form<RegistrationFields>) -> Flash<Redirect> {
+  // @TODO(vy): Move username validation to somewhere else.
+  let re = regex::Regex::new(r"^[a-z_\d]*$").unwrap();
+
+  if !re.is_match(&form.username) || form.username.len() > 20 {
+    return Flash::error(
+      Redirect::to("/register"),
+      "Invalid username. Must be no longer than 20 characters, and only contain letters + numbers + underscores.",
+    );
+  }
+
   match user::register(&conn, form.into_inner()) {
-    Ok(_) => Flash::success(Redirect::to("/"), ""),
+    Ok(_) => Flash::success(Redirect::to("/login"), "Account created!"),
     Err(err) => match err {
       RegistrationError::PasswordFailure => Flash::error(
         Redirect::to("/register"),
