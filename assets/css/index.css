@@ -21,6 +21,10 @@ input[type='date'] {
   display: block;
 }
 
+button {
+  cursor: pointer;
+}
+
 textarea {
   padding: 1rem;
 }

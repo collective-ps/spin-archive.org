@@ -172,9 +172,10 @@ fn main() {
                 routes::upload::create_comment,
                 routes::upload::edit_comment,
                 routes::upload::edit_comment_page,
-                routes::webhooks::video::webhook
+                routes::webhooks::video::webhook,
             ],
         )
+        .mount("/admin", routes::admin::router())
         .mount(
             "/public",
             StaticFiles::from(format!("{}/{}", current_dir, "build")),

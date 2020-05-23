@@ -12,6 +12,16 @@ table! {
 }
 
 table! {
+    tags (id) {
+        id -> Int8,
+        name -> Text,
+        description -> Text,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
     upload_comments (id) {
         id -> Int8,
         upload_id -> Int4,
@@ -74,4 +84,11 @@ joinable!(upload_comments -> users (user_id));
 joinable!(upload_views -> uploads (upload_id));
 joinable!(uploads -> users (uploader_user_id));
 
-allow_tables_to_appear_in_same_query!(audit_log, upload_comments, upload_views, uploads, users,);
+allow_tables_to_appear_in_same_query!(
+    audit_log,
+    tags,
+    upload_comments,
+    upload_views,
+    uploads,
+    users,
+);

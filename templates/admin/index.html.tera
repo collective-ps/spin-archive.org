@@ -1,0 +1,9 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="text-center">
+  <form action="/admin/actions/rebuild_tags" method="POST">
+    <button type='submit'>Rebuild Tags</button>
+  </form>
+</main>
+{% endblock content %}

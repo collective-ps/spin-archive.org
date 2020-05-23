@@ -8,7 +8,7 @@ use crate::models::audit_log::{self, AuditLog};
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
 use crate::schema::upload_views;
-use crate::services::{audit_service, encoder_service};
+use crate::services::{audit_service, encoder_service, tag_service};
 
 #[derive(Insertable)]
 #[table_name = "upload_views"]
@@ -70,6 +70,8 @@ pub(crate) fn finalize_upload(
 
       match upload::update(&conn, &update_upload) {
         Ok(upload) => {
+          after_edit_hooks(&conn, &upload);
+
           match encoder_service::enqueue_upload(&upload) {
             Ok(_job) => {
               debug!("[encoding] Started job id {}", upload.video_encoding_key);
@@ -146,7 +148,10 @@ pub(crate) fn update_upload(
       );
 
       match upload::update(&conn, &update_upload) {
-        Ok(upload) => Ok(upload),
+        Ok(upload) => {
+          after_edit_hooks(&conn, &upload);
+          Ok(upload)
+        }
         Err(_err) => Err(UploadError::DatabaseError),
       }
     }
@@ -154,10 +159,15 @@ pub(crate) fn update_upload(
   }
 }
 
+pub fn after_edit_hooks(conn: &PgConnection, upload: &Upload) {
+  let _ = tag_service::create_from_tag_string(&conn, &upload.tag_string);
+}
+
 pub fn sanitize_tags<'a>(tags: &'a str) -> String {
   tags
     .split_whitespace()
     .map(|str| str.to_lowercase())
+    .filter(|str| str.len() <= 60)
     .collect::<Vec<_>>()
     .join(" ")
 }
