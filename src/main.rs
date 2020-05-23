@@ -175,6 +175,7 @@ fn main() {
                 routes::webhooks::video::webhook,
             ],
         )
+        .mount("/api/v1", routes::api::router())
         .mount("/admin", routes::admin::router())
         .mount(
             "/public",

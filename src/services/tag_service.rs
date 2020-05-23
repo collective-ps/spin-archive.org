@@ -3,8 +3,8 @@ use std::collections::HashSet;
 use diesel::PgConnection;
 use log::debug;
 
-use crate::models::tag::{self, NewTag, Tag};
-use crate::models::upload::{Upload, UploadStatus};
+use crate::models::tag::{self, NewTag};
+use crate::models::upload::UploadStatus;
 use crate::schema::uploads;
 
 pub fn create_from_tag_string(conn: &PgConnection, tag_string: &str) {

@@ -37,3 +37,12 @@ pub fn by_names(conn: &PgConnection, tag_names: &Vec<String>) -> Vec<Tag> {
     .load::<Tag>(conn)
     .unwrap_or_default()
 }
+
+/// Gets tags by their corresponding name.
+pub fn starting_with(conn: &PgConnection, prefix: &str) -> Vec<Tag> {
+  tags::table
+    .filter(tags::name.ilike(&format!("{}%", prefix)))
+    .limit(25)
+    .load::<Tag>(conn)
+    .unwrap_or_default()
+}
