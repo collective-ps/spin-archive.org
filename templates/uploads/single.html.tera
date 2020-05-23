@@ -25,23 +25,10 @@
 {% endblock %}
 
 {% block content %}
-{% set tags = split_tags(tags=upload.tag_string) %}
 <main class="two-column-page">
   <div class="sidebar upload-metadata">
-    <div class="upload-tags">
-      <label>Tags</label>
-      {% set tag_count = tags | length %}
-      {% if tag_count == 0 %}
-      <div>
-        No tags were found.
-      </div>
-      {% endif %}
-      <ol>
-        {% for tag in tags%}
-          <li><a href="{{ tag | tag_url() }}">{{ tag }}</a></li>
-        {% endfor %}
-      </ol>
-    </div>
+    {% include "partials/tag_list" %}
+
     {% if upload.source %}
     <div class="upload-source">
       <label>Source</label>

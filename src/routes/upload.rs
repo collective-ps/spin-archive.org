@@ -14,8 +14,7 @@ use crate::database::DatabaseConnection;
 use crate::models::upload;
 use crate::models::user::User;
 use crate::s3_client::generate_signed_url;
-use crate::services::comment_service;
-use crate::services::upload_service;
+use crate::services::{comment_service, tag_service, upload_service};
 
 #[derive(Serialize, Deserialize)]
 pub struct UploadResponse {
@@ -87,11 +86,14 @@ pub(crate) fn get(
       let view_count = upload_service::get_view_count(&conn, upload.id.into());
       let uploader_user = upload_service::get_uploader_user(&conn, &upload);
       let comments_with_authors = comment_service::get_comments_for_upload(&conn, &upload);
+      let raw_tags = upload.tag_string.split_whitespace().collect::<Vec<&str>>();
+      let tags = tag_service::by_names(&conn, &raw_tags);
 
       context.insert("upload", &upload);
       context.insert("view_count", &view_count);
       context.insert("uploader", &uploader_user);
       context.insert("comments_with_authors", &comments_with_authors);
+      context.insert("tags", &tags);
 
       Ok(Template::render("uploads/single", &context))
     }

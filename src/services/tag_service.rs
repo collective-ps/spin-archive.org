@@ -7,6 +7,8 @@ use crate::models::tag::{self, NewTag, Tag};
 use crate::models::upload::UploadStatus;
 use crate::schema::uploads;
 
+pub use crate::models::tag::by_names;
+
 pub fn create_from_tag_string(conn: &PgConnection, tag_string: &str) {
   let tags = sanitize_tags(tag_string);
 

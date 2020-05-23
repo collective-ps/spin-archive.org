@@ -51,13 +51,15 @@ fn index(
         models::upload::index(&conn, current_page, per_page, q.clone());
     let query = q.unwrap_or_default();
 
-    let mut tags: Vec<&str> = uploads
+    let mut raw_tags: Vec<&str> = uploads
         .iter()
         .flat_map(|upload| upload.tag_string.split_whitespace().collect::<Vec<&str>>())
         .collect();
 
-    tags.sort();
-    tags.dedup();
+    raw_tags.sort();
+    raw_tags.dedup();
+
+    let tags = services::tag_service::by_names(&conn, &raw_tags);
 
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, user);

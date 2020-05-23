@@ -32,9 +32,10 @@ pub fn insert(conn: &PgConnection, tag: &NewTag) -> QueryResult<usize> {
 }
 
 /// Gets tags by their corresponding name.
-pub fn by_names(conn: &PgConnection, tag_names: &Vec<String>) -> Vec<Tag> {
+pub fn by_names(conn: &PgConnection, tag_names: &Vec<&str>) -> Vec<Tag> {
   tags::table
     .filter(tags::name.eq_any(tag_names))
+    .order((tags::name.asc(), tags::upload_count.desc()))
     .load::<Tag>(conn)
     .unwrap_or_default()
 }

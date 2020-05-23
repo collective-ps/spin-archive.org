@@ -1,0 +1,20 @@
+<div class="upload-tags">
+  <label>Tags</label>
+  {% if tags %}
+    {% set tag_count = tags | length %}
+    {% if tag_count == 0 %}
+    <div>
+      No tags were found.
+    </div>
+    {% endif %}
+    <ol>
+      {% for tag in tags %}
+        <li><a href="{{ tag.name | tag_url() }}">{{ tag.name }}</a> <small>({{ tag.upload_count }})</small></li>
+      {% endfor %}
+    </ol>
+  {% else %}
+  <div>
+    No tags were found.
+  </div>
+  {% endif %}
+</div>
