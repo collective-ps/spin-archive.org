@@ -5,5 +5,8 @@
   <form action="/admin/actions/rebuild_tags" method="POST">
     <button type='submit'>Rebuild Tags</button>
   </form>
+  <form action="/admin/actions/rebuild_tag_counts" method="POST">
+    <button type='submit'>Rebuild Tag Counts</button>
+  </form>
 </main>
 {% endblock content %}

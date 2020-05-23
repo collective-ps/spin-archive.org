@@ -39,6 +39,17 @@ pub(crate) fn action_rebuild_tags(user: &User, conn: DatabaseConnection) -> Flas
   }
 }
 
+#[rocket::post("/actions/rebuild_tag_counts")]
+pub(crate) fn action_rebuild_tag_counts(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
+  if user.role == UserRole::Admin {
+    tag_service::rebuild_tag_counts(&conn);
+
+    Flash::success(Redirect::to("/admin"), "Rebuilt tag counts!")
+  } else {
+    Flash::error(Redirect::to("/"), "")
+  }
+}
+
 pub(crate) fn router() -> Vec<rocket::Route> {
-  rocket::routes![index, action_rebuild_tags]
+  rocket::routes![index, action_rebuild_tags, action_rebuild_tag_counts]
 }

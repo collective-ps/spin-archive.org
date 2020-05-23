@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::schema::tags;
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, QueryableByName)]
 #[table_name = "tags"]
 pub struct Tag {
   pub id: i64,
@@ -13,6 +13,7 @@ pub struct Tag {
   pub description: String,
   pub created_at: NaiveDateTime,
   pub updated_at: NaiveDateTime,
+  pub upload_count: i32,
 }
 
 #[derive(Debug, Insertable)]
@@ -42,6 +43,7 @@ pub fn by_names(conn: &PgConnection, tag_names: &Vec<String>) -> Vec<Tag> {
 pub fn starting_with(conn: &PgConnection, prefix: &str) -> Vec<Tag> {
   tags::table
     .filter(tags::name.ilike(&format!("{}%", prefix)))
+    .order(tags::upload_count.desc())
     .limit(25)
     .load::<Tag>(conn)
     .unwrap_or_default()

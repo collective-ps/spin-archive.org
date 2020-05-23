@@ -18,6 +18,7 @@ table! {
         description -> Text,
         created_at -> Timestamp,
         updated_at -> Timestamp,
+        upload_count -> Int4,
     }
 }
 

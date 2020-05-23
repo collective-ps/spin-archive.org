@@ -3,7 +3,7 @@ use std::collections::HashSet;
 use diesel::PgConnection;
 use log::debug;
 
-use crate::models::tag::{self, NewTag};
+use crate::models::tag::{self, NewTag, Tag};
 use crate::models::upload::UploadStatus;
 use crate::schema::uploads;
 
@@ -65,6 +65,38 @@ pub fn rebuild(conn: &PgConnection) {
       break;
     }
   }
+}
+
+pub fn rebuild_tag_counts(conn: &PgConnection) -> Vec<Tag> {
+  use diesel::prelude::*;
+
+  let mut tags = Vec::with_capacity(1000);
+
+  let mut updated_tags = diesel::sql_query(
+    "UPDATE tags SET upload_count = true_count FROM (
+        SELECT tag, COUNT(*) AS true_count
+        FROM uploads,
+        unnest(string_to_array(tag_string, ' ')) AS tag
+        WHERE uploads.status = 2
+        GROUP BY tag
+      ) true_counts WHERE tags.name = tag AND tags.upload_count != true_count RETURNING tags.*",
+  )
+  .load::<Tag>(conn)
+  .unwrap_or_default();
+
+  let mut removed_tags = diesel::sql_query(
+    "UPDATE tags SET upload_count = 0 WHERE upload_count != 0 AND name NOT IN (
+        SELECT DISTINCT tag
+        FROM uploads, unnest(string_to_array(tag_string, ' ')) AS tag
+        GROUP BY tag
+      ) RETURNING tags.*",
+  )
+  .load::<Tag>(conn)
+  .unwrap_or_default();
+
+  tags.append(&mut updated_tags);
+  tags.append(&mut removed_tags);
+  tags
 }
 
 fn dedupe_tags<'a>(tag_strings: &Vec<String>, buffer: &'a mut HashSet<String>) {

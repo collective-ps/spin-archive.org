@@ -6,8 +6,14 @@ use crate::database::DatabaseConnection;
 use crate::models::tag;
 
 #[derive(Serialize, Deserialize)]
+pub struct TagJson {
+  name: String,
+  upload_count: i32,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct SuggestionResponse {
-  tags: Vec<String>,
+  tags: Vec<TagJson>,
 }
 
 #[rocket::get("/tags/suggestions?<q>")]
@@ -18,7 +24,10 @@ pub fn suggestions(
   let prefix = q.unwrap_or_default();
   let tags = tag::starting_with(&conn, &prefix)
     .iter()
-    .map(|tag| tag.name.clone())
+    .map(|tag| TagJson {
+      name: tag.name.clone(),
+      upload_count: tag.upload_count,
+    })
     .collect();
 
   let response = SuggestionResponse { tags };
