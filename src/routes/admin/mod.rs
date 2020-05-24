@@ -77,5 +77,10 @@ pub(crate) fn action_encode_video(
 }
 
 pub(crate) fn router() -> Vec<rocket::Route> {
-  rocket::routes![index, action_rebuild_tags, action_rebuild_tag_counts]
+  rocket::routes![
+    index,
+    action_rebuild_tags,
+    action_rebuild_tag_counts,
+    action_encode_video
+  ]
 }
