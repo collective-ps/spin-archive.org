@@ -9,7 +9,6 @@ RUN apt-get update
 WORKDIR /usr/src/spin-archive
 
 COPY Cargo.toml Cargo.toml
-COPY Cargo.lock Cargo.lock
 
 RUN mkdir src/
 
