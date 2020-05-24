@@ -64,6 +64,16 @@
     {% endif %}
 
     <a href="/u/{{ upload.file_id }}/log" class="nav-item">Log</a>
+
+    {% if user_id and user_role == "admin" %}
+    <div class="admin-actions">
+      <label>Admin Actions</label>
+      <form action="/admin/encode_video" method="POST">
+        <input type="hidden" name="file_id" value="{{ upload.file_id }}">
+        <a href="javascript:;" onclick="parentNode.submit()">Encode Video</a>
+      </form>
+    </div>
+    {% endif %}
   </div>
 
   <div class="content">

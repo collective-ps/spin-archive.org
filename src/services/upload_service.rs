@@ -5,6 +5,7 @@ use log::{debug, warn};
 use nanoid::nanoid;
 
 use crate::models::audit_log::{self, AuditLog};
+pub use crate::models::upload::get_by_file_id;
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
 use crate::schema::upload_views;

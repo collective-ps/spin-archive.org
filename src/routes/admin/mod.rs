@@ -1,12 +1,14 @@
-use rocket::request::FlashMessage;
+use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
+use rocket::FromForm;
 use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
+use serde::{Deserialize, Serialize};
 
 use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::{User, UserRole};
-use crate::services::tag_service;
+use crate::services::{encoder_service, tag_service, upload_service};
 
 /// Admin area.
 #[rocket::get("/")]
@@ -47,6 +49,30 @@ pub(crate) fn action_rebuild_tag_counts(user: &User, conn: DatabaseConnection) -
     Flash::success(Redirect::to("/admin"), "Rebuilt tag counts!")
   } else {
     Flash::error(Redirect::to("/"), "")
+  }
+}
+
+#[derive(Serialize, Deserialize, FromForm)]
+pub struct EncodeVideoRequest {
+  pub file_id: String,
+}
+
+#[rocket::post("/actions/encode_video", data = "<request>")]
+pub(crate) fn action_encode_video(
+  user: &User,
+  conn: DatabaseConnection,
+  request: Form<EncodeVideoRequest>,
+) -> Flash<Redirect> {
+  if user.role != UserRole::Admin {
+    return Flash::error(Redirect::to("/"), "");
+  }
+
+  match upload_service::get_by_file_id(&conn, &request.file_id) {
+    Some(upload) => match encoder_service::enqueue_upload(&upload) {
+      Ok(_) => Flash::success(Redirect::to("/"), "Sent video for encoding."),
+      _ => Flash::error(Redirect::to("/"), "Could not enqueue video for encoding."),
+    },
+    None => return Flash::error(Redirect::to("/"), "Upload not found."),
   }
 }
 
