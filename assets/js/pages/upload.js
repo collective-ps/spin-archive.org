@@ -2,24 +2,11 @@ import React, { useState, useEffect } from 'react'
 import Uploader from '../components/uploader'
 import './upload.css'
 
-const useInput = (initialValue) => {
-  const [value, setValue] = useState(initialValue)
-
-  return {
-    value,
-    setValue,
-    reset: () => setValue(''),
-    bind: {
-      value,
-      onChange: (event) => {
-        setValue(event.target.value)
-      },
-    },
-  }
-}
+import useInput from '../lib/use_input'
+import TagInput from '../components/search_box'
 
 const File = ({ file }) => {
-  const { value: tags, bind: bindTags } = useInput('')
+  const [tags, setTags] = useState('')
   const { value: source, bind: bindSource } = useInput('')
   const { value: description, bind: bindDescription } = useInput('')
   const { value: originalUploadDate, bind: bindOriginalUploadDate } = useInput(
@@ -40,7 +27,7 @@ const File = ({ file }) => {
       <fieldset>
         <label>
           Tags (space-separated)
-          <input type='text' value={tags} {...bindTags} />
+          <TagInput query='' onChange={(value) => setTags(value)} />
         </label>
       </fieldset>
       <fieldset>

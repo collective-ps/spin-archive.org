@@ -11,7 +11,9 @@
     <form action="/upload/{{ upload.file_id }}" method="POST">
       <fieldset>
         <label for="tags">Tags (space-separated)</label>
-        <input type="text" id="tags" name="tags" value="{{ upload.tag_string }}" required>
+        <div id="tag-box-input" data-name="tags" data-tags="{{ upload.tag_string }}">
+          <input type="text" id="tag-box-input" name="tags" value="{{ upload.tag_string }}" required>
+        </div>
       </fieldset>
       <fieldset>
         <label for="source">Source (URL)</label>

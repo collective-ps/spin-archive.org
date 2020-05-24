@@ -3,7 +3,7 @@
 {% block content %}
 <main id="index-page" class="two-column-page">
   <div class="sidebar upload-metadata">
-    <div class="search" id="search-box" data-query="{{ query }}">
+    <div class="search" id="search-box-form" data-query="{{ query }}">
       <form action="/" method="GET">
         <input type="text" name="q" value="{{ query }}">
       </form>

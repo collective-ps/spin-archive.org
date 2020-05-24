@@ -1,8 +1,6 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import SVG from 'react-inlinesvg'
 
 import './index.css'
-import searchIcon from '../../../svg/icon-search.svg'
 
 const TAG_REGEX = /([-~]*)?([a-z\:]*)$/i
 
@@ -46,7 +44,13 @@ const insertSuggestion = (completion, inputRef) => {
     beforeCaretText.length
 }
 
-const Component = ({ query }) => {
+const Component = ({
+  query,
+  onChange: parentChange = () => {},
+  children,
+  name = 'q',
+  required = false,
+}) => {
   const [suggestions, setSuggestions] = useState([])
   const [isFetching, setFetching] = useState(false)
   const [isFocused, setIsFocused] = useState(false)
@@ -58,6 +62,8 @@ const Component = ({ query }) => {
       if (isFetching) {
         return
       }
+
+      parentChange(ev.target.value)
 
       let parsedQuery = parseQuery(
         ev.target.value,
@@ -111,19 +117,10 @@ const Component = ({ query }) => {
         ev.preventDefault()
         setSuggestionIndex(newIndex)
       }
+
+      parentChange(inputRef.current.value)
     },
     [suggestionIndex, suggestions]
-  )
-
-  const onSubmit = useCallback(
-    (ev) => {
-      ev.preventDefault()
-
-      const query = encodeURI(inputRef.current.value.trim())
-
-      window.location = `/?q=${query}`
-    },
-    [inputRef]
   )
 
   const clickedSuggestion = (idx) => {
@@ -136,24 +133,23 @@ const Component = ({ query }) => {
   }
 
   return (
-    <form action='/' method='GET' onSubmit={onSubmit}>
+    <div className='search-box'>
       <div className='search'>
         <input
           ref={inputRef}
           type='text'
           className='search-input'
-          name='q'
+          name={name}
           onChange={onChange}
           onFocus={onFocus}
           onBlur={onBlur}
           onKeyDown={onKeyDown}
           autoComplete='off'
           defaultValue={query}
+          required={required}
         ></input>
 
-        <button type='submit' className='search-btn'>
-          <SVG src={searchIcon} className='icon' />
-        </button>
+        {children}
       </div>
 
       <div class={`suggestions ${isFocused ? 'visible' : ''}`}>
@@ -174,7 +170,7 @@ const Component = ({ query }) => {
           )
         })}
       </div>
-    </form>
+    </div>
   )
 }
 

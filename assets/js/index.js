@@ -9,10 +9,11 @@ import Plyr from 'plyr'
 
 import UploadPage from './pages/upload'
 
-import SearchBox from './components/search_box'
+import SearchBox from './components/search_box/form'
+import SearchBoxInput from './components/search_box'
 
-if (document.getElementById('search-box')) {
-  let container = document.getElementById('search-box')
+if (document.getElementById('search-box-form')) {
+  let container = document.getElementById('search-box-form')
   let query = container.dataset.query || ''
 
   if (!query.length) {
@@ -24,6 +25,24 @@ if (document.getElementById('search-box')) {
   }
 
   ReactDOM.render(<SearchBox {...props} />, container)
+}
+
+if (document.getElementById('tag-box-input')) {
+  let container = document.getElementById('tag-box-input')
+  let query = container.dataset.tags || ''
+  let name = container.dataset.name || ''
+
+  if (!query.length) {
+    query = ''
+  }
+
+  let props = {
+    query,
+    name,
+    required: true,
+  }
+
+  ReactDOM.render(<SearchBoxInput {...props} />, container)
 }
 
 if (document.getElementById('upload-page')) {
