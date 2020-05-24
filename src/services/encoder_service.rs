@@ -46,11 +46,11 @@ pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
     format!("set source = {}", source),
     format!("set webhook = {}", webhook_url),
     format!(
-      "-> mp4 = {}, keep=video_bitrate,audio_bitrate, if=$source_video_bitrate <= 8000",
+      "-> mp4 = {}, keep=video_bitrate, if=$source_video_bitrate <= 8000",
       output_url("e", &output_filename)
     ),
     format!(
-      "-> mp4::quality=4 = {}, keep=audio_bitrate, if=$source_video_bitrate > 8000",
+      "-> mp4::quality=4 = {}, if=$source_video_bitrate > 8000",
       output_url("e", &output_filename)
     ),
     format!(
