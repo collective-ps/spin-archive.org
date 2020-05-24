@@ -32,7 +32,9 @@
     {% if upload.source %}
     <div class="upload-source">
       <label>Source</label>
+      <div>
       <a rel="noreferrer noopener" target="_blank" href="{{ upload.source }}">{{ upload.source }}</a>
+      </div>
     </div>
     {% endif %}
     {% if view_count %}

@@ -9,6 +9,23 @@ import Plyr from 'plyr'
 
 import UploadPage from './pages/upload'
 
+import SearchBox from './components/search_box'
+
+if (document.getElementById('search-box')) {
+  let container = document.getElementById('search-box')
+  let query = container.dataset.query || ''
+
+  if (!query.length) {
+    query = ''
+  }
+
+  let props = {
+    query,
+  }
+
+  ReactDOM.render(<SearchBox {...props} />, container)
+}
+
 if (document.getElementById('upload-page')) {
   let page = document.getElementById('upload-page')
   ReactDOM.render(<UploadPage />, page)
