@@ -220,6 +220,7 @@ pub(crate) fn login(
     }
 }
 
+#[allow(dead_code)]
 pub(crate) fn by_ids(conn: &PgConnection, ids: Vec<i32>) -> Vec<User> {
     users::table
         .filter(users::id.eq_any(ids))

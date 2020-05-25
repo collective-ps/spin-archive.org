@@ -20,9 +20,9 @@ RUN cargo build --release
 
 RUN rm -f target/release/deps/spin-archive*
 
-COPY src .
-COPY templates .
-COPY migrations .
+COPY src ./src
+COPY templates ./templates
+COPY migrations ./migrations
 
 RUN cargo build --release
 

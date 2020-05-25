@@ -12,7 +12,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::user::{self, User};
 use crate::pagination::*;
-use crate::schema::uploads;
+use crate::schema::{upload_comments, upload_views, uploads};
 
 type AllColumns = (
     uploads::id,
@@ -87,6 +87,37 @@ pub struct Upload {
     pub video_url: Option<String>,
     pub description: String,
     pub original_upload_date: Option<NaiveDate>,
+}
+
+#[derive(Debug, Serialize, Deserialize, QueryableByName)]
+#[table_name = "uploads"]
+pub struct FullUpload {
+    pub id: i32,
+    pub status: UploadStatus,
+    pub file_id: String,
+    pub file_size: Option<i64>,
+    pub file_name: Option<String>,
+    pub md5_hash: Option<String>,
+    pub uploader_user_id: Option<i32>,
+    pub source: Option<String>,
+    pub created_at: NaiveDateTime,
+    pub updated_at: NaiveDateTime,
+    pub file_ext: String,
+    pub tag_string: String,
+    pub video_encoding_key: String,
+    pub thumbnail_url: Option<String>,
+    pub video_url: Option<String>,
+    pub description: String,
+    pub original_upload_date: Option<NaiveDate>,
+
+    #[sql_type = "sql_types::Text"]
+    pub uploader_username: String,
+    #[sql_type = "sql_types::BigInt"]
+    pub comment_count: i64,
+    #[sql_type = "sql_types::BigInt"]
+    pub view_count: i64,
+    #[sql_type = "sql_types::BigInt"]
+    pub count: i64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
@@ -250,37 +281,81 @@ pub fn index(
     page: i64,
     per_page: i64,
     q_string: Option<String>,
-) -> (Vec<Upload>, Vec<User>, i64) {
-    use diesel_full_text_search::*;
+) -> (Vec<FullUpload>, i64, i64) {
+    use diesel::sql_types::*;
 
-    let mut sql_query = uploads::table
-        .filter(uploads::status.eq(UploadStatus::Completed))
-        .select(ALL_COLUMNS)
-        .into_boxed();
+    let result = if q_string.is_some() {
+        diesel::sql_query(
+            "
+                SELECT *,
+                COUNT(*) OVER ()
+                    FROM
+                    (
+                    SELECT uploads.*,
+                        users.username AS uploader_username,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = uploads.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = uploads.id)
+                    FROM uploads
+                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                    WHERE uploads.status = $1
+                    AND uploads.tag_index @@ plainto_tsquery($2)
+                    GROUP BY (uploads.id, users.username)
+                    ORDER BY uploads.updated_at DESC
+                    ) t
+                    LIMIT $3
+                    OFFSET $4
+                ",
+        )
+        .bind::<BigInt, _>(2)
+        .bind::<Text, _>(q_string.unwrap())
+        .bind::<BigInt, _>(per_page)
+        .bind::<BigInt, _>((page - 1) * per_page)
+        .load::<FullUpload>(conn)
+    } else {
+        diesel::sql_query(
+            "
+                SELECT *,
+                COUNT(*) OVER ()
+                    FROM
+                    (
+                    SELECT uploads.*,
+                        users.username AS uploader_username,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = uploads.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = uploads.id)
+                    FROM uploads
+                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                    WHERE uploads.status = $1
+                    GROUP BY (uploads.id, users.username)
+                    ORDER BY uploads.updated_at DESC
+                    ) t
+                    LIMIT $2
+                    OFFSET $3
+                ",
+        )
+        .bind::<BigInt, _>(2)
+        .bind::<BigInt, _>(per_page)
+        .bind::<BigInt, _>((page - 1) * per_page)
+        .load::<FullUpload>(conn)
+    };
 
-    if let Some(query) = q_string {
-        let tsquery = plainto_tsquery(query);
-        sql_query = sql_query.filter(tsquery.matches(uploads::tag_index));
-    }
+    match result.unwrap() {
+        full_uploads => {
+            let total_count = full_uploads
+                .first()
+                .map(|full_upload| full_upload.count)
+                .unwrap_or(0);
 
-    match sql_query
-        .order(uploads::updated_at.desc())
-        .paginate(page)
-        .per_page(per_page)
-        .load_and_count_pages::<Upload>(&conn)
-        .ok()
-    {
-        Some((uploads, page_count)) => {
-            let mut user_ids = uploads
-                .iter()
-                .filter(|upload| upload.uploader_user_id.is_some())
-                .map(|upload| upload.uploader_user_id.unwrap())
-                .collect::<Vec<i32>>();
+            let total_pages = (total_count as f64 / per_page as f64).ceil() as i64;
 
-            user_ids.dedup();
-
-            (uploads, user::by_ids(&conn, user_ids), page_count)
+            (full_uploads, total_pages, total_count)
         }
-        None => (Vec::default(), Vec::default(), 0),
     }
 }

@@ -53,7 +53,7 @@ fn index(
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 25;
-    let (uploads, users, page_count) =
+    let (uploads, page_count, total_count) =
         models::upload::index(&conn, current_page, per_page, q.clone());
     let query = q.unwrap_or_default();
 
@@ -73,12 +73,11 @@ fn index(
 
     context.insert("uploads", &uploads);
     context.insert("page_count", &page_count);
-    context.insert("total_count", &(page_count * per_page));
+    context.insert("total_count", &total_count);
     context.insert("page", &current_page);
     context.insert("tags", &tags);
     context.insert("tag_groups", &tag_groups);
     context.insert("query", &query);
-    context.insert("users", &users);
 
     Template::render("index", &context)
 }

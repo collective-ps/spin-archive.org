@@ -118,6 +118,31 @@ footer {
   padding: 0.25em;
 }
 
+.upload-grid .upload a {
+  width: 100%;
+  height: auto;
+  position: relative;
+  display: block;
+}
+
+.upload-grid .upload .upload-bottom-bar {
+  width: 100%;
+  height: 30px;
+  z-index: 2;
+  font-size: 9pt;
+  user-select: none;
+  text-decoration: none;
+  color: black;
+}
+
+.upload-grid .upload .upload-bottom-bar .left {
+  float: left;
+}
+
+.upload-grid .upload .upload-bottom-bar .right {
+  float: right;
+}
+
 .upload-grid .upload .thumbnail {
   width: 100%;
 }
@@ -259,11 +284,6 @@ footer {
   .upload-grid {
     display: flex;
     flex-direction: column;
-  }
-
-  .upload-grid .upload {
-    width: 100%;
-    height: auto;
   }
 
   .pagination {
