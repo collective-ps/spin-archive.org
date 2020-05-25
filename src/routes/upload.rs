@@ -15,7 +15,7 @@ use crate::database::DatabaseConnection;
 use crate::models::upload;
 use crate::models::user::User;
 use crate::s3_client::generate_signed_url;
-use crate::services::{comment_service, tag_service, upload_service};
+use crate::services::{comment_service, notification_service, tag_service, upload_service};
 
 #[derive(Serialize, Deserialize)]
 pub struct UploadFailedResponse {
@@ -224,7 +224,11 @@ pub(crate) fn create_comment(
         Some(upload) => {
             match comment_service::create_comment_on_upload(&conn, &upload, &user, &request.comment)
             {
-                Some(_comment) => Flash::success(Redirect::to(path), "Comment added!"),
+                Some(comment) => {
+                    notification_service::notify_new_comment(&comment, &upload, &user);
+
+                    Flash::success(Redirect::to(path), "Comment added!")
+                }
                 None => Flash::error(Redirect::to(path), "Could not create comment."),
             }
         }
