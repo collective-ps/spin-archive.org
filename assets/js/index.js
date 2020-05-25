@@ -78,6 +78,7 @@ window.addEventListener('DOMContentLoaded', () => {
         'airplay', // Airplay (currently Safari only)
         'fullscreen', // Toggle fullscreen
       ],
+      enabled: !/webOS|iPhone|iPod|BlackBerry/i.test(navigator.userAgent),
     })
 
     window.addEventListener('keypress', function (evt) {
