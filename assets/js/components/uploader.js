@@ -3,24 +3,33 @@ import Dropzone from 'react-dropzone-uploader'
 import 'react-dropzone-uploader/dist/styles.css'
 
 const Uploader = ({ handleSubmit }) => {
-  const getUploadParams = async ({ file, meta: { name } }) => {
-    const { id, url } = await fetch('/upload', {
+  const getUploadParams = async (fileWithMeta) => {
+    const response = await fetch('/upload', {
       method: 'POST',
       body: JSON.stringify({
-        file_name: name,
-        content_length: file.size,
+        file_name: fileWithMeta.meta.name,
+        content_length: fileWithMeta.file.size,
       }),
       headers: {
         'Content-Type': 'application/json',
       },
     })
-      .then((response) => response.json())
-      .catch(() => {
-        return { id: null, url: null }
-      })
+
+    if (!response.ok) {
+      return {}
+    }
+
+    const json = await response.json()
+
+    if (json['status'] == 'error') {
+      fileWithMeta.meta.error = json['reason']
+      return {}
+    }
+
+    const { id, url } = json
 
     return {
-      body: file,
+      body: fileWithMeta.file,
       method: 'PUT',
       headers: {
         'x-amz-acl': 'public-read',
@@ -33,7 +42,14 @@ const Uploader = ({ handleSubmit }) => {
     }
   }
 
-  const handleChangeStatus = ({ meta, file }, status) => {}
+  const handleChangeStatus = (data, status) => {
+    if (status == 'error_upload_params') {
+      if (data.meta.error) {
+        data.meta.status = 'error_validation'
+        data.meta.validationError = data.meta.error
+      }
+    }
+  }
 
   return (
     <Dropzone

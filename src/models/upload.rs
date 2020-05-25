@@ -139,6 +139,7 @@ pub struct PendingUpload {
     pub uploader_user_id: i32,
     pub file_name: String,
     pub file_ext: String,
+    pub file_size: i64,
 }
 
 #[derive(Insertable)]
@@ -236,6 +237,22 @@ pub fn get_by_video_encoding_key(conn: &PgConnection, search_key: &str) -> Optio
 
     uploads
         .filter(video_encoding_key.eq(search_key))
+        .select(ALL_COLUMNS)
+        .first::<Upload>(conn)
+        .ok()
+}
+
+/// Gets an [`Upload`] by `file_name` + `file_ext` + `file_size`.
+pub fn get_by_original_file(
+    conn: &PgConnection,
+    file_name: &str,
+    file_ext: &str,
+    file_size: i64,
+) -> Option<Upload> {
+    uploads::table
+        .filter(uploads::file_name.eq(file_name))
+        .filter(uploads::file_ext.eq(file_ext))
+        .filter(uploads::file_size.eq(file_size))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
         .ok()

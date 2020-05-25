@@ -5,11 +5,12 @@ use log::{debug, warn};
 use nanoid::nanoid;
 
 use crate::models::audit_log::{self, AuditLog};
-pub use crate::models::upload::get_by_file_id;
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
 use crate::schema::upload_views;
 use crate::services::{audit_service, encoder_service, tag_service};
+
+pub use crate::models::upload::{get_by_file_id, get_by_original_file};
 
 #[derive(Insertable)]
 #[table_name = "upload_views"]
@@ -30,6 +31,7 @@ pub(crate) fn new_pending_upload(
     user: &User,
     file_name: &str,
     file_ext: &str,
+    file_size: i64,
 ) -> Result<Upload, UploadError> {
     let pending_upload = PendingUpload {
         status: UploadStatus::Pending,
@@ -38,6 +40,7 @@ pub(crate) fn new_pending_upload(
         uploader_user_id: user.id,
         file_name: file_name.to_owned(),
         file_ext: file_ext.to_owned(),
+        file_size,
     };
 
     upload::insert_pending_upload(&conn, &pending_upload).map_err(|_| UploadError::DatabaseError)

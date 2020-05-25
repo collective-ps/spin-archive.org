@@ -4,7 +4,8 @@ use rocket::request::{FlashMessage, Form};
 use rocket::response::status::BadRequest;
 use rocket::response::{Flash, Redirect};
 use rocket::FromForm;
-use rocket_contrib::json::Json;
+use rocket_contrib::json;
+use rocket_contrib::json::{Json, JsonValue};
 use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
 use serde::{Deserialize, Serialize};
@@ -17,6 +18,11 @@ use crate::s3_client::generate_signed_url;
 use crate::services::{comment_service, tag_service, upload_service};
 
 #[derive(Serialize, Deserialize)]
+pub struct UploadFailedResponse {
+    error: &'static str,
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct UploadResponse {
     id: String,
     url: String,
@@ -25,7 +31,7 @@ pub struct UploadResponse {
 #[derive(Serialize, Deserialize)]
 pub struct UploadRequest {
     file_name: String,
-    content_length: i32,
+    content_length: i64,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -288,7 +294,7 @@ pub(crate) fn upload(
     conn: DatabaseConnection,
     user: &User,
     request: Json<UploadRequest>,
-) -> Result<Json<UploadResponse>, BadRequest<()>> {
+) -> Result<JsonValue, BadRequest<()>> {
     if !user.can_upload() {
         return Err(BadRequest(None));
     }
@@ -301,21 +307,40 @@ pub(crate) fn upload(
         return Err(BadRequest(None));
     }
 
+    // Basic duplicate check by file name / ext / file size.
+    if upload_service::get_by_original_file(
+        &conn,
+        name.unwrap().to_str().unwrap(),
+        ext.unwrap().to_str().unwrap(),
+        request.content_length,
+    )
+    .is_some()
+    {
+        return Ok(json!({
+            "status": "error",
+            "reason": "Already uploaded"
+        }));
+    }
+
     match upload_service::new_pending_upload(
         &conn,
         &user,
         name.unwrap().to_str().unwrap(),
         ext.unwrap().to_str().unwrap(),
+        request.content_length,
     ) {
         Ok(upload) => {
             let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);
 
-            Ok(Json(UploadResponse {
-                id: upload.file_id.to_owned(),
-                url: generate_signed_url("uploads", &file_name),
+            Ok(json!({
+                "id": upload.file_id.to_owned(),
+                "url": generate_signed_url("uploads", &file_name),
             }))
         }
-        Err(_) => Err(BadRequest(None)),
+        Err(_) => Ok(json!({
+            "status": "error",
+            "reason": "Server error"
+        })),
     }
 }
 
