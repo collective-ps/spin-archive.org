@@ -15,6 +15,11 @@
     </video>
   {% endif %}
 </div>
+<div class="embed center">
+  <form action="/u/{{ upload.file_id }}">
+    <button>View on spin-archive.org</button>
+  </form>
+</div>
 {% endblock content %}
 
 {% block footer %}
