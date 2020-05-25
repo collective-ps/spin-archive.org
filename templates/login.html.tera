@@ -2,7 +2,6 @@
 
 {% block content %}
 <main class="text-center" id="login-page">
-  <p>You need an account to be able to contribute to the archive project.</p>
   <form action="/login" method="post">
     <fieldset>
       <label for="username">Username</label>
