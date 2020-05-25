@@ -22,7 +22,7 @@ pub fn suggestions(
     q: Option<String>,
 ) -> Result<Json<SuggestionResponse>, BadRequest<()>> {
     let prefix = q.unwrap_or_default();
-    let tags = tag::starting_with(&conn, &prefix)
+    let tags = tag::starting_with(&conn, &prefix, 10)
         .iter()
         .map(|tag| TagJson {
             name: tag.name.clone(),
