@@ -154,6 +154,15 @@ footer {
   font-size: 10.5pt;
 }
 
+.upload-tags .tag-group {
+  background-color: var(--color-lightGrey);
+  padding: 0 6px;
+}
+
+.upload-tags .tag-group ol {
+  padding: 6px;
+}
+
 .upload-metadata label {
   color: #797979;
   text-decoration: none;

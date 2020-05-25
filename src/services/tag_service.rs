@@ -126,12 +126,19 @@ impl TagGroup {
     }
 }
 
+/// Groups tags into defined, common tag groups.
 pub fn group_tags(tags: Vec<Tag>) -> (Vec<TagGroup>, Vec<Tag>) {
     let mut groups = vec![
-        TagGroup::new("cv"),
-        TagGroup::new("spinner"),
-        TagGroup::new("type"),
-        TagGroup::new("community")
+        TagGroup::new("Communities"),
+        TagGroup::new("Spinners"),
+        TagGroup::new("Collaboration Video"),
+        TagGroup::new("Promo Video"),
+        TagGroup::new("Solo Video"),
+        TagGroup::new("Editors"),
+        TagGroup::new("Events"),
+        TagGroup::new("Video Type"),
+        TagGroup::new("Organizers"),
+        TagGroup::new("Teams"),
     ];
 
     let remaining_tags = tags
@@ -139,7 +146,7 @@ pub fn group_tags(tags: Vec<Tag>) -> (Vec<TagGroup>, Vec<Tag>) {
         .filter(|tag| {
             let mut any_matches = false;
 
-            if tag.name.starts_with("cv:") {
+            if tag.name.starts_with("community:") {
                 groups[0].tags.push(tag.clone());
                 any_matches = true;
             }
@@ -149,13 +156,43 @@ pub fn group_tags(tags: Vec<Tag>) -> (Vec<TagGroup>, Vec<Tag>) {
                 any_matches = true;
             }
 
-            if tag.name.starts_with("type:") {
+            if tag.name.starts_with("cv:") {
                 groups[2].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("community:") {
+            if tag.name.starts_with("pv:") {
                 groups[3].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("sv:") {
+                groups[4].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("editor:") {
+                groups[5].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("event:") {
+                groups[6].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("type:") {
+                groups[7].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("organizer:") {
+                groups[8].tags.push(tag.clone());
+                any_matches = true;
+            }
+
+            if tag.name.starts_with("team:") {
+                groups[9].tags.push(tag.clone());
                 any_matches = true;
             }
 
