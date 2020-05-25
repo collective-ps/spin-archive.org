@@ -60,6 +60,7 @@ fn index(
     raw_tags.dedup();
 
     let tags = services::tag_service::by_names(&conn, &raw_tags);
+    let (tag_groups, tags) = services::tag_service::group_tags(tags);
 
     context::flash_context(&mut context, flash);
     context::user_context(&mut context, user);
@@ -69,6 +70,7 @@ fn index(
     context.insert("total_count", &(page_count * per_page));
     context.insert("page", &current_page);
     context.insert("tags", &tags);
+    context.insert("tag_groups", &tag_groups);
     context.insert("query", &query);
     context.insert("users", &users);
 

@@ -13,74 +13,74 @@ use crate::services::{encoder_service, tag_service, upload_service};
 /// Admin area.
 #[rocket::get("/")]
 pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template, Redirect> {
-  if user.role == UserRole::Admin {
-    let mut context = TeraContext::new();
+    if user.role == UserRole::Admin {
+        let mut context = TeraContext::new();
 
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, Some(user));
+        context::flash_context(&mut context, flash);
+        context::user_context(&mut context, Some(user));
 
-    Ok(Template::render("admin/index", &context))
-  } else {
-    Err(Redirect::to("/"))
-  }
+        Ok(Template::render("admin/index", &context))
+    } else {
+        Err(Redirect::to("/"))
+    }
 }
 
 #[rocket::post("/actions/rebuild_tags")]
 pub(crate) fn action_rebuild_tags(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
-  if user.role == UserRole::Admin {
-    std::thread::spawn(move || {
-      tag_service::rebuild(&conn);
-    });
+    if user.role == UserRole::Admin {
+        std::thread::spawn(move || {
+            tag_service::rebuild(&conn);
+        });
 
-    Flash::success(
-      Redirect::to("/admin"),
-      "Started to rebuild tags. This may take a while.",
-    )
-  } else {
-    Flash::error(Redirect::to("/"), "")
-  }
+        Flash::success(
+            Redirect::to("/admin"),
+            "Started to rebuild tags. This may take a while.",
+        )
+    } else {
+        Flash::error(Redirect::to("/"), "")
+    }
 }
 
 #[rocket::post("/actions/rebuild_tag_counts")]
 pub(crate) fn action_rebuild_tag_counts(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
-  if user.role == UserRole::Admin {
-    tag_service::rebuild_tag_counts(&conn);
+    if user.role == UserRole::Admin {
+        tag_service::rebuild_tag_counts(&conn);
 
-    Flash::success(Redirect::to("/admin"), "Rebuilt tag counts!")
-  } else {
-    Flash::error(Redirect::to("/"), "")
-  }
+        Flash::success(Redirect::to("/admin"), "Rebuilt tag counts!")
+    } else {
+        Flash::error(Redirect::to("/"), "")
+    }
 }
 
 #[derive(Serialize, Deserialize, FromForm)]
 pub struct EncodeVideoRequest {
-  pub file_id: String,
+    pub file_id: String,
 }
 
 #[rocket::post("/actions/encode_video", data = "<request>")]
 pub(crate) fn action_encode_video(
-  user: &User,
-  conn: DatabaseConnection,
-  request: Form<EncodeVideoRequest>,
+    user: &User,
+    conn: DatabaseConnection,
+    request: Form<EncodeVideoRequest>,
 ) -> Flash<Redirect> {
-  if user.role != UserRole::Admin {
-    return Flash::error(Redirect::to("/"), "");
-  }
+    if user.role != UserRole::Admin {
+        return Flash::error(Redirect::to("/"), "");
+    }
 
-  match upload_service::get_by_file_id(&conn, &request.file_id) {
-    Some(upload) => match encoder_service::enqueue_upload(&upload) {
-      Ok(_) => Flash::success(Redirect::to("/"), "Sent video for encoding."),
-      _ => Flash::error(Redirect::to("/"), "Could not enqueue video for encoding."),
-    },
-    None => return Flash::error(Redirect::to("/"), "Upload not found."),
-  }
+    match upload_service::get_by_file_id(&conn, &request.file_id) {
+        Some(upload) => match encoder_service::enqueue_upload(&upload) {
+            Ok(_) => Flash::success(Redirect::to("/"), "Sent video for encoding."),
+            _ => Flash::error(Redirect::to("/"), "Could not enqueue video for encoding."),
+        },
+        None => return Flash::error(Redirect::to("/"), "Upload not found."),
+    }
 }
 
 pub(crate) fn router() -> Vec<rocket::Route> {
-  rocket::routes![
-    index,
-    action_rebuild_tags,
-    action_rebuild_tag_counts,
-    action_encode_video
-  ]
+    rocket::routes![
+        index,
+        action_rebuild_tags,
+        action_rebuild_tag_counts,
+        action_encode_video
+    ]
 }

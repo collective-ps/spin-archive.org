@@ -7,30 +7,30 @@ use crate::models::tag;
 
 #[derive(Serialize, Deserialize)]
 pub struct TagJson {
-  name: String,
-  upload_count: i32,
+    name: String,
+    upload_count: i32,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct SuggestionResponse {
-  tags: Vec<TagJson>,
+    tags: Vec<TagJson>,
 }
 
 #[rocket::get("/tags/suggestions?<q>")]
 pub fn suggestions(
-  conn: DatabaseConnection,
-  q: Option<String>,
+    conn: DatabaseConnection,
+    q: Option<String>,
 ) -> Result<Json<SuggestionResponse>, BadRequest<()>> {
-  let prefix = q.unwrap_or_default();
-  let tags = tag::starting_with(&conn, &prefix)
-    .iter()
-    .map(|tag| TagJson {
-      name: tag.name.clone(),
-      upload_count: tag.upload_count,
-    })
-    .collect();
+    let prefix = q.unwrap_or_default();
+    let tags = tag::starting_with(&conn, &prefix)
+        .iter()
+        .map(|tag| TagJson {
+            name: tag.name.clone(),
+            upload_count: tag.upload_count,
+        })
+        .collect();
 
-  let response = SuggestionResponse { tags };
+    let response = SuggestionResponse { tags };
 
-  Ok(Json(response))
+    Ok(Json(response))
 }
