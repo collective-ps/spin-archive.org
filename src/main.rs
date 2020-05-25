@@ -8,6 +8,7 @@ extern crate diesel;
 use std::collections::HashMap;
 use std::env;
 
+use lazy_static::lazy_static;
 use rocket::http::RawStr;
 use rocket::http::{Cookie, Cookies};
 use rocket::request::FlashMessage;
@@ -35,6 +36,11 @@ use models::user::User;
 embed_migrations!();
 
 type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
+
+lazy_static! {
+    #[derive(Copy, Clone, Debug)]
+    static ref APP_VERSION: String = env::var("GIT_REV").unwrap_or_default();
+}
 
 #[rocket::get("/?<page>&<q>")]
 fn index(
@@ -147,6 +153,10 @@ fn main() {
             engines
                 .tera
                 .register_filter("from_markdown", context::from_markdown);
+
+            engines
+                .tera
+                .register_filter("append_version", append_version);
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
@@ -187,4 +197,17 @@ fn main() {
         )
         .register(rocket::catchers![not_found])
         .launch();
+}
+
+pub fn append_version(
+    value: TeraValue,
+    _args: HashMap<String, TeraValue>,
+) -> TeraResult<TeraValue> {
+    match serde_json::from_value::<String>(value.clone()) {
+        Ok(content) => {
+            let new_string = format!("{}?v={}", content, &**APP_VERSION);
+            Ok(serde_json::to_value(new_string).unwrap())
+        }
+        Err(_) => Err("Could not get string.".into()),
+    }
 }

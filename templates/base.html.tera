@@ -12,7 +12,7 @@
     />
 
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.2/plyr.css" />
-    <link rel="stylesheet" type="text/css" href="/public/app.css" />
+    <link rel="stylesheet" type="text/css" href={{ "/public/app.css" | safe | append_version }} />
 
     {% block head %}
     <meta property="og:title" content="spin-archive.org" />
@@ -54,7 +54,7 @@
     {% endblock content %}
   </body>
 
-  <script type="text/javascript" src="/public/app.bundle.js"></script>
+  <script type="text/javascript" src={{ "/public/app.bundle.js" | safe | append_version }}></script>
 
   {% block footer %}
   {% include "partials/footer" %}
