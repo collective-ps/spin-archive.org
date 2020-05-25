@@ -81,6 +81,10 @@ window.addEventListener('DOMContentLoaded', () => {
     })
 
     window.addEventListener('keypress', function (evt) {
+      if (evt.keyCode === 122) {
+        player.elements.container.classList.toggle('flipped')
+      }
+
       if (player.paused) {
         if (evt.keyCode === 44) {
           // ',' = back one frame

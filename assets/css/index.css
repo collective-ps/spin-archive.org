@@ -290,3 +290,7 @@ footer {
     text-align: center;
   }
 }
+
+.flipped video {
+  transform: rotateY(180deg);
+}
