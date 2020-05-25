@@ -10,9 +10,8 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::models::user::{self, User};
-use crate::pagination::*;
-use crate::schema::{upload_comments, upload_views, uploads};
+use crate::models::user::User;
+use crate::schema::uploads;
 
 type AllColumns = (
     uploads::id,
