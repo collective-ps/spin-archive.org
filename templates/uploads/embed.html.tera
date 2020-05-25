@@ -8,17 +8,12 @@
 
 {% block content %}
 {% set is_video = is_video(upload=upload) %}
-<div class="upload" data-id="{{ upload.file_id }}">
+<div class="embed upload" data-id="{{ upload.file_id }}">
   {% if is_video %}
     <video controls muted autoplay loop class="video-player" id="video-player" data-poster="{{ get_thumbnail_url(upload=upload) | safe }}" >
       <source src="{{ get_video_url(upload=upload) | safe }}">>
     </video>
   {% endif %}
-</div>
-<div class="embed center">
-  <form action="/u/{{ upload.file_id }}">
-    <button>View on spin-archive.org</button>
-  </form>
 </div>
 {% endblock content %}
 

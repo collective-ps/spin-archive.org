@@ -171,6 +171,17 @@ footer {
   height: 100%;
 }
 
+.upload.embed {
+  position: absolute;
+  max-height: none;
+}
+
+.upload.embed,
+.upload.embed .video-player {
+  width: 100%;
+  height: 100%;
+}
+
 .upload-metadata .upload-tags ol {
   list-style: none;
 }
