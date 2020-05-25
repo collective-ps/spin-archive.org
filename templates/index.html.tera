@@ -12,18 +12,18 @@
   </div>
 
   <div class="content">
-    {% if uploads %}
+    {% if uploads -%}
     <div class="upload-grid">
-      {% set upload_count = uploads | length %}
-      {% if upload_count == 0 %}
+      {% set upload_count = uploads | length -%}
+      {% if upload_count == 0 -%}
         <div class="empty text-center vertical-align">
           No uploads were posted yet.
         </div>
-      {% endif %}
+      {% endif -%}
 
-      {% for upload in uploads %}
-        {% set uploader = users | filter(attribute="id", value=upload.uploader_user_id) | first %}
-        {% set uploader_username = uploader.username | default(value="unknown") %}
+      {% for upload in uploads -%}
+        {% set uploader = users | filter(attribute="id", value=upload.uploader_user_id) | first -%}
+        {% set uploader_username = uploader.username | default(value="unknown") -%}
         <div class="upload" id="{{ upload.file_id }}" data-tags="{{ upload.tag_string }}" data-uploader="{{ uploader_username }}">
           <a href="/u/{{ upload.file_id }}">
             <img
@@ -34,48 +34,48 @@
             />
            </a>
         </div>
-      {% endfor %}
+      {% endfor -%}
     </div>
-    {% else %}
+    {% else -%}
     <div class="empty text-center vertical-align">
       No uploads were posted yet.
     </div>
-    {% endif %}
+    {% endif -%}
 
-    {% if page_count %}
+    {% if page_count -%}
     <div class="pagination">
-      {% for i in range(start=1, end=5) | reverse %}
-        {% if page - i > 0 %}
-          {% if query %}
+      {% for i in range(start=1, end=5) | reverse -%}
+        {% if page - i > 0 -%}
+          {% if query -%}
             <a href="/?q={{ query }}&page={{ page - i}}">{{ page - i}}</a>
-          {% else %}
+          {% else -%}
             <a href="/?page={{ page - i}}">{{ page - i}}</a>
-          {% endif %}
-        {% endif %}
-      {% endfor %}
+          {% endif -%}
+        {% endif -%}
+      {% endfor -%}
 
       <span>{{page}}</span>
 
-      {% if page_count > page %}
-        {% for i in range(start=1, end=5) %}
-          {% if page + i <= page_count %}
-            {% if query %}
+      {% if page_count > page -%}
+        {% for i in range(start=1, end=5) -%}
+          {% if page + i <= page_count -%}
+            {% if query -%}
               <a href="/?q={{ query }}&page={{ page + i}}">{{ page + i}}</a>
-            {% else %}
+            {% else -%}
               <a href="/?page={{ page + i}}">{{ page + i}}</a>
-            {% endif %}
-          {% endif %}
-        {% endfor %}
+            {% endif -%}
+          {% endif -%}
+        {% endfor -%}
 
-        {% if page + 5 <= page_count %}
+        {% if page + 5 <= page_count -%}
         <span>...</span>
         <a href="/?page={{ page_count }}">{{ page_count }}</a>
-        {% endif %}
-      {% endif %}
+        {% endif -%}
+      {% endif -%}
 
       <span><small><em>({{ total_count }} results)</em></small></span>
     </div>
-    {% endif %}
+    {% endif -%}
   </div>
 </main>
 {% endblock content %}
