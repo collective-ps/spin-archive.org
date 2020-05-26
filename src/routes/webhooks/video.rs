@@ -4,6 +4,7 @@ use rocket_contrib::json::Json;
 use log::warn;
 
 use crate::database::DatabaseConnection;
+use crate::models::upload::UploadStatus;
 use crate::models::user::get_user_by_id;
 use crate::services::encoder_service::{self, Job};
 use crate::services::notification_service;
@@ -22,7 +23,10 @@ pub(crate) fn webhook(conn: DatabaseConnection, request: Json<Job>, key: Option<
                 .uploader_user_id
                 .and_then(|uploader_user_id| get_user_by_id(&conn, uploader_user_id))
                 .and_then(|user| {
-                    notification_service::notify_new_upload(&upload, &user);
+                    if upload.status == UploadStatus::Completed {
+                        notification_service::notify_new_upload(&upload, &user);
+                    }
+
                     Some(())
                 });
 

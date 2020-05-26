@@ -6,8 +6,8 @@ use rocket_contrib::templates::Template;
 use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::upload::UploadStatus;
-use crate::models::user::User;
-use crate::services::upload_service;
+use crate::models::user::{get_user_by_id, User};
+use crate::services::{notification_service, upload_service};
 
 #[rocket::get("/")]
 pub(crate) fn index(
@@ -40,6 +40,18 @@ pub(crate) fn approve(conn: DatabaseConnection, user: &User, file_id: String) ->
     .and_then(|upload| {
       if upload.status == UploadStatus::PendingApproval {
         upload_service::update_status(&conn, upload.id, UploadStatus::Completed)
+          .and_then(|result| {
+            upload
+              .uploader_user_id
+              .and_then(|uploader_user_id| get_user_by_id(&conn, uploader_user_id))
+              .and_then(|uploader_user| {
+                notification_service::notify_new_upload(&upload, &uploader_user);
+
+                Some(())
+              });
+
+            Ok(result)
+          })
           .map_err(|_| "Could not change upload status to Completed.")
       } else {
         Err("Already approved.")
