@@ -8,6 +8,7 @@ use serde_json::Value;
 
 use crate::database::DatabaseConnection;
 use crate::models::upload::{self, FinishedEncodingUpload, Upload, UploadStatus};
+use crate::models::user::get_user_by_id;
 
 const HOST: &'static str = "https://s3.us-west-1.wasabisys.com";
 const BUCKET: &'static str = "bits.spin-archive.org";
@@ -93,8 +94,16 @@ pub fn accept_webhook(
                 let thumbnail_url =
                     format!("https://bits.spin-archive.org/t/{}.jpg", upload.file_id);
 
+                let uploader = get_user_by_id(&conn, upload.uploader_user_id.unwrap()).unwrap();
+
+                let status = if uploader.is_contributor() {
+                    UploadStatus::Completed
+                } else {
+                    UploadStatus::PendingApproval
+                };
+
                 let finished_encoding = FinishedEncodingUpload {
-                    status: UploadStatus::Completed,
+                    status,
                     thumbnail_url: thumbnail_url,
                     video_url: video_url,
                 };

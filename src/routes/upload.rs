@@ -55,12 +55,21 @@ pub struct UpdateUploadRequest {
 
 /// Upload page where a user can upload.
 #[rocket::get("/upload")]
-pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template, Redirect> {
+pub(crate) fn index(
+    conn: DatabaseConnection,
+    flash: Option<FlashMessage>,
+    user: &User,
+) -> Result<Template, Redirect> {
     if user.can_upload() {
         let mut context = TeraContext::new();
 
         context::flash_context(&mut context, flash);
         context::user_context(&mut context, Some(user));
+
+        if !user.is_contributor() {
+            let upload_limit = upload_service::get_remaining_upload_limit(&conn, &user);
+            context.insert("upload_limit", &upload_limit);
+        }
 
         Ok(Template::render("upload", &context))
     } else {
@@ -374,6 +383,7 @@ pub(crate) fn finalize(
 
     match upload_service::finalize_upload(
         &conn,
+        &user,
         &file_id,
         &request.tags,
         &request.source,

@@ -56,11 +56,18 @@ pub struct User {
     pub created_at: NaiveDateTime,
     pub updated_at: NaiveDateTime,
     pub role: UserRole,
+    pub daily_upload_limit: i32,
 }
 
 impl User {
     pub fn can_upload(&self) -> bool {
-        vec![UserRole::Contributor, UserRole::Moderator, UserRole::Admin].contains(&self.role)
+        vec![
+            UserRole::Registered,
+            UserRole::Contributor,
+            UserRole::Moderator,
+            UserRole::Admin,
+        ]
+        .contains(&self.role)
     }
 
     pub fn is_contributor(&self) -> bool {

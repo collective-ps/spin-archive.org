@@ -7,7 +7,7 @@ use nanoid::nanoid;
 use crate::models::audit_log::{self, AuditLog};
 use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
 use crate::models::user::User;
-use crate::schema::upload_views;
+use crate::schema::{upload_views, uploads};
 use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{get_by_file_id, get_by_original_file};
@@ -23,6 +23,7 @@ pub(crate) enum UploadError {
     AlreadyExists,
     DatabaseError,
     NotFound,
+    UploadLimitReached,
 }
 
 /// Creates a new pending upload.
@@ -50,12 +51,19 @@ pub(crate) fn new_pending_upload(
 /// we can move the upload for later processing.
 pub(crate) fn finalize_upload(
     conn: &PgConnection,
+    uploader: &User,
     file_id: &str,
     tags: &str,
     source: &str,
     description: &str,
     original_upload_date: Option<NaiveDate>,
 ) -> Result<Upload, UploadError> {
+    let upload_limit = get_remaining_upload_limit(&conn, &uploader);
+
+    if !uploader.is_contributor() && upload_limit <= 0 {
+        return Err(UploadError::UploadLimitReached);
+    }
+
     match upload::get_by_file_id(&conn, &file_id) {
         Some(
             upload
@@ -221,4 +229,25 @@ pub fn get_uploader_user(conn: &PgConnection, upload: &Upload) -> User {
 /// Gets an audit log for a particular upload.
 pub fn get_audit_log(conn: &PgConnection, upload: &Upload) -> Vec<(AuditLog, User)> {
     audit_log::get_by_row_id(conn, "uploads", upload.id).unwrap_or_default()
+}
+
+/// Returns the user's daily upload limit.
+pub fn get_remaining_upload_limit(conn: &PgConnection, user: &User) -> i64 {
+    use chrono::{Duration, Utc};
+    let yesterday = Utc::now().naive_local() - Duration::days(1);
+
+    let count: i64 = uploads::table
+        .select(diesel::dsl::count_star())
+        .filter(uploads::uploader_user_id.eq(user.id))
+        .filter(uploads::created_at.gt(yesterday))
+        .filter(uploads::status.eq_any(vec![
+            UploadStatus::Processing,
+            UploadStatus::PendingApproval,
+            UploadStatus::Completed,
+            UploadStatus::Deleted,
+        ]))
+        .first(conn)
+        .unwrap_or(0);
+
+    std::cmp::max(user.daily_upload_limit as i64 - count, 0)
 }

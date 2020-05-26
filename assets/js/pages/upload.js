@@ -83,7 +83,7 @@ const STATE = {
   error: 'error',
 }
 
-const UploadPage = () => {
+const UploadPage = ({ uploadLimit }) => {
   const [files, setFiles] = useState([])
   const [state, setState] = useState(STATE.upload)
 
@@ -125,21 +125,65 @@ const UploadPage = () => {
     setState(STATE.upload)
   }
 
-  if (state == STATE.upload) {
-    return <Uploader handleSubmit={handleAfterUpload} />
+  if (Number.isInteger(uploadLimit) && uploadLimit === 0) {
+    return (
+      <div>
+        <div>Sorry, you have reached your limit of daily uploads.</div>
+        <div>
+          This limit is set in place to help us monitor the site and keep it
+          clean. If you have more content that you wish to share, contact us in
+          the{' '}
+          <a
+            rel='noopener noreferrer'
+            target='_blank'
+            href='https://discord.gg/NMMWPnA'
+          >
+            Discord
+          </a>
+          .
+        </div>
+      </div>
+    )
+  } else if (state == STATE.upload) {
+    return (
+      <div>
+        {Number.isInteger(uploadLimit) && (
+          <div>
+            <div>You have {uploadLimit} upload(s) left for the day.</div>
+            <div>
+              This limit is set in place to help us monitor the site and keep it
+              clean. If you have more content that you wish to share, contact us
+              in the{' '}
+              <a
+                rel='noopener noreferrer'
+                target='_blank'
+                href='https://discord.gg/NMMWPnA'
+              >
+                Discord
+              </a>
+              .
+            </div>
+          </div>
+        )}
+        <Uploader handleSubmit={handleAfterUpload} uploadLimit={uploadLimit} />
+      </div>
+    )
   } else if (state == STATE.edit) {
     return <EditComponent files={files} next={handleDone} />
   } else if (state == STATE.done) {
     return (
       <div>
-        <div>Videos are now processing. They should be published shortly.</div>
+        <div>Videos are now processing and will be sent for approval.</div>
         <button onClick={reset}>Upload more</button>
       </div>
     )
   } else if (state == STATE.error) {
     return (
       <div>
-        <div>An unknown error occured.</div>
+        <div>
+          An unknown error occured. Any successfully uploads will still be
+          processed.
+        </div>
         <button onClick={reset}>Retry</button>
       </div>
     )

@@ -47,7 +47,11 @@ if (document.getElementById('tag-box-input')) {
 
 if (document.getElementById('upload-page')) {
   let page = document.getElementById('upload-page')
-  ReactDOM.render(<UploadPage />, page)
+  let uploadLimit = page.dataset.uploadLimit
+    ? parseInt(page.dataset.uploadLimit)
+    : null
+
+  ReactDOM.render(<UploadPage uploadLimit={uploadLimit} />, page)
 }
 
 window.addEventListener('DOMContentLoaded', () => {

@@ -1,4 +1,9 @@
+#![allow(unused_imports)]
+
 table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     audit_log (id) {
         id -> Int8,
         table_name -> Text,
@@ -12,6 +17,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     tags (id) {
         id -> Int8,
         name -> Text,
@@ -23,6 +31,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     upload_comments (id) {
         id -> Int8,
         upload_id -> Int4,
@@ -34,6 +45,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     upload_views (id) {
         id -> Int8,
         upload_id -> Int4,
@@ -68,6 +82,9 @@ table! {
 }
 
 table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     users (id) {
         id -> Int4,
         username -> Text,
@@ -76,6 +93,7 @@ table! {
         created_at -> Timestamp,
         updated_at -> Timestamp,
         role -> Int2,
+        daily_upload_limit -> Int4,
     }
 }
 

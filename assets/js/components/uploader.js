@@ -2,7 +2,7 @@ import React from 'react'
 import Dropzone from 'react-dropzone-uploader'
 import 'react-dropzone-uploader/dist/styles.css'
 
-const Uploader = ({ handleSubmit }) => {
+const Uploader = ({ handleSubmit, uploadLimit }) => {
   const getUploadParams = async (fileWithMeta) => {
     const response = await fetch('/upload', {
       method: 'POST',
@@ -51,6 +51,15 @@ const Uploader = ({ handleSubmit }) => {
     }
   }
 
+  const props = isInteger(uploadLimit)
+    ? {
+        maxFiles: uploadLimit,
+        multiple: uploadLimit > 1,
+      }
+    : {}
+
+  console.log(props)
+
   return (
     <Dropzone
       getUploadParams={getUploadParams}
@@ -58,6 +67,7 @@ const Uploader = ({ handleSubmit }) => {
       onSubmit={handleSubmit}
       submitButtonContent={'Continue'}
       accept='video/*'
+      {...props}
     />
   )
 }
