@@ -22,6 +22,8 @@ use crate::config;
 use crate::database::DatabaseConnection;
 use crate::schema::users;
 
+sql_function!(fn lower(x: sql_types::Text) -> sql_types::Text);
+
 #[derive(Debug, Copy, Clone, Serialize, Deserialize, PartialEq, FromSqlRow, AsExpression)]
 #[repr(i16)]
 pub enum UserRole {
@@ -228,7 +230,7 @@ pub(crate) fn login(
     use crate::schema::users::dsl::*;
 
     let user: User = users
-        .filter(username.eq(login_username))
+        .filter(lower(username).eq(lower(login_username)))
         .first::<User>(conn)
         .map_err(|_| LoginError::InvalidPasswordOrUser)?;
 

@@ -24,7 +24,7 @@ pub(crate) fn index(flash: Option<FlashMessage>) -> Template {
 #[rocket::post("/register", data = "<form>")]
 pub(crate) fn post(conn: DatabaseConnection, form: Form<RegistrationFields>) -> Flash<Redirect> {
     // @TODO(vy): Move username validation to somewhere else.
-    let re = regex::Regex::new(r"^[a-z_\d]*$").unwrap();
+    let re = regex::Regex::new(r"^[a-z_A-Z\d]*$").unwrap();
 
     if !re.is_match(&form.username) || form.username.len() > 20 {
         return Flash::error(
