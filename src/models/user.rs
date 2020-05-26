@@ -62,6 +62,18 @@ impl User {
     pub fn can_upload(&self) -> bool {
         vec![UserRole::Contributor, UserRole::Moderator, UserRole::Admin].contains(&self.role)
     }
+
+    pub fn is_contributor(&self) -> bool {
+        vec![UserRole::Contributor, UserRole::Moderator, UserRole::Admin].contains(&self.role)
+    }
+
+    pub fn is_moderator(&self) -> bool {
+        vec![UserRole::Moderator, UserRole::Admin].contains(&self.role)
+    }
+
+    pub fn is_admin(&self) -> bool {
+        vec![UserRole::Admin].contains(&self.role)
+    }
 }
 
 impl<DB> ToSql<sql_types::SmallInt, DB> for UserRole

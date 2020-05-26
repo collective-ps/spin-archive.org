@@ -67,13 +67,28 @@
 
     <a href="/u/{{ upload.file_id }}/log" class="nav-item">Log</a>
 
-    {% if user_id and user_role == "admin" %}
+    {% if user | is_admin() %}
     <div class="admin-actions">
       <label>Admin Actions</label>
       <form action="/admin/actions/encode_video" method="POST">
         <input type="hidden" name="file_id" value="{{ upload.file_id }}">
         <a href="javascript:;" onclick="parentNode.submit()">Encode Video</a>
       </form>
+    </div>
+    {% endif %}
+
+    {% if user | is_moderator() %}
+    <div class="admin-actions">
+      <label>Moderator Actions</label>
+
+      {% if upload.status == "Deleted" %}
+      <div>Deleted</div>
+      {% else %}
+      <form action="/upload/{{ upload.file_id }}/delete" method="POST">
+        <input type="hidden" name="file_id" value="{{ upload.file_id }}">
+        <a href="javascript:;" onclick="parentNode.submit()">Delete</a>
+      </form>
+      {% endif %}
     </div>
     {% endif %}
   </div>

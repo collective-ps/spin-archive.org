@@ -20,6 +20,7 @@ pub(crate) fn flash_context(context: &mut TeraContext, flash: Option<FlashMessag
 
 pub(crate) fn user_context(context: &mut TeraContext, user: Option<&User>) {
     if let Some(user) = user {
+        context.insert("user", &user);
         context.insert("user_id", &user.id);
         context.insert("user_role", &user.role.to_string());
         context.insert("user_can_upload", &user.can_upload());
@@ -140,5 +141,29 @@ pub fn from_markdown(value: TeraValue, _args: HashMap<String, TeraValue>) -> Ter
             Ok(serde_json::to_value(html_output).unwrap())
         }
         Err(_) => Err("Could not format markdown.".into()),
+    }
+}
+
+pub fn is_contributor(
+    value: TeraValue,
+    _args: HashMap<String, TeraValue>,
+) -> TeraResult<TeraValue> {
+    match serde_json::from_value::<User>(value.clone()) {
+        Ok(user) => Ok(serde_json::to_value(user.is_contributor()).unwrap()),
+        Err(_) => Ok(serde_json::to_value(false).unwrap()),
+    }
+}
+
+pub fn is_moderator(value: TeraValue, _args: HashMap<String, TeraValue>) -> TeraResult<TeraValue> {
+    match serde_json::from_value::<User>(value.clone()) {
+        Ok(user) => Ok(serde_json::to_value(user.is_moderator()).unwrap()),
+        Err(_) => Ok(serde_json::to_value(false).unwrap()),
+    }
+}
+
+pub fn is_admin(value: TeraValue, _args: HashMap<String, TeraValue>) -> TeraResult<TeraValue> {
+    match serde_json::from_value::<User>(value.clone()) {
+        Ok(user) => Ok(serde_json::to_value(user.is_admin()).unwrap()),
+        Err(_) => Ok(serde_json::to_value(false).unwrap()),
     }
 }

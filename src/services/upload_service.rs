@@ -165,6 +165,22 @@ pub(crate) fn update_upload(
     }
 }
 
+pub fn delete(conn: &PgConnection, upload: &Upload, user: &User) -> QueryResult<Upload> {
+    upload::update_status(&conn, upload.id, UploadStatus::Deleted).and_then(|new_upload| {
+        audit_service::create_audit_log(
+            &conn,
+            "uploads",
+            "status",
+            upload.id,
+            user.id,
+            &upload.status.to_string(),
+            &new_upload.status.to_string(),
+        );
+
+        Ok(new_upload)
+    })
+}
+
 pub fn after_edit_hooks(conn: &PgConnection, upload: &Upload) {
     let _ = tag_service::create_from_tag_string(&conn, &upload.tag_string);
 }

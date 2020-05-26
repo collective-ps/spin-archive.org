@@ -63,6 +63,23 @@ pub enum UploadStatus {
     Processing = 1,
     Completed = 2,
     Failed = 3,
+    Deleted = 4,
+    PendingApproval = 5,
+}
+
+impl std::fmt::Display for UploadStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        let role = match self {
+            UploadStatus::Pending => "Pending",
+            UploadStatus::Processing => "Processing",
+            UploadStatus::Completed => "Completed",
+            UploadStatus::Failed => "Failed",
+            UploadStatus::Deleted => "Deleted",
+            UploadStatus::PendingApproval => "Pending Approval",
+        };
+
+        write!(f, "{}", role)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset, Associations)]
@@ -199,6 +216,8 @@ where
             1 => Ok(UploadStatus::Processing),
             2 => Ok(UploadStatus::Completed),
             3 => Ok(UploadStatus::Failed),
+            4 => Ok(UploadStatus::Deleted),
+            5 => Ok(UploadStatus::PendingApproval),
             _ => Err("Unrecognized enum variant".into()),
         }
     }
@@ -274,6 +293,18 @@ pub fn update_encoding(
 ) -> QueryResult<Upload> {
     diesel::update(uploads::table.filter(uploads::id.eq(id)))
         .set(upload)
+        .returning(ALL_COLUMNS)
+        .get_result::<Upload>(conn)
+}
+
+/// Updates a given [`Upload`] to given [`UploadStatus`].
+pub fn update_status(
+    conn: &PgConnection,
+    upload_id: i32,
+    status: UploadStatus,
+) -> QueryResult<Upload> {
+    diesel::update(uploads::table.filter(uploads::id.eq(upload_id)))
+        .set(uploads::status.eq(status))
         .returning(ALL_COLUMNS)
         .get_result::<Upload>(conn)
 }

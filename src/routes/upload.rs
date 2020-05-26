@@ -395,7 +395,7 @@ pub(crate) fn update(
 ) -> Flash<Redirect> {
     let path = format!("/u/{}", file_id);
 
-    if !user.can_upload() {
+    if !user.is_contributor() {
         return Flash::error(Redirect::to(path), "");
     }
 
@@ -426,5 +426,30 @@ pub(crate) fn update(
             Redirect::to(format!("{}/edit", path)),
             "Could not edit upload.",
         ),
+    }
+}
+
+/// Marks a given upload as Deleted.
+#[rocket::post("/upload/<file_id>/delete")]
+pub(crate) fn delete(conn: DatabaseConnection, user: &User, file_id: String) -> Flash<Redirect> {
+    let path = format!("/u/{}", file_id);
+
+    if !user.is_moderator() {
+        return Flash::error(Redirect::to(path), "You do not have access to do that.");
+    }
+
+    match upload_service::get_by_file_id(&conn, &file_id)
+        .ok_or("No upload found.")
+        .and_then(|upload| {
+            upload_service::delete(&conn, &upload, &user).map_err(|_| "Could not delete upload.")
+        })
+        .and_then(|_| {
+            Ok(Flash::success(
+                Redirect::to(path.clone()),
+                "Marked upload as deleted.",
+            ))
+        }) {
+        Ok(result) => result,
+        Err(error) => Flash::error(Redirect::to(path.clone()), error),
     }
 }

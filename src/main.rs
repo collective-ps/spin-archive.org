@@ -156,6 +156,16 @@ fn main() {
             engines
                 .tera
                 .register_filter("append_version", append_version);
+
+            engines
+                .tera
+                .register_filter("is_contributor", context::is_contributor);
+
+            engines
+                .tera
+                .register_filter("is_moderator", context::is_moderator);
+
+            engines.tera.register_filter("is_admin", context::is_admin);
         }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
@@ -185,6 +195,7 @@ fn main() {
                 routes::upload::create_comment,
                 routes::upload::edit_comment,
                 routes::upload::edit_comment_page,
+                routes::upload::delete,
                 routes::webhooks::video::webhook,
             ],
         )
