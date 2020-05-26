@@ -25,6 +25,13 @@ pub(crate) fn user_context(context: &mut TeraContext, user: Option<&User>) {
         context.insert("user_role", &user.role.to_string());
         context.insert("user_can_upload", &user.can_upload());
         context.insert("username", &user.username.clone());
+        context.insert("is_contributor", &user.is_contributor());
+        context.insert("is_moderator", &user.is_moderator());
+        context.insert("is_admin", &user.is_admin());
+    } else {
+        context.insert("is_contributor", &false);
+        context.insert("is_moderator", &false);
+        context.insert("is_admin", &false);
     }
 }
 

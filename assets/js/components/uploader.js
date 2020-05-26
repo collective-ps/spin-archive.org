@@ -3,6 +3,8 @@ import Dropzone from 'react-dropzone-uploader'
 import 'react-dropzone-uploader/dist/styles.css'
 
 const Uploader = ({ handleSubmit, uploadLimit }) => {
+  const hasUploadLimit = uploadLimit !== null
+
   const getUploadParams = async (fileWithMeta) => {
     const response = await fetch('/upload', {
       method: 'POST',
@@ -51,14 +53,12 @@ const Uploader = ({ handleSubmit, uploadLimit }) => {
     }
   }
 
-  const props = isInteger(uploadLimit)
+  const props = hasUploadLimit
     ? {
         maxFiles: uploadLimit,
         multiple: uploadLimit > 1,
       }
     : {}
-
-  console.log(props)
 
   return (
     <Dropzone

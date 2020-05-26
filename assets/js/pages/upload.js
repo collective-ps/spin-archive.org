@@ -86,6 +86,7 @@ const STATE = {
 const UploadPage = ({ uploadLimit }) => {
   const [files, setFiles] = useState([])
   const [state, setState] = useState(STATE.upload)
+  const hasUploadLimit = uploadLimit !== null
 
   const handleAfterUpload = (files) => {
     setFiles(files)
@@ -125,7 +126,7 @@ const UploadPage = ({ uploadLimit }) => {
     setState(STATE.upload)
   }
 
-  if (Number.isInteger(uploadLimit) && uploadLimit === 0) {
+  if (hasUploadLimit && uploadLimit === 0) {
     return (
       <div>
         <div>Sorry, you have reached your limit of daily uploads.</div>
@@ -147,7 +148,7 @@ const UploadPage = ({ uploadLimit }) => {
   } else if (state == STATE.upload) {
     return (
       <div>
-        {Number.isInteger(uploadLimit) && (
+        {hasUploadLimit && (
           <div>
             <div>You have {uploadLimit} upload(s) left for the day.</div>
             <div>
@@ -162,6 +163,10 @@ const UploadPage = ({ uploadLimit }) => {
                 Discord
               </a>
               .
+            </div>
+            <div>
+              It's recommended to read the #contributor-guide in the Discord
+              before uploading.
             </div>
           </div>
         )}

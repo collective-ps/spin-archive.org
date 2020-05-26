@@ -67,14 +67,14 @@
 
     <a href="/u/{{ upload.file_id }}/log" class="nav-item">Log</a>
 
-    {% if user | is_contributor() %}
+    {% if is_contributor %}
     <div class="upload-status">
       <label>Status</label>
       <div>{{ upload.status }}</div>
     </div>
     {% endif %}
 
-    {% if user | is_admin() %}
+    {% if is_admin %}
     <div class="admin-actions">
       <label>Admin Actions</label>
       <form action="/admin/actions/encode_video" method="POST">
@@ -84,7 +84,7 @@
     </div>
     {% endif %}
 
-    {% if user | is_moderator() %}
+    {% if is_moderator %}
     <div class="moderator-actions">
       <label>Moderator Actions</label>
 
@@ -99,7 +99,7 @@
     </div>
     {% endif %}
 
-    {% if user | is_contributor() %}
+    {% if is_contributor %}
     <div class="contributor-actions">
       <label>Contributor Actions</label>
       {% if upload.status == "PendingApproval" %}
