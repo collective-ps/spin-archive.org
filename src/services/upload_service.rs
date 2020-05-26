@@ -10,7 +10,9 @@ use crate::models::user::User;
 use crate::schema::{upload_views, uploads};
 use crate::services::{audit_service, encoder_service, tag_service};
 
-pub use crate::models::upload::{get_by_file_id, get_by_original_file};
+pub use crate::models::upload::{
+    get_by_file_id, get_by_original_file, get_pending_approval_uploads, update_status,
+};
 
 #[derive(Insertable)]
 #[table_name = "upload_views"]

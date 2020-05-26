@@ -320,6 +320,18 @@ pub fn insert_pending_upload(
         .get_result(conn)
 }
 
+/// Gets all pending approval uploads and their uploader.
+pub fn get_pending_approval_uploads(conn: &PgConnection) -> Vec<(Upload, User)> {
+    use crate::schema::users;
+
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::PendingApproval))
+        .inner_join(users::table)
+        .select((ALL_COLUMNS, users::all_columns))
+        .load::<(Upload, User)>(conn)
+        .unwrap_or_default()
+}
+
 /// Index query for uploads, fetches completed uploads by the page number provided.
 ///
 /// Returns a tuple: (Vec<Upload>, page_count).

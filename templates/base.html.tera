@@ -33,6 +33,9 @@
           {% if user_can_upload %}
             <a href="/upload" class="nav-item">Upload</a>
           {% endif %}
+          {% if user | is_contributor() %}
+            <a href="/queue" class="nav-item">Queue</a>
+          {% endif %}
           {% if user_id %}
             <form action="/logout" method="POST" class="nav-item">
               <a class="nav-item" href="javascript:;" onclick="parentNode.submit()">Log out</a>

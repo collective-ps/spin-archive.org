@@ -67,6 +67,13 @@
 
     <a href="/u/{{ upload.file_id }}/log" class="nav-item">Log</a>
 
+    {% if user | is_contributor() %}
+    <div class="upload-status">
+      <label>Status</label>
+      <div>{{ upload.status }}</div>
+    </div>
+    {% endif %}
+
     {% if user | is_admin() %}
     <div class="admin-actions">
       <label>Admin Actions</label>
@@ -78,7 +85,7 @@
     {% endif %}
 
     {% if user | is_moderator() %}
-    <div class="admin-actions">
+    <div class="moderator-actions">
       <label>Moderator Actions</label>
 
       {% if upload.status == "Deleted" %}
@@ -87,6 +94,17 @@
       <form action="/upload/{{ upload.file_id }}/delete" method="POST">
         <input type="hidden" name="file_id" value="{{ upload.file_id }}">
         <a href="javascript:;" onclick="parentNode.submit()">Delete</a>
+      </form>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    {% if user | is_contributor() %}
+    <div class="contributor-actions">
+      <label>Contributor Actions</label>
+      {% if upload.status == "PendingApproval" %}
+      <form action="/queue/{{ upload.file_id }}/approve" method="POST">
+        <a href="javascript:;" onclick="parentNode.submit()">Approve</a>
       </form>
       {% endif %}
     </div>

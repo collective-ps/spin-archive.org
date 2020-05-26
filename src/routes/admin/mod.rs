@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 
 use crate::context;
 use crate::database::DatabaseConnection;
-use crate::models::user::{User, UserRole};
+use crate::models::user::User;
 use crate::services::{encoder_service, tag_service, upload_service};
 
 /// Admin area.
 #[rocket::get("/")]
 pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template, Redirect> {
-    if user.role == UserRole::Admin {
+    if user.is_admin() {
         let mut context = TeraContext::new();
 
         context::flash_context(&mut context, flash);
@@ -27,7 +27,7 @@ pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template
 
 #[rocket::post("/actions/rebuild_tags")]
 pub(crate) fn action_rebuild_tags(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
-    if user.role == UserRole::Admin {
+    if user.is_admin() {
         std::thread::spawn(move || {
             tag_service::rebuild(&conn);
         });
@@ -43,7 +43,7 @@ pub(crate) fn action_rebuild_tags(user: &User, conn: DatabaseConnection) -> Flas
 
 #[rocket::post("/actions/rebuild_tag_counts")]
 pub(crate) fn action_rebuild_tag_counts(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
-    if user.role == UserRole::Admin {
+    if user.is_admin() {
         tag_service::rebuild_tag_counts(&conn);
 
         Flash::success(Redirect::to("/admin"), "Rebuilt tag counts!")
@@ -63,7 +63,7 @@ pub(crate) fn action_encode_video(
     conn: DatabaseConnection,
     request: Form<EncodeVideoRequest>,
 ) -> Flash<Redirect> {
-    if user.role != UserRole::Admin {
+    if !user.is_admin() {
         return Flash::error(Redirect::to("/"), "");
     }
 

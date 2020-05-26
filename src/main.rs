@@ -200,6 +200,7 @@ fn main() {
             ],
         )
         .mount("/api/v1", routes::api::router())
+        .mount("/queue", routes::queue::router())
         .mount("/admin", routes::admin::router())
         .mount(
             "/public",

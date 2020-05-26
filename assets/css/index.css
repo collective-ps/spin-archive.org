@@ -162,6 +162,13 @@ footer {
   padding: 1.5em;
 }
 
+.two-column-page .content .banner {
+  padding: 1.5rem;
+  border-radius: 4px;
+  background-color: var(--color-lightGrey);
+  margin: 1em 0;
+}
+
 .upload {
   height: 100%;
   max-height: 750px;
