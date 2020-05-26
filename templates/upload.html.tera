@@ -1,12 +1,10 @@
 {% extends "base" %}
 
 {% block content %}
-{% if upload_limit %}
-  {% if upload_limit >= 0 -%}
-  <main class="text-center" id="upload-page" data-upload-limit="{{ upload_limit }}">
-  {% endif %}
-{% else -%}
+{% if is_contributor %}
 <main class="text-center" id="upload-page">
+{% else %}
+<main class="text-center" id="upload-page" data-upload-limit="{{ upload_limit }}">
 {% endif -%}
 </main>
 {% endblock content %}

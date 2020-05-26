@@ -36,6 +36,12 @@ pub(crate) fn new_pending_upload(
     file_ext: &str,
     file_size: i64,
 ) -> Result<Upload, UploadError> {
+    let upload_limit = get_remaining_upload_limit(&conn, &user);
+
+    if !user.is_contributor() && upload_limit <= 0 {
+        return Err(UploadError::UploadLimitReached);
+    }
+
     let pending_upload = PendingUpload {
         status: UploadStatus::Pending,
         file_id: nanoid!(),
