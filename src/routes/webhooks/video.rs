@@ -25,6 +25,8 @@ pub(crate) fn webhook(conn: DatabaseConnection, request: Json<Job>, key: Option<
                 .and_then(|user| {
                     if upload.status == UploadStatus::Completed {
                         notification_service::notify_new_upload(&upload, &user);
+                    } else if upload.status == UploadStatus::PendingApproval {
+                        notification_service::notify_pending_upload(&upload, &user);
                     }
 
                     Some(())
