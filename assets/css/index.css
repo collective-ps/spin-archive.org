@@ -324,7 +324,3 @@ footer {
 .flipped video {
   transform: rotateY(180deg);
 }
-
-label {
-  font-weight: 500;
-}

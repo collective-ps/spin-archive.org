@@ -1,3 +1,7 @@
+#profile-page label {
+  font-weight: 500;
+}
+
 #profile-page .user-profile .username {
   margin: 1em;
 }
