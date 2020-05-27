@@ -21,7 +21,7 @@
       </div>
       <div class="upload-count">
         <label>Upload Count</label>
-        <p>{{ upload_count }}</p>
+        <p><a href="/?q=uploader:{{ profile_user.username | lower }}">{{ upload_count }}</a></p>
       </div>
     </div>
   </div>
