@@ -4,4 +4,4 @@ pub mod login;
 pub mod queue;
 pub mod register;
 pub mod upload;
-pub mod webhooks;
+pub mod users;pub mod webhooks;

@@ -1,0 +1,29 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="one-column-page" id="profile-page">
+  <div class="user-profile">
+    <div class="username">
+      <h2>{{ profile_user.username }}</h2>
+    </div>
+    <div class="details">
+      <div class="role">
+        <label>Role</label>
+        <p class="role" data-role="{{ profile_user.role | lower }}">{{ profile_user.role }}</p>
+      </div>
+      <div class="join-date">
+        <label>Join Date</label>
+        <p class="date">{{ profile_user.created_at | date(format="%Y-%m-%d") }} ({{ profile_user.created_at | humanized_past }})</p>
+      </div>
+      <div class="comment-count">
+        <label>Comment Count</label>
+        <p>{{ comment_count }}</p>
+      </div>
+      <div class="upload-count">
+        <label>Upload Count</label>
+        <p>{{ upload_count }}</p>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock content %}

@@ -195,6 +195,13 @@ pub fn get_user_by_id(conn: &PgConnection, user_id: i32) -> Option<User> {
     users.filter(id.eq(user_id)).first::<User>(conn).ok()
 }
 
+pub fn get_user_by_username(conn: &PgConnection, username: &str) -> Option<User> {
+    users::table
+        .filter(lower(users::username).eq(lower(username)))
+        .first::<User>(conn)
+        .ok()
+}
+
 fn hash_password(password: &str) -> Result<String, RegistrationError> {
     let salt = config::secret_key();
     let config = argon2::Config::default();

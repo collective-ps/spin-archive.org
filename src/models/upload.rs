@@ -418,3 +418,14 @@ pub fn index(
         }
     }
 }
+
+pub fn get_upload_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
+    use diesel::dsl::count;
+
+    uploads::table
+        .select(count(uploads::id))
+        .filter(uploads::uploader_user_id.eq(user_id))
+        .filter(uploads::status.eq(UploadStatus::Completed))
+        .first::<i64>(conn)
+        .unwrap_or_default()
+}

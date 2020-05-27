@@ -75,3 +75,13 @@ pub fn update(
         .set(comment)
         .get_result::<UploadComment>(conn)
 }
+
+pub fn get_comment_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
+    use diesel::dsl::count;
+
+    upload_comments::table
+        .select(count(upload_comments::id))
+        .filter(upload_comments::user_id.eq(user_id))
+        .first::<i64>(conn)
+        .unwrap_or_default()
+}

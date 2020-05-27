@@ -202,6 +202,7 @@ fn main() {
         .mount("/api/v1", routes::api::router())
         .mount("/queue", routes::queue::router())
         .mount("/admin", routes::admin::router())
+        .mount("/user", routes::users::router())
         .mount(
             "/public",
             StaticFiles::from(format!("{}/{}", current_dir, "build")),
