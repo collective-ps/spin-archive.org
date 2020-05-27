@@ -339,70 +339,139 @@ pub fn index(
     conn: &PgConnection,
     page: i64,
     per_page: i64,
-    q_string: Option<String>,
+    query: &str,
+    uploader: Option<User>,
 ) -> (Vec<FullUpload>, i64, i64) {
     use diesel::sql_types::*;
 
-    let result = if q_string.is_some() {
-        diesel::sql_query(
-            "
-                SELECT *,
-                COUNT(*) OVER ()
-                    FROM
-                    (
-                    SELECT uploads.*,
-                        users.username AS uploader_username,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
-                        FROM upload_comments
-                        WHERE upload_comments.upload_id = uploads.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
-                        FROM upload_views
-                        WHERE upload_views.upload_id = uploads.id)
-                    FROM uploads
-                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                    WHERE uploads.status = $1
-                    AND uploads.tag_index @@ plainto_tsquery($2)
-                    GROUP BY (uploads.id, users.username)
-                    ORDER BY uploads.updated_at DESC
-                    ) t
-                    LIMIT $3
-                    OFFSET $4
-                ",
-        )
-        .bind::<BigInt, _>(2)
-        .bind::<Text, _>(q_string.unwrap())
-        .bind::<BigInt, _>(per_page)
-        .bind::<BigInt, _>((page - 1) * per_page)
-        .load::<FullUpload>(conn)
+    let result = if !query.is_empty() {
+        if uploader.is_some() {
+            diesel::sql_query(
+                "
+                    SELECT *,
+                    COUNT(*) OVER ()
+                        FROM
+                        (
+                        SELECT uploads.*,
+                            users.username AS uploader_username,
+                            (SELECT COUNT(upload_comments.*) AS comment_count
+                            FROM upload_comments
+                            WHERE upload_comments.upload_id = uploads.id),
+                            (SELECT COUNT(upload_views.*) AS view_count
+                            FROM upload_views
+                            WHERE upload_views.upload_id = uploads.id)
+                        FROM uploads
+                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                        WHERE uploads.status = $1
+                        AND uploads.tag_index @@ plainto_tsquery($2)
+                        AND uploads.uploader_user_id = $3
+                        GROUP BY (uploads.id, users.username)
+                        ORDER BY uploads.updated_at DESC
+                        ) t
+                        LIMIT $4
+                        OFFSET $5
+                    ",
+            )
+            .bind::<BigInt, _>(2)
+            .bind::<Text, _>(query)
+            .bind::<Int4, _>(uploader.unwrap().id)
+            .bind::<BigInt, _>(per_page)
+            .bind::<BigInt, _>((page - 1) * per_page)
+            .load::<FullUpload>(conn)
+        } else {
+            diesel::sql_query(
+                "
+                    SELECT *,
+                    COUNT(*) OVER ()
+                        FROM
+                        (
+                        SELECT uploads.*,
+                            users.username AS uploader_username,
+                            (SELECT COUNT(upload_comments.*) AS comment_count
+                            FROM upload_comments
+                            WHERE upload_comments.upload_id = uploads.id),
+                            (SELECT COUNT(upload_views.*) AS view_count
+                            FROM upload_views
+                            WHERE upload_views.upload_id = uploads.id)
+                        FROM uploads
+                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                        WHERE uploads.status = $1
+                        AND uploads.tag_index @@ plainto_tsquery($2)
+                        GROUP BY (uploads.id, users.username)
+                        ORDER BY uploads.updated_at DESC
+                        ) t
+                        LIMIT $3
+                        OFFSET $4
+                    ",
+            )
+            .bind::<BigInt, _>(2)
+            .bind::<Text, _>(query)
+            .bind::<BigInt, _>(per_page)
+            .bind::<BigInt, _>((page - 1) * per_page)
+            .load::<FullUpload>(conn)
+        }
     } else {
-        diesel::sql_query(
-            "
-                SELECT *,
-                COUNT(*) OVER ()
-                    FROM
-                    (
-                    SELECT uploads.*,
-                        users.username AS uploader_username,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
-                        FROM upload_comments
-                        WHERE upload_comments.upload_id = uploads.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
-                        FROM upload_views
-                        WHERE upload_views.upload_id = uploads.id)
-                    FROM uploads
-                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                    WHERE uploads.status = $1
-                    GROUP BY (uploads.id, users.username)
-                    ORDER BY uploads.updated_at DESC
-                    ) t
-                    LIMIT $2
-                    OFFSET $3
-                ",
-        )
-        .bind::<BigInt, _>(2)
-        .bind::<BigInt, _>(per_page)
-        .bind::<BigInt, _>((page - 1) * per_page)
-        .load::<FullUpload>(conn)
+        if uploader.is_some() {
+            diesel::sql_query(
+                "
+                    SELECT *,
+                    COUNT(*) OVER ()
+                        FROM
+                        (
+                        SELECT uploads.*,
+                            users.username AS uploader_username,
+                            (SELECT COUNT(upload_comments.*) AS comment_count
+                            FROM upload_comments
+                            WHERE upload_comments.upload_id = uploads.id),
+                            (SELECT COUNT(upload_views.*) AS view_count
+                            FROM upload_views
+                            WHERE upload_views.upload_id = uploads.id)
+                        FROM uploads
+                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                        WHERE uploads.status = $1
+                        AND uploads.uploader_user_id = $2
+                        GROUP BY (uploads.id, users.username)
+                        ORDER BY uploads.updated_at DESC
+                        ) t
+                        LIMIT $3
+                        OFFSET $4
+                    ",
+            )
+            .bind::<BigInt, _>(2)
+            .bind::<Int4, _>(uploader.unwrap().id)
+            .bind::<BigInt, _>(per_page)
+            .bind::<BigInt, _>((page - 1) * per_page)
+            .load::<FullUpload>(conn)
+        } else {
+            diesel::sql_query(
+                "
+                    SELECT *,
+                    COUNT(*) OVER ()
+                        FROM
+                        (
+                        SELECT uploads.*,
+                            users.username AS uploader_username,
+                            (SELECT COUNT(upload_comments.*) AS comment_count
+                            FROM upload_comments
+                            WHERE upload_comments.upload_id = uploads.id),
+                            (SELECT COUNT(upload_views.*) AS view_count
+                            FROM upload_views
+                            WHERE upload_views.upload_id = uploads.id)
+                        FROM uploads
+                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                        WHERE uploads.status = $1
+                        GROUP BY (uploads.id, users.username)
+                        ORDER BY uploads.updated_at DESC
+                        ) t
+                        LIMIT $2
+                        OFFSET $3
+                    ",
+            )
+            .bind::<BigInt, _>(2)
+            .bind::<BigInt, _>(per_page)
+            .bind::<BigInt, _>((page - 1) * per_page)
+            .load::<FullUpload>(conn)
+        }
     };
 
     match result.unwrap() {

@@ -31,7 +31,7 @@ mod schema;
 mod services;
 
 use database::DatabaseConnection;
-use models::user::User;
+use models::user::{get_user_by_username, User};
 
 embed_migrations!();
 
@@ -53,9 +53,33 @@ fn index(
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 25;
+    let mut query = q.unwrap_or_default();
+    let original_query = query.clone();
+
+    // Check if the query has an `uploader:[USERNAME]` tag.
+    let mut uploader: Option<User> = None;
+
+    if !query.is_empty() {
+        let uploader_regex = regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
+
+        match uploader_regex.captures(&query) {
+            None => (),
+            Some(matches) => {
+                let full_match = &matches[0];
+                let username = &matches[2];
+
+                match get_user_by_username(&conn, &username) {
+                    Some(user) => uploader = Some(user),
+                    _ => (),
+                }
+
+                query = query.replace(full_match, "");
+            }
+        }
+    }
+
     let (uploads, page_count, total_count) =
-        models::upload::index(&conn, current_page, per_page, q.clone());
-    let query = q.unwrap_or_default();
+        models::upload::index(&conn, current_page, per_page, &query, uploader);
 
     let mut raw_tags: Vec<&str> = uploads
         .iter()
@@ -77,7 +101,7 @@ fn index(
     context.insert("page", &current_page);
     context.insert("tags", &tags);
     context.insert("tag_groups", &tag_groups);
-    context.insert("query", &query);
+    context.insert("query", &original_query);
 
     Template::render("index", &context)
 }
