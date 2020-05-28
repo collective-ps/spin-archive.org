@@ -43,15 +43,20 @@ pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
 
     let webhook_url = format!("{}?key={}", WEBHOOK_BASE, upload.video_encoding_key);
 
+    // Encode videos in lower quality if greater than 125MB.
     let config = vec![
         format!("set source = {}", source),
         format!("set webhook = {}", webhook_url),
         format!(
-            "-> mp4 = {}, keep=video_bitrate, if=$source_video_bitrate <= 8000",
+            "-> mp4:480p = {}, if=$source_width < 1280",
             output_url("e", &output_filename)
         ),
         format!(
-            "-> mp4::quality=4 = {}, if=$source_video_bitrate > 8000",
+            "-> mp4:720p = {}, if=$source_width >= 1280 and $source_width < 1980",
+            output_url("e", &output_filename)
+        ),
+        format!(
+            "-> mp4:1080p = {}, if=$source_width >= 1980",
             output_url("e", &output_filename)
         ),
         format!(
