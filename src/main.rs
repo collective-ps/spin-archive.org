@@ -52,7 +52,7 @@ fn index(
 ) -> Template {
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
-    let per_page = 25;
+    let per_page = 30;
     let mut query = q.unwrap_or_default();
     let original_query = query.clone();
 

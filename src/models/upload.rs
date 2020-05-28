@@ -272,6 +272,7 @@ pub fn get_by_original_file(
         .filter(uploads::file_name.eq(file_name))
         .filter(uploads::file_ext.eq(file_ext))
         .filter(uploads::file_size.eq(file_size))
+        .filter(uploads::status.ne(UploadStatus::Pending))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
         .ok()
