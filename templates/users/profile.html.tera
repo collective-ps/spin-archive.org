@@ -17,7 +17,7 @@
       </div>
       <div class="comment-count">
         <label>Comment Count</label>
-        <p>{{ comment_count }}</p>
+        <p><a href="/user/{{ profile_user.username | lower }}/comments">{{ comment_count }}</a></p>
       </div>
       <div class="upload-count">
         <label>Upload Count</label>

@@ -3,6 +3,7 @@ import 'wingcss'
 import '../css/index.css'
 import '../css/login.css'
 import '../css/pages/profile.css'
+import '../css/pages/user-comments-page.css'
 
 import React from 'react'
 import ReactDOM from 'react-dom'

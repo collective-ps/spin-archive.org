@@ -3,9 +3,10 @@ use diesel::prelude::*;
 use diesel::PgConnection;
 use serde::{Deserialize, Serialize};
 
-use crate::models::upload::Upload;
+use crate::models::upload::{Upload, ALL_COLUMNS as ALL_UPLOAD_COLUMNS};
 use crate::models::user::User;
 use crate::schema::upload_comments;
+use crate::schema::uploads;
 use crate::schema::users;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, Associations)]
@@ -83,5 +84,22 @@ pub fn get_comment_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
         .select(count(upload_comments::id))
         .filter(upload_comments::user_id.eq(user_id))
         .first::<i64>(conn)
+        .unwrap_or_default()
+}
+
+pub fn get_paginated_comments(
+    conn: &PgConnection,
+    user_id: i32,
+    page: i64,
+    per_page: i64,
+) -> Vec<(UploadComment, Upload)> {
+    upload_comments::table
+        .inner_join(uploads::table)
+        .select((upload_comments::all_columns, ALL_UPLOAD_COLUMNS))
+        .filter(upload_comments::user_id.eq(user_id))
+        .order_by(upload_comments::created_at.desc())
+        .limit(per_page)
+        .offset((page - 1) * per_page)
+        .load::<(UploadComment, Upload)>(conn)
         .unwrap_or_default()
 }

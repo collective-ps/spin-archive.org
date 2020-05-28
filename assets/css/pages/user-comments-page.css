@@ -1,0 +1,18 @@
+#user-comments-page .comments {
+  width: 100%;
+}
+
+#user-comments-page .comments ol {
+  list-style: none;
+}
+
+#user-comments-page .comment {
+  padding: 0.25em 0;
+}
+
+#user-comments-page .comment .title,
+#user-comments-page .comment .timestamp {
+  font-size: 10.5pt;
+  color: var(--color-grey);
+  font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
+}

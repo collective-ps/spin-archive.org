@@ -155,6 +155,10 @@ footer {
   padding: 2.5em;
 }
 
+.one-column-page {
+  flex-direction: column;
+}
+
 .two-column-page .sidebar {
   width: 300px;
 }

@@ -4,7 +4,9 @@ use crate::models::upload::Upload;
 use crate::models::upload_comment::{self, NewUploadComment, UpdateUploadComment, UploadComment};
 use crate::models::user::User;
 
-pub use crate::models::upload_comment::{get_comment_by_id, get_comment_count_by_user_id};
+pub use crate::models::upload_comment::{
+    get_comment_by_id, get_comment_count_by_user_id, get_paginated_comments,
+};
 
 pub fn create_comment_on_upload(
     conn: &PgConnection,
