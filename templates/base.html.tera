@@ -28,7 +28,7 @@
     <header>
       <nav class="nav row">
         <div class="col">
-          <div class="nav-logo nav-item">spin-archive.org</div>
+          <div class="nav-logo nav-item">spin-archive.org [beta]</div>
           <a href="/" class="nav-item">Home</a>
           {% if user_can_upload %}
             <a href="/upload" class="nav-item">Upload</a>
