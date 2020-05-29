@@ -115,7 +115,30 @@ footer {
 .upload-grid .upload {
   height: 180px;
   width: 180px;
-  padding: 0.25em;
+  padding: 0.25rem;
+  position: relative;
+}
+
+.upload-grid .upload::after {
+  position: absolute;
+  background-color: black;
+  color: white;
+  top: 0.25rem;
+  left: 0.25rem;
+  padding: 0 0.25rem;
+  font-size: 9pt;
+}
+
+.upload-grid .upload[data-tags~='type:collaboration_video']::after {
+  content: 'CV';
+}
+
+.upload-grid .upload[data-tags~='type:promo_video']::after {
+  content: 'PV';
+}
+
+.upload-grid .upload[data-tags~='type:solo_video']::after {
+  content: 'SV';
 }
 
 .upload-grid .upload a {
