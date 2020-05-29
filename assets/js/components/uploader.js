@@ -58,7 +58,10 @@ const Uploader = ({ handleSubmit, uploadLimit }) => {
         maxFiles: uploadLimit,
         multiple: uploadLimit > 1,
       }
-    : {}
+    : {
+        maxFiles: 10,
+        multiple: true,
+      }
 
   return (
     <Dropzone
