@@ -22,7 +22,16 @@
       {% endif -%}
 
       {% for upload in uploads -%}
-        <div class="upload" id="{{ upload.file_id }}" data-tags="{{ upload.tag_string }}" data-uploader="{{ upload.uploader_username }}">
+        <div
+          class="upload"
+          id="{{ upload.file_id }}"
+          data-tags="{{ upload.tag_string }}"
+          data-uploader="{{ upload.uploader_username }}"
+          data-uploader-role="{{ upload.uploader_role }}"
+          data-comment-count="{{ upload.comment_count }}"
+          data-humanized-past="{{ upload.created_at | humanized_past }}"
+          data-original-file-name="{{ upload.file_name }}"
+         >
           <a href="/u/{{ upload.file_id }}">
             <img
               src="{{ get_thumbnail_url(upload=upload) }}"

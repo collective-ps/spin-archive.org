@@ -14,6 +14,8 @@ import UploadPage from './pages/upload'
 import SearchBox from './components/search_box/form'
 import SearchBoxInput from './components/search_box'
 
+import './lib/upload_tooltips'
+
 if (document.getElementById('search-box-form')) {
   let container = document.getElementById('search-box-form')
   let query = container.dataset.query || ''

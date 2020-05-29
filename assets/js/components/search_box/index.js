@@ -152,7 +152,7 @@ const Component = ({
         {children}
       </div>
 
-      <div class={`suggestions ${isFocused ? 'visible' : ''}`}>
+      <div className={`suggestions ${isFocused ? 'visible' : ''}`}>
         {suggestions.map((tag, idx) => {
           const classNames = [
             'suggestion',

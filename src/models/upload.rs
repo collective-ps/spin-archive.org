@@ -10,7 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
-use crate::models::user::User;
+use crate::models::user::{User, UserRole};
 use crate::schema::uploads;
 
 type AllColumns = (
@@ -128,6 +128,8 @@ pub struct FullUpload {
 
     #[sql_type = "sql_types::Text"]
     pub uploader_username: String,
+    #[sql_type = "sql_types::SmallInt"]
+    pub uploader_role: UserRole,
     #[sql_type = "sql_types::BigInt"]
     pub comment_count: i64,
     #[sql_type = "sql_types::BigInt"]
@@ -355,6 +357,7 @@ pub fn index(
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
+                            users.role AS uploader_role,
                             (SELECT COUNT(upload_comments.*) AS comment_count
                             FROM upload_comments
                             WHERE upload_comments.upload_id = uploads.id),
@@ -366,7 +369,7 @@ pub fn index(
                         WHERE uploads.status = $1
                         AND uploads.tag_index @@ plainto_tsquery($2)
                         AND uploads.uploader_user_id = $3
-                        GROUP BY (uploads.id, users.username)
+                        GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.updated_at DESC
                         ) t
                         LIMIT $4
@@ -388,6 +391,7 @@ pub fn index(
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
+                            users.role AS uploader_role,
                             (SELECT COUNT(upload_comments.*) AS comment_count
                             FROM upload_comments
                             WHERE upload_comments.upload_id = uploads.id),
@@ -398,7 +402,7 @@ pub fn index(
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
                         AND uploads.tag_index @@ plainto_tsquery($2)
-                        GROUP BY (uploads.id, users.username)
+                        GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.updated_at DESC
                         ) t
                         LIMIT $3
@@ -421,6 +425,7 @@ pub fn index(
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
+                            users.role AS uploader_role,
                             (SELECT COUNT(upload_comments.*) AS comment_count
                             FROM upload_comments
                             WHERE upload_comments.upload_id = uploads.id),
@@ -431,7 +436,7 @@ pub fn index(
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
                         AND uploads.uploader_user_id = $2
-                        GROUP BY (uploads.id, users.username)
+                        GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.updated_at DESC
                         ) t
                         LIMIT $3
@@ -452,6 +457,7 @@ pub fn index(
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
+                            users.role AS uploader_role,
                             (SELECT COUNT(upload_comments.*) AS comment_count
                             FROM upload_comments
                             WHERE upload_comments.upload_id = uploads.id),
@@ -461,7 +467,7 @@ pub fn index(
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
-                        GROUP BY (uploads.id, users.username)
+                        GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.updated_at DESC
                         ) t
                         LIMIT $2

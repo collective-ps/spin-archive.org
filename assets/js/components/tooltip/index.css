@@ -1,0 +1,56 @@
+.sa-tooltip {
+  max-width: 400px;
+  min-width: 320px;
+  border: 1px solid var(--color-grey);
+  background-color: white;
+}
+
+.sa-tooltip .original-file-name {
+  font-size: 9pt;
+  font-style: italic;
+  width: 100%;
+  padding: 0 6px;
+  background-color: var(--color-lightGrey);
+}
+
+.sa-tooltip .header {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.sa-tooltip .header .left,
+.sa-tooltip .header .right {
+  flex: 1;
+}
+
+.sa-tooltip .header .left {
+  text-align: left;
+}
+
+.sa-tooltip .header .right {
+  text-align: right;
+}
+
+.sa-tooltip .header div + div {
+  padding-left: 4px;
+}
+
+.sa-tooltip .header .humanized-past {
+  font-style: italic;
+}
+
+.sa-tooltip .header .comment-count {
+  align-self: flex-end;
+}
+
+.sa-tooltip .header,
+.sa-tooltip .tags {
+  font-size: 9pt;
+  padding: 0 6px;
+}
+
+.sa-tooltip .tags {
+  max-height: 60px;
+  overflow-y: auto;
+}
