@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import Uploader from '../components/uploader'
+import PromisePool from 'es6-promise-pool'
+
 import './upload.css'
 
 import useInput from '../lib/use_input'
@@ -94,31 +96,46 @@ const UploadPage = ({ uploadLimit }) => {
   }
 
   const handleDone = (files) => {
-    let requests = files.map((file) => {
-      const url = `/upload/${file.meta.file_id}/finalize`
+    let file_idx = 0
+    let file_count = files.length
 
-      return fetch(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          tags: file.meta.tags,
-          source: file.meta.source,
-          description: file.meta.description,
-          original_upload_date: file.meta.originalUploadDate,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }).then((response) => response.json())
-    })
+    let promiseProducer = function () {
+      if (file_idx < files.length - 1) {
+        const file = files[file_idx]
+        const url = `/upload/${file.meta.file_id}/finalize`
 
-    Promise.all(requests)
-      .then(() => {
+        file_idx += 1
+
+        return fetch(url, {
+          method: 'POST',
+          body: JSON.stringify({
+            tags: file.meta.tags,
+            source: file.meta.source,
+            description: file.meta.description,
+            original_upload_date: file.meta.originalUploadDate,
+          }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }).then((response) => response.json())
+      } else {
+        return null
+      }
+    }
+
+    let concurrency = 3
+    let pool = new PromisePool(promiseProducer, concurrency)
+    let poolPromise = pool.start()
+
+    poolPromise.then(
+      function () {
         setState(STATE.done)
-      })
-      .catch((err) => {
+      },
+      function (err) {
         console.error(err)
         setState(STATE.error)
-      })
+      }
+    )
   }
 
   const reset = () => {

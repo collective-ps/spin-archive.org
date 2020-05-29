@@ -59,7 +59,7 @@ const Uploader = ({ handleSubmit, uploadLimit }) => {
         multiple: uploadLimit > 1,
       }
     : {
-        maxFiles: 10,
+        maxFiles: 25,
         multiple: true,
       }
 
