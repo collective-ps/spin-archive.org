@@ -17,6 +17,7 @@ pub fn notify_pending_upload(upload: &Upload, user: &User) {
     "embeds": [
       {
         "title": "Uploaded a video for approval.",
+        "description": format!("`{}`", upload.file_name.as_ref().unwrap_or(&"No original file name.".to_string())),
         "image": {
           "url": thumbnail_url,
         },
@@ -52,6 +53,7 @@ pub fn notify_new_upload(upload: &Upload, user: &User) {
     "embeds": [
       {
         "title": "Uploaded a new video.",
+        "description": format!("`{}`", upload.file_name.as_ref().unwrap_or(&"No original file name.".to_string())),
         "image": {
           "url": thumbnail_url,
         },
@@ -85,7 +87,7 @@ pub fn notify_new_comment(comment: &UploadComment, upload: &Upload, user: &User)
   let json = json!({
     "embeds": [
       {
-        "title": format!("Commented on #{}.", upload.file_id),
+        "title": format!("Commented on {} - #{}.", upload.file_name.as_ref().unwrap_or(&"unknown".to_string()), upload.file_id),
         "description": comment.comment,
         "image": {
           "url": thumbnail_url,
