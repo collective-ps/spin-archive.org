@@ -20,7 +20,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::config;
 use crate::database::DatabaseConnection;
-use crate::models::api_token;
 use crate::schema::users;
 
 sql_function!(fn lower(x: sql_types::Text) -> sql_types::Text);
@@ -145,34 +144,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for &'a User {
             })
             .as_ref();
 
-        let api_result = request
-            .local_cache(|| {
-                let db = request.guard::<DatabaseConnection>().succeeded()?;
-
-                request
-                    .headers()
-                    .get_one("Authorization")
-                    .and_then(|value| {
-                        if value.starts_with("Bearer ") {
-                            let token = &value[7..];
-                            api_token::by_token(&db, &token)
-                        } else {
-                            None
-                        }
-                    })
-                    .and_then(|result| Some(result.1))
-            })
-            .as_ref();
-
-        let combined_result = match cookie_result {
-            Some(user) => Some(user),
-            None => match api_result {
-                Some(user) => Some(user),
-                None => None,
-            },
-        };
-
-        combined_result.or_forward(())
+        cookie_result.or_forward(())
     }
 }
 

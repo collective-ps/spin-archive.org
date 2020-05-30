@@ -20,6 +20,7 @@ use rocket_contrib::templates::tera::{
 };
 use rocket_contrib::templates::Template;
 
+mod api;
 mod config;
 mod context;
 mod database;

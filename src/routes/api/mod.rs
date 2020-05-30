@@ -1,5 +1,6 @@
 pub mod tag;
+pub mod uploads;
 
 pub(crate) fn router() -> Vec<rocket::Route> {
-    rocket::routes![tag::suggestions]
+    rocket::routes![tag::suggestions, uploads::search]
 }
