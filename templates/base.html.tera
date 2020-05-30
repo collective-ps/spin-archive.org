@@ -58,6 +58,7 @@
   </body>
 
   <script type="text/javascript" src={{ "/public/app.bundle.js" | safe | append_version }}></script>
+  <script src="https://cdn.usefathom.com/script.js" site="UEARXKBQ" defer></script>
 
   {% block footer %}
   {% include "partials/footer" %}
