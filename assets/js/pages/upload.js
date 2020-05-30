@@ -100,7 +100,7 @@ const UploadPage = ({ uploadLimit }) => {
     let file_count = files.length
 
     let promiseProducer = function () {
-      if (file_idx < files.length - 1) {
+      if (file_idx < files.length) {
         const file = files[file_idx]
         const url = `/upload/${file.meta.file_id}/finalize`
 
