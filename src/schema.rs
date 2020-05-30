@@ -1,4 +1,15 @@
-#![allow(unused_imports)]
+table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
+    api_tokens (id) {
+        id -> Int8,
+        token -> Text,
+        user_id -> Int4,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
 
 table! {
     use diesel::sql_types::*;
@@ -97,6 +108,7 @@ table! {
     }
 }
 
+joinable!(api_tokens -> users (user_id));
 joinable!(audit_log -> users (changed_by));
 joinable!(upload_comments -> uploads (upload_id));
 joinable!(upload_comments -> users (user_id));
@@ -104,6 +116,7 @@ joinable!(upload_views -> uploads (upload_id));
 joinable!(uploads -> users (uploader_user_id));
 
 allow_tables_to_appear_in_same_query!(
+    api_tokens,
     audit_log,
     tags,
     upload_comments,

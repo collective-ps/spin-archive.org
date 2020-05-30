@@ -1,13 +1,70 @@
 use rocket::http::RawStr;
 use rocket::request::FlashMessage;
-use rocket::response::Redirect;
+use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::tera::Context as TeraContext;
 use rocket_contrib::templates::Template;
 
 use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::{get_user_by_username, User};
-use crate::services::{comment_service, upload_service};
+use crate::services::{api_token_service, comment_service, upload_service};
+
+#[rocket::get("/settings")]
+pub(crate) fn settings(
+  conn: DatabaseConnection,
+  flash: Option<FlashMessage>,
+  user: &User,
+) -> Result<Template, Redirect> {
+  let mut context = TeraContext::new();
+
+  context::flash_context(&mut context, flash);
+  context::user_context(&mut context, Some(user));
+
+  let api_tokens = api_token_service::get_tokens_by_user(&conn, user.id);
+
+  context.insert("api_tokens", &api_tokens);
+
+  Ok(Template::render("users/settings", &context))
+}
+
+#[rocket::post("/settings/api_tokens")]
+pub(crate) fn new_api_token(conn: DatabaseConnection, user: &User) -> Flash<Redirect> {
+  if user.is_contributor() {
+    match api_token_service::new(&conn, &user) {
+      Ok(_) => Flash::success(Redirect::to("/user/settings"), "Generated an API token"),
+      Err(_) => Flash::error(
+        Redirect::to("/user/settings"),
+        "Could not generate an API token.",
+      ),
+    }
+  } else {
+    Flash::error(
+      Redirect::to("/user/settings"),
+      "You do not have permission to create an API token. Must be at least [Contributor] rank.",
+    )
+  }
+}
+
+#[rocket::post("/settings/api_tokens/<id>/delete")]
+pub(crate) fn delete_api_token(conn: DatabaseConnection, id: i64, user: &User) -> Flash<Redirect> {
+  if user.is_contributor() {
+    match api_token_service::revoke(&conn, user.id, id) {
+      Ok(_) => Flash::success(
+        Redirect::to("/user/settings"),
+        "Deleted API token succesfully.",
+      ),
+      Err(_) => Flash::error(
+        Redirect::to("/user/settings"),
+        "Could not delete API token.",
+      ),
+    }
+  } else {
+    Flash::error(
+      Redirect::to("/user/settings"),
+      "You do not have permission to delete an API token. Must be at least [Contributor] rank.",
+    )
+  }
+}
 
 #[rocket::get("/<username>")]
 pub(crate) fn index(
@@ -74,5 +131,5 @@ pub(crate) fn comments(
 }
 
 pub(crate) fn router() -> Vec<rocket::Route> {
-  rocket::routes![index, comments]
+  rocket::routes![index, comments, settings, new_api_token, delete_api_token]
 }

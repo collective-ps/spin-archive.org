@@ -114,7 +114,7 @@
   <div class="content">
     {% set is_video = is_video(upload=upload) %}
     <div class="upload" data-id="{{ upload.file_id }}">
-      {% if is_video %}
+      {% if is_video and upload.status != "Processing" %}
         <video controls muted autoplay loop class="video-player" id="video-player" data-poster="{{ get_thumbnail_url(upload=upload) | safe }}">
           <source src="{{ get_video_url(upload=upload) | safe }}">>
         </video>
