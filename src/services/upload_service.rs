@@ -50,6 +50,7 @@ pub(crate) fn immediate_upload(
     tag_string: &str,
     source: &str,
     description: &str,
+    original_upload_date: NaiveDate,
 ) -> Result<Upload, UploadError> {
     let new_tag_string = sanitize_tags(tag_string);
 
@@ -64,11 +65,19 @@ pub(crate) fn immediate_upload(
         tag_string: new_tag_string.to_owned(),
         source: source.to_owned(),
         description: description.to_owned(),
+        original_upload_date,
         file_size,
     };
 
-    upload::insert_immediate_upload(&conn, &immediate_upload)
+    match upload::insert_immediate_upload(&conn, &immediate_upload)
         .map_err(|_| UploadError::DatabaseError)
+    {
+        Ok(upload) => {
+            after_edit_hooks(&conn, &upload);
+            Ok(upload)
+        }
+        err => err,
+    }
 }
 
 /// Creates a new pending upload.

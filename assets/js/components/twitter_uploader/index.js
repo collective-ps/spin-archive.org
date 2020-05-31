@@ -15,6 +15,7 @@ const Component = () => {
     (ev) => {
       ev.preventDefault()
       setError(null)
+      setIsSubmitting(true)
 
       fetch('/api/v1/uploads/twitter', {
         method: 'POST',

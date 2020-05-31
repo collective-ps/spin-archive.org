@@ -116,6 +116,7 @@ pub async fn download_from_tweet(
     &format!("{} twitter_rip", tag_string),
     &tweet_url,
     &status.text,
+    status.created_at.naive_utc().date(),
   )
   .map_err(|err| err.into())
 }

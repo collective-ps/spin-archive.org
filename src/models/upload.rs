@@ -191,6 +191,7 @@ pub struct NewImmediateUpload {
     pub tag_string: String,
     pub source: String,
     pub description: String,
+    pub original_upload_date: NaiveDate,
 }
 
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";

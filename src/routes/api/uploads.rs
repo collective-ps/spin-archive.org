@@ -307,7 +307,7 @@ pub fn twitter(
       warn!("[api/v1/uploads/twitter] {}", err);
       Err(BadRequest(Some(json!({
           "status": "error",
-          "reason": "Server error"
+          "reason": format!("{}", err)
       }))))
     }
   }
