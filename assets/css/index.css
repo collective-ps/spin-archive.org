@@ -249,6 +249,10 @@ footer {
   font-family: 'Consolas', 'Monaco', 'Menlo', monospace;
 }
 
+.upload-metadata .upload-source a {
+  word-break: break-word;
+}
+
 .content .description {
   white-space: pre-wrap;
   background-color: var(--color-lightGrey);

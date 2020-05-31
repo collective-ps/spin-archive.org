@@ -177,6 +177,22 @@ pub struct FinishedEncodingUpload {
     pub video_url: String,
 }
 
+#[derive(Insertable)]
+#[table_name = "uploads"]
+pub struct NewImmediateUpload {
+    pub file_ext: String,
+    pub file_id: String,
+    pub file_name: String,
+    pub file_size: i64,
+    pub status: UploadStatus,
+    pub thumbnail_url: String,
+    pub uploader_user_id: i32,
+    pub video_encoding_key: String,
+    pub tag_string: String,
+    pub source: String,
+    pub description: String,
+}
+
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
 
 impl Upload {
@@ -188,6 +204,14 @@ impl Upload {
             file_id = self.file_id,
             ext = self.file_ext
         )
+    }
+
+    /// Gets the encoded video URL, or falls back to the original URL.
+    pub fn get_video_url(&self) -> String {
+        self.video_url
+            .as_ref()
+            .unwrap_or(&self.get_file_url())
+            .to_string()
     }
 
     pub fn is_video(&self) -> bool {
@@ -319,6 +343,17 @@ pub fn insert_pending_upload(
 ) -> QueryResult<Upload> {
     diesel::insert_into(uploads::table)
         .values(pending_upload)
+        .returning(ALL_COLUMNS)
+        .get_result(conn)
+}
+
+/// Inserts a given [`NewImmediateUpload`] into the database.
+pub fn insert_immediate_upload(
+    conn: &PgConnection,
+    immediate_upload: &NewImmediateUpload,
+) -> QueryResult<Upload> {
+    diesel::insert_into(uploads::table)
+        .values(immediate_upload)
         .returning(ALL_COLUMNS)
         .get_result(conn)
 }

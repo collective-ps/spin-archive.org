@@ -67,9 +67,7 @@ pub fn get_video_url() -> GlobalFn {
     Box::new(move |args| -> TeraResult<TeraValue> {
         match args.get("upload") {
             Some(value) => match serde_json::from_value::<Upload>(value.clone()) {
-                Ok(upload) => {
-                    Ok(serde_json::to_value(upload.video_url.unwrap_or("".to_string())).unwrap())
-                }
+                Ok(upload) => Ok(serde_json::to_value(upload.get_video_url()).unwrap()),
                 Err(_) => Err("Could not get upload".into()),
             },
             None => Err("Could not get upload".into()),

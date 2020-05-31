@@ -24,6 +24,7 @@ mod api;
 mod config;
 mod context;
 mod database;
+mod ingestors;
 mod models;
 mod pagination;
 mod routes;

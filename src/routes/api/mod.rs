@@ -6,6 +6,7 @@ pub(crate) fn router() -> Vec<rocket::Route> {
         tag::suggestions,
         uploads::search,
         uploads::new,
-        uploads::finalize
+        uploads::finalize,
+        uploads::twitter
     ]
 }

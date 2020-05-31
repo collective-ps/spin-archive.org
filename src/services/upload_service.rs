@@ -3,16 +3,19 @@ use diesel::prelude::*;
 use diesel::PgConnection;
 use log::{debug, warn};
 use nanoid::nanoid;
+use thiserror::Error;
 
 use crate::models::audit_log::{self, AuditLog};
-use crate::models::upload::{self, PendingUpload, UpdateUpload, Upload, UploadStatus};
+use crate::models::upload::{
+    self, NewImmediateUpload, PendingUpload, UpdateUpload, Upload, UploadStatus,
+};
 use crate::models::user::User;
 use crate::schema::{upload_views, uploads};
 use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{
     get_by_file_id, get_by_original_file, get_pending_approval_uploads,
-    get_upload_count_by_user_id, update_status,
+    get_upload_count_by_user_id, insert_immediate_upload, update_status,
 };
 
 #[derive(Insertable)]
@@ -21,12 +24,49 @@ pub struct View {
     pub upload_id: i32,
 }
 
-#[allow(dead_code)]
+#[derive(Error, Debug)]
 pub(crate) enum UploadError {
+    #[error("Upload already exists")]
     AlreadyExists,
+
+    #[error("Error occured in database")]
     DatabaseError,
+
+    #[error("Upload was not found")]
     NotFound,
+
+    #[error("Upload limit reached")]
     UploadLimitReached,
+}
+
+pub(crate) fn immediate_upload(
+    conn: &PgConnection,
+    user: &User,
+    file_id: &str,
+    file_name: &str,
+    file_ext: &str,
+    thumbnail_url: &str,
+    file_size: i64,
+    tag_string: &str,
+    source: &str,
+    description: &str,
+) -> Result<Upload, UploadError> {
+    let immediate_upload = NewImmediateUpload {
+        status: UploadStatus::Completed,
+        file_id: file_id.to_owned(),
+        video_encoding_key: nanoid!(),
+        uploader_user_id: user.id,
+        file_name: file_name.to_owned(),
+        file_ext: file_ext.to_owned(),
+        thumbnail_url: thumbnail_url.to_owned(),
+        tag_string: tag_string.to_owned(),
+        source: source.to_owned(),
+        description: description.to_owned(),
+        file_size,
+    };
+
+    upload::insert_immediate_upload(&conn, &immediate_upload)
+        .map_err(|_| UploadError::DatabaseError)
 }
 
 /// Creates a new pending upload.

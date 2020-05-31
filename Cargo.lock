@@ -19,6 +19,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "anyhow"
+version = "1.0.31"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "85bb70cc08ec97ca5450e6eba421deeea5f172c0fc61f78b5357b2a8e8be195f"
+
+[[package]]
 name = "arc-swap"
 version = "0.4.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -271,6 +277,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive_more"
+version = "0.99.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2127768764f1556535c01b5326ef94bd60ff08dcfbdc544d53e69ed155610f5d"
+dependencies = [
+ "proc-macro2 1.0.13",
+ "quote 1.0.6",
+ "syn 1.0.22",
+]
+
+[[package]]
 name = "deunicode"
 version = "0.4.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -400,6 +417,32 @@ name = "dtoa"
 version = "0.4.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "4358a9e11b9a09cf52383b451b49a169e8d797b68aa02301ff586d70d9661ea3"
+
+[[package]]
+name = "egg-mode"
+version = "0.14.0"
+source = "git+https://github.com/andrewvy/egg-mode#c1598525eb38d44c30b91accd3a2cb4059ba2064"
+dependencies = [
+ "base64 0.11.0",
+ "chrono",
+ "derive_more",
+ "futures",
+ "hmac",
+ "hyper 0.13.5",
+ "hyper-tls",
+ "lazy_static",
+ "mime 0.3.16",
+ "native-tls",
+ "percent-encoding 2.1.0",
+ "rand 0.7.3",
+ "regex",
+ "serde",
+ "serde_json",
+ "sha-1",
+ "thiserror",
+ "tokio",
+ "url 2.1.1",
+]
 
 [[package]]
 name = "encoding_rs"
@@ -2139,12 +2182,13 @@ dependencies = [
 name = "spin-archive"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "diesel",
  "diesel_full_text_search",
  "diesel_migrations",
  "dotenv",
- "futures",
+ "egg-mode",
  "lazy_static",
  "log 0.4.8",
  "mime_guess",
@@ -2160,7 +2204,12 @@ dependencies = [
  "rust-argon2 0.8.2",
  "serde",
  "serde_json",
+ "tempfile",
+ "thiserror",
  "timeago",
+ "tokio",
+ "tokio-util",
+ "url 2.1.1",
 ]
 
 [[package]]
@@ -2285,6 +2334,26 @@ dependencies = [
  "slug",
  "unic-segment",
  "url 1.7.2",
+]
+
+[[package]]
+name = "thiserror"
+version = "1.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b13f926965ad00595dd129fa12823b04bbf866e9085ab0a5f2b05b850fbfc344"
+dependencies = [
+ "thiserror-impl",
+]
+
+[[package]]
+name = "thiserror-impl"
+version = "1.0.19"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "893582086c2f98cde18f906265a65b5030a074b1046c674ae898be6519a7f479"
+dependencies = [
+ "proc-macro2 1.0.13",
+ "quote 1.0.6",
+ "syn 1.0.22",
 ]
 
 [[package]]

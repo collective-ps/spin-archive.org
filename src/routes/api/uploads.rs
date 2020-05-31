@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use chrono::{NaiveDate, NaiveDateTime};
+use log::warn;
 use rocket::response::status::BadRequest;
 use rocket_contrib::json;
 use rocket_contrib::json::{Json, JsonValue};
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::api::{Auth, Paginated};
 use crate::database::DatabaseConnection;
+use crate::ingestors;
 use crate::models;
 use crate::models::upload::FullUpload;
 use crate::models::user::{get_user_by_username, User};
@@ -246,5 +248,39 @@ pub(crate) fn finalize(
         "status": "error",
         "reason": "Server error"
     })))),
+  }
+}
+
+#[derive(Deserialize)]
+pub struct TwitterUpload {
+  url: String,
+  tags: String,
+}
+
+#[derive(Serialize)]
+pub struct TwitterUploadResponse {
+  id: String,
+  url: String,
+}
+
+#[rocket::post("/uploads/twitter", format = "json", data = "<request>")]
+pub fn twitter(
+  conn: DatabaseConnection,
+  auth: Auth,
+  request: Json<TwitterUpload>,
+) -> Result<Json<TwitterUploadResponse>, BadRequest<JsonValue>> {
+  let user = auth.user;
+  match ingestors::twitter::download_from_tweet(conn, &user, &request.url, &request.tags) {
+    Ok(upload) => Ok(Json(TwitterUploadResponse {
+      id: upload.file_id.clone(),
+      url: format!("https://spin-archive.org/u/{}", upload.file_id),
+    })),
+    Err(err) => {
+      warn!("[api/v1/uploads/twitter] {}", err);
+      Err(BadRequest(Some(json!({
+          "status": "error",
+          "reason": "Server error"
+      }))))
+    }
   }
 }
