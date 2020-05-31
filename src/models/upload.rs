@@ -370,7 +370,7 @@ pub fn index(
                         AND uploads.tag_index @@ plainto_tsquery($2)
                         AND uploads.uploader_user_id = $3
                         GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.updated_at DESC
+                        ORDER BY uploads.created_at DESC
                         ) t
                         LIMIT $4
                         OFFSET $5
@@ -403,7 +403,7 @@ pub fn index(
                         WHERE uploads.status = $1
                         AND uploads.tag_index @@ plainto_tsquery($2)
                         GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.updated_at DESC
+                        ORDER BY uploads.created_at DESC
                         ) t
                         LIMIT $3
                         OFFSET $4
@@ -437,7 +437,7 @@ pub fn index(
                         WHERE uploads.status = $1
                         AND uploads.uploader_user_id = $2
                         GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.updated_at DESC
+                        ORDER BY uploads.created_at DESC
                         ) t
                         LIMIT $3
                         OFFSET $4
@@ -468,7 +468,7 @@ pub fn index(
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
                         GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.updated_at DESC
+                        ORDER BY uploads.created_at DESC
                         ) t
                         LIMIT $2
                         OFFSET $3
