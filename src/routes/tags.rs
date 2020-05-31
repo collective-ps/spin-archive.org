@@ -12,11 +12,11 @@ use crate::services::tag_service;
 pub(crate) fn index(
   conn: DatabaseConnection,
   flash: Option<FlashMessage>,
-  user: &User,
+  user: Option<&User>,
 ) -> Result<Template, Redirect> {
   let mut context = TeraContext::new();
   context::flash_context(&mut context, flash);
-  context::user_context(&mut context, Some(user));
+  context::user_context(&mut context, user);
 
   let tags = tag_service::all(&conn);
   let (tag_groups, tags) = tag_service::group_tags(tags);
