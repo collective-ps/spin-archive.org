@@ -40,7 +40,7 @@ const insertSuggestion = (completion, inputRef) => {
   beforeCaretText = beforeCaretText.replace(TAG_REGEX, '$1') + completion + ' '
 
   inputRef.current.value = beforeCaretText + afterCaretText
-  inputRef.current.selectionStart = inputRef.selectionEnd =
+  inputRef.current.selectionStart = inputRef.current.selectionEnd =
     beforeCaretText.length
 }
 
@@ -100,6 +100,7 @@ const Component = ({
         if (suggestedTag) {
           ev.preventDefault()
           insertSuggestion(suggestedTag.name, inputRef)
+          parentChange(inputRef.current.value)
           setSuggestions([])
         }
       }
@@ -128,6 +129,7 @@ const Component = ({
 
     if (suggestedTag) {
       insertSuggestion(suggestedTag.name, inputRef)
+      parentChange(inputRef.current.value)
       setSuggestions([])
     }
   }
