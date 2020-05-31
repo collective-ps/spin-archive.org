@@ -1,6 +1,34 @@
 {% extends "base" %}
 
 {% block content %}
+<div class="recent-comments">
+  {% if comments_and_users_and_uploads %}
+  <ol class="comment-list">
+    {% for comment_and_user_and_upload in comments_and_users_and_uploads %}
+      {% set comment = comment_and_user_and_upload.0 %}
+      {% set author = comment_and_user_and_upload.1 %}
+      {% set upload = comment_and_user_and_upload.2 %}
+      {% set show_user_role = author.role != "Registered" %}
+
+      <li class="comment">
+        <div class="author">
+          <div class="username"><a href="/user/{{ author.username }}">{{ author.username }}</a></div>
+          {% if show_user_role %}
+            <div class="role" data-role="{{ author.role | lower }}">[{{ author.role }}]</div>
+          {% endif %}
+          <span>commented on <a href="/u/{{ upload.file_id }}">{{ upload.file_name }}</a><span>
+          <div class="date"><small><em>({{ comment.created_at | humanized_past }})</em></small></div>
+          {% if edited %}
+          <span>*</span>
+          {% endif %}
+        </div>
+        <div class="comment-content">{{ comment.comment | truncate(length=200) }}</div>
+      </li>
+    {% endfor %}
+  </ol>
+  {% endif %}
+</div>
+
 <main id="index-page" class="two-column-page">
   <div class="sidebar upload-metadata">
     <div class="search" id="search-box-form" data-query="{{ query }}">

@@ -32,6 +32,8 @@ mod schema;
 mod services;
 
 use database::DatabaseConnection;
+use models::upload::Upload;
+use models::upload_comment::UploadComment;
 use models::user::{get_user_by_username, User};
 
 embed_migrations!();
@@ -59,6 +61,7 @@ fn index(
 
     // Check if the query has an `uploader:[USERNAME]` tag.
     let mut uploader: Option<User> = None;
+    let mut comments_and_users_and_uploads: Vec<(UploadComment, User, Upload)> = Vec::default();
 
     if !query.is_empty() {
         let uploader_regex = regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
@@ -77,6 +80,8 @@ fn index(
                 query = query.replace(full_match, "");
             }
         }
+    } else {
+        comments_and_users_and_uploads = services::comment_service::get_recent_comments(&conn);
     }
 
     let (uploads, page_count, total_count) =
@@ -103,6 +108,10 @@ fn index(
     context.insert("tags", &tags);
     context.insert("tag_groups", &tag_groups);
     context.insert("query", &original_query);
+    context.insert(
+        "comments_and_users_and_uploads",
+        &comments_and_users_and_uploads,
+    );
 
     Template::render("index", &context)
 }

@@ -103,3 +103,19 @@ pub fn get_paginated_comments(
         .load::<(UploadComment, Upload)>(conn)
         .unwrap_or_default()
 }
+
+/// Gets the N-most recent comments and their user.
+pub fn get_recent_comments(conn: &PgConnection) -> Vec<(UploadComment, User, Upload)> {
+    upload_comments::table
+        .inner_join(users::table)
+        .inner_join(uploads::table)
+        .select((
+            upload_comments::all_columns,
+            users::all_columns,
+            ALL_UPLOAD_COLUMNS,
+        ))
+        .order(upload_comments::created_at.desc())
+        .limit(10)
+        .load::<(UploadComment, User, Upload)>(conn)
+        .unwrap_or_default()
+}

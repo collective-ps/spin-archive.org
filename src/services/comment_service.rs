@@ -5,7 +5,7 @@ use crate::models::upload_comment::{self, NewUploadComment, UpdateUploadComment,
 use crate::models::user::User;
 
 pub use crate::models::upload_comment::{
-    get_comment_by_id, get_comment_count_by_user_id, get_paginated_comments,
+    get_comment_by_id, get_comment_count_by_user_id, get_paginated_comments, get_recent_comments,
 };
 
 pub fn create_comment_on_upload(
