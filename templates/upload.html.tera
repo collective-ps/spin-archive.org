@@ -3,8 +3,10 @@
 {% block content %}
 {% if is_contributor %}
 <main class="text-center" id="upload-page">
+</main>
+<div id="twitter-uploader"></div>
 {% else %}
 <main class="text-center" id="upload-page" data-upload-limit="{{ upload_limit }}">
-{% endif -%}
 </main>
+{% endif -%}
 {% endblock content %}

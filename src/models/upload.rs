@@ -276,6 +276,17 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
         .ok()
 }
 
+/// Gets an [`Upload`] by `source`.
+pub fn get_by_source(conn: &PgConnection, source_url: &str) -> Option<Upload> {
+    use crate::schema::uploads::dsl::*;
+
+    uploads
+        .filter(source.eq(source_url))
+        .select(ALL_COLUMNS)
+        .first::<Upload>(conn)
+        .ok()
+}
+
 /// Gets an [`Upload`] by `video_encoding_key`.
 pub fn get_by_video_encoding_key(conn: &PgConnection, search_key: &str) -> Option<Upload> {
     use crate::schema::uploads::dsl::*;

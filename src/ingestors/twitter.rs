@@ -113,7 +113,7 @@ pub async fn download_from_tweet(
     file_ext.to_str().unwrap(),
     &output_thumbnail_url,
     size as i64,
-    &tag_string,
+    &format!("{} twitter_rip", tag_string),
     &tweet_url,
     &status.text,
   )

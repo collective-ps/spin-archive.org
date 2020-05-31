@@ -14,7 +14,7 @@ use crate::schema::{upload_views, uploads};
 use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{
-    get_by_file_id, get_by_original_file, get_pending_approval_uploads,
+    get_by_file_id, get_by_original_file, get_by_source, get_pending_approval_uploads,
     get_upload_count_by_user_id, insert_immediate_upload, update_status,
 };
 
@@ -51,6 +51,8 @@ pub(crate) fn immediate_upload(
     source: &str,
     description: &str,
 ) -> Result<Upload, UploadError> {
+    let new_tag_string = sanitize_tags(tag_string);
+
     let immediate_upload = NewImmediateUpload {
         status: UploadStatus::Completed,
         file_id: file_id.to_owned(),
@@ -59,7 +61,7 @@ pub(crate) fn immediate_upload(
         file_name: file_name.to_owned(),
         file_ext: file_ext.to_owned(),
         thumbnail_url: thumbnail_url.to_owned(),
-        tag_string: tag_string.to_owned(),
+        tag_string: new_tag_string.to_owned(),
         source: source.to_owned(),
         description: description.to_owned(),
         file_size,

@@ -1,0 +1,13 @@
+#twitter-uploader {
+  margin: 0 auto;
+  max-width: 600px;
+  padding: 1em 0;
+}
+
+.twitter-uploader-wrapper {
+  text-align: center;
+}
+
+.twitter-uploader-wrapper .banner {
+  font-weight: 500;
+}

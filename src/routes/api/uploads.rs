@@ -266,11 +266,39 @@ pub struct TwitterUploadResponse {
 #[rocket::post("/uploads/twitter", format = "json", data = "<request>")]
 pub fn twitter(
   conn: DatabaseConnection,
-  auth: Auth,
+  auth: Option<Auth>,
+  user: Option<&User>,
   request: Json<TwitterUpload>,
 ) -> Result<Json<TwitterUploadResponse>, BadRequest<JsonValue>> {
-  let user = auth.user;
-  match ingestors::twitter::download_from_tweet(conn, &user, &request.url, &request.tags) {
+  if auth.is_none() && user.is_none() {
+    return Err(BadRequest(Some(json!({
+        "status": "no_permissions",
+        "reason": "Unauthorized"
+    }))));
+  }
+
+  if auth.is_none() && !user.unwrap().is_contributor() {
+    return Err(BadRequest(Some(json!({
+        "status": "no_permissions",
+        "reason": "Unauthorized"
+    }))));
+  }
+
+  let uploader = match auth {
+    None => user.unwrap(),
+    Some(auth) => auth.user,
+  };
+
+  let existing_upload = upload_service::get_by_source(&conn, &request.url);
+
+  if existing_upload.is_some() {
+    return Err(BadRequest(Some(json!({
+        "status": "already_exists",
+        "reason": "An upload with this URL already exists"
+    }))));
+  }
+
+  match ingestors::twitter::download_from_tweet(conn, &uploader, &request.url, &request.tags) {
     Ok(upload) => Ok(Json(TwitterUploadResponse {
       id: upload.file_id.clone(),
       url: format!("https://spin-archive.org/u/{}", upload.file_id),

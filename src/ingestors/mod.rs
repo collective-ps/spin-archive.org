@@ -26,14 +26,12 @@ pub async fn transfer_file(source_url: &str, destination_url: &str) -> Result<u6
 
   async_temp_file.seek(SeekFrom::Start(0)).await?;
 
-  let upload = client
+  let _ = client
     .put(destination_url)
     .header("content-length", size)
     .body(file_to_body(async_temp_file))
     .send()
     .await?;
-
-  dbg!(&upload);
 
   Ok(size)
 }
