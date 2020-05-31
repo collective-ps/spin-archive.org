@@ -49,3 +49,12 @@ pub fn starting_with(conn: &PgConnection, prefix: &str, limit: i64) -> Vec<Tag> 
         .load::<Tag>(conn)
         .unwrap_or_default()
 }
+
+/// Gets all tags.
+pub fn all(conn: &PgConnection) -> Vec<Tag> {
+    tags::table
+        .filter(tags::upload_count.gt(0))
+        .order((tags::name.asc(), tags::upload_count.desc()))
+        .load::<Tag>(conn)
+        .unwrap_or_default()
+}

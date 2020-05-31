@@ -228,6 +228,7 @@ fn main() {
         .mount("/queue", routes::queue::router())
         .mount("/admin", routes::admin::router())
         .mount("/user", routes::users::router())
+        .mount("/tags", routes::tags::router())
         .mount(
             "/public",
             StaticFiles::from(format!("{}/{}", current_dir, "build")),

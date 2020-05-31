@@ -1,0 +1,7 @@
+#tags-page .tag-group ol {
+  column-count: 3;
+}
+
+#tags-page .tags ol {
+  column-count: 3;
+}
