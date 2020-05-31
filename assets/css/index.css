@@ -168,6 +168,9 @@ footer {
 
 .upload-grid .upload .thumbnail {
   width: 100%;
+  width: 100%;
+  max-height: 150px;
+  object-fit: contain;
 }
 
 .one-column-page,
