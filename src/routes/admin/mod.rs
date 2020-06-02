@@ -1,3 +1,4 @@
+use log::warn;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket::FromForm;
@@ -8,6 +9,7 @@ use serde::{Deserialize, Serialize};
 use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::User;
+use crate::s3_client;
 use crate::services::{encoder_service, tag_service, upload_service};
 
 /// Admin area.
@@ -76,11 +78,37 @@ pub(crate) fn action_encode_video(
     }
 }
 
+#[rocket::post("/actions/rebuild_md5")]
+pub(crate) fn action_rebuild_md5(user: &User, conn: DatabaseConnection) -> Flash<Redirect> {
+    if !user.is_admin() {
+        return Flash::error(Redirect::to("/"), "");
+    }
+
+    match s3_client::list_objects() {
+        Ok(upload_objects) => {
+            for object in upload_objects.iter() {
+                if let Err(e) = upload_service::update_md5(&conn, &object.file_id, &object.md5) {
+                    warn!("[action_rebuild_md5] {}", e);
+                }
+            }
+        }
+        Err(e) => {
+            warn!("[action_rebuild_md5] {}", e);
+        }
+    }
+
+    Flash::success(
+        Redirect::to("/"),
+        "Rebuilding MD5 index. This will take some time.",
+    )
+}
+
 pub(crate) fn router() -> Vec<rocket::Route> {
     rocket::routes![
         index,
         action_rebuild_tags,
         action_rebuild_tag_counts,
-        action_encode_video
+        action_encode_video,
+        action_rebuild_md5
     ]
 }

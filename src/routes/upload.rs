@@ -32,6 +32,7 @@ pub struct UploadResponse {
 pub struct UploadRequest {
     file_name: String,
     content_length: i64,
+    md5_hash: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -320,15 +321,8 @@ pub(crate) fn upload(
         return Err(BadRequest(None));
     }
 
-    // Basic duplicate check by file name / ext / file size.
-    if upload_service::get_by_original_file(
-        &conn,
-        name.unwrap().to_str().unwrap(),
-        ext.unwrap().to_str().unwrap(),
-        request.content_length,
-    )
-    .is_some()
-    {
+    // Basic duplicate check by MD5 hash.
+    if upload_service::get_by_md5(&conn, &request.md5_hash).is_some() {
         return Ok(json!({
             "status": "error",
             "reason": "Already uploaded"
@@ -341,6 +335,7 @@ pub(crate) fn upload(
         name.unwrap().to_str().unwrap(),
         ext.unwrap().to_str().unwrap(),
         request.content_length,
+        Some(request.md5_hash.clone()),
     ) {
         Ok(upload) => {
             let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);

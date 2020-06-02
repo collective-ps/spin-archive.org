@@ -14,8 +14,8 @@ use crate::schema::{upload_views, uploads};
 use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{
-    get_by_file_id, get_by_original_file, get_by_source, get_pending_approval_uploads,
-    get_upload_count_by_user_id, insert_immediate_upload, update_status,
+    get_by_file_id, get_by_md5, get_by_original_file, get_by_source, get_pending_approval_uploads,
+    get_upload_count_by_user_id, insert_immediate_upload, update_md5, update_status,
 };
 
 #[derive(Insertable)]
@@ -87,6 +87,7 @@ pub(crate) fn new_pending_upload(
     file_name: &str,
     file_ext: &str,
     file_size: i64,
+    md5_hash: Option<String>,
 ) -> Result<Upload, UploadError> {
     let upload_limit = get_remaining_upload_limit(&conn, &user);
 
@@ -102,6 +103,7 @@ pub(crate) fn new_pending_upload(
         file_name: file_name.to_owned(),
         file_ext: file_ext.to_owned(),
         file_size,
+        md5_hash,
     };
 
     upload::insert_pending_upload(&conn, &pending_upload).map_err(|_| UploadError::DatabaseError)

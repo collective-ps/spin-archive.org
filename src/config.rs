@@ -19,3 +19,11 @@ pub fn get_twitter_consumer_key() -> String {
 pub fn get_twitter_consumer_secret() -> String {
     env::var("TWITTER_CONSUMER_SECRET").unwrap_or_default()
 }
+
+pub fn get_aws_access_key_id() -> String {
+    env::var("AWS_ACCESS_KEY_ID").unwrap_or_default()
+}
+
+pub fn get_aws_secret_access_key() -> String {
+    env::var("AWS_SECRET_ACCESS_KEY").unwrap_or_default()
+}

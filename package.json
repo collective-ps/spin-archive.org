@@ -31,6 +31,7 @@
     "wingcss": "^1.0.0-beta"
   },
   "dependencies": {
+    "browser-md5-file": "^1.1.1",
     "clean-webpack-plugin": "^3.0.0",
     "es6-promise-pool": "^2.5.0",
     "plyr": "^3.6.2",

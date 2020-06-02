@@ -167,6 +167,7 @@ pub fn new(
     name.unwrap().to_str().unwrap(),
     ext.unwrap().to_str().unwrap(),
     request.content_length,
+    None,
   ) {
     Ok(upload) => {
       let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);

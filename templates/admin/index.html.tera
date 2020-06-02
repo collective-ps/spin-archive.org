@@ -8,5 +8,8 @@
   <form action="/admin/actions/rebuild_tag_counts" method="POST">
     <button type='submit'>Rebuild Tag Counts</button>
   </form>
+  <form action="/admin/actions/rebuild_md5" method="POST">
+    <button type='submit'>Rebuild MD5</button>
+  </form>
 </main>
 {% endblock content %}

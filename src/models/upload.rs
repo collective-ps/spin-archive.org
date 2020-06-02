@@ -159,6 +159,7 @@ pub struct PendingUpload {
     pub file_name: String,
     pub file_ext: String,
     pub file_size: i64,
+    pub md5_hash: Option<String>,
 }
 
 #[derive(Insertable)]
@@ -310,6 +311,16 @@ pub fn get_by_original_file(
         .filter(uploads::file_name.eq(file_name))
         .filter(uploads::file_ext.eq(file_ext))
         .filter(uploads::file_size.eq(file_size))
+        .filter(uploads::status.ne(UploadStatus::Pending))
+        .select(ALL_COLUMNS)
+        .first::<Upload>(conn)
+        .ok()
+}
+
+/// Gets an [`Upload`] by `md5_hash`.
+pub fn get_by_md5(conn: &PgConnection, md5_hash: &str) -> Option<Upload> {
+    uploads::table
+        .filter(uploads::md5_hash.eq(md5_hash))
         .filter(uploads::status.ne(UploadStatus::Pending))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
@@ -551,4 +562,10 @@ pub fn get_upload_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
         .filter(uploads::status.eq(UploadStatus::Completed))
         .first::<i64>(conn)
         .unwrap_or_default()
+}
+
+pub fn update_md5(conn: &PgConnection, file_id: &str, md5: &str) -> QueryResult<usize> {
+    diesel::update(uploads::table.filter(uploads::file_id.eq(file_id)))
+        .set(uploads::md5_hash.eq(md5))
+        .execute(conn)
 }
