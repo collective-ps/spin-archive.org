@@ -60,6 +60,11 @@
     <div class="original-filename">
       <small>Original Filename: {{ upload.file_name }}</small>
     </div>
+    {% if upload.md5_hash %}
+    <div class="md5">
+      <small>MD5: {{ upload.md5_hash }}</small>
+    </div>
+    {% endif %}
 
     {% if user_can_upload %}
       <a href="/u/{{ upload.file_id }}/edit" class="nav-item">Edit</a>
