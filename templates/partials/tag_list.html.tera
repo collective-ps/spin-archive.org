@@ -5,7 +5,7 @@
     {% set tag_count = group.tags | length %}
 
     {% if tag_count != 0 %}
-      <details class="tag-group" open>
+      <details class="tag-group">
         <summary>{{ group.name }} ({{ tag_count }})</summary>
         <ol>
         {% for tag in group.tags %}
@@ -18,11 +18,14 @@
   {% endif %}
 
   {% if tags %}
-    <ol>
-      {% for tag in tags %}
-        <li><a href="{{ tag.name | tag_url() }}">{{ tag.name }}</a> <small>({{ tag.upload_count }})</small></li>
-      {% endfor %}
-    </ol>
+    <details class="tag-group" open>
+      <summary>Uncategorized</summary>
+      <ol>
+        {% for tag in tags %}
+          <li><a href="{{ tag.name | tag_url() }}">{{ tag.name }}</a> <small>({{ tag.upload_count }})</small></li>
+        {% endfor %}
+      </ol>
+    </details>
   {% else %}
   <div>
     No tags were found.
