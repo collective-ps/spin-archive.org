@@ -25,7 +25,7 @@
 {% endblock %}
 
 {% block content %}
-<main class="two-column-page">
+<main class="two-column-page" id="single-upload-page">
   <div class="sidebar upload-metadata">
     {% include "partials/tag_list" %}
 

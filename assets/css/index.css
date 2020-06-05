@@ -328,6 +328,10 @@ footer {
   padding-top: 5em;
 }
 
+#single-upload-page {
+  padding-top: 1em;
+}
+
 .recent-comments {
   border-radius: 4px;
 }

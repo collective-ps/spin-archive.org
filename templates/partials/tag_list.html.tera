@@ -18,6 +18,13 @@
   {% endif %}
 
   {% if tags %}
+    {% if upload %}
+    <ol>
+      {% for tag in tags %}
+        <li><a href="{{ tag.name | tag_url() }}">{{ tag.name }}</a> <small>({{ tag.upload_count }})</small></li>
+      {% endfor %}
+    </ol>
+    {% else %}
     <details class="tag-group" open>
       <summary>Uncategorized</summary>
       <ol>
@@ -26,6 +33,7 @@
         {% endfor %}
       </ol>
     </details>
+    {% endif %}
   {% else %}
   <div>
     No tags were found.
