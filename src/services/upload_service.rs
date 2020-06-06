@@ -15,7 +15,7 @@ use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{
     get_by_file_id, get_by_md5, get_by_original_file, get_by_source, get_pending_approval_uploads,
-    get_upload_count_by_user_id, insert_immediate_upload, update_md5, update_status,
+    get_upload_count_by_user_id, insert_immediate_upload, update_md5, update_status, where_md5,
 };
 
 #[derive(Insertable)]

@@ -327,6 +327,17 @@ pub fn get_by_md5(conn: &PgConnection, md5_hash: &str) -> Option<Upload> {
         .ok()
 }
 
+/// Get uploads where matching by md5 hashes.
+pub fn where_md5(conn: &PgConnection, hashes: &Vec<String>) -> Vec<Upload> {
+    uploads::table
+        .select(uploads::md5_hash)
+        .filter(uploads::md5_hash.eq_any(hashes))
+        .filter(uploads::md5_hash.is_not_null())
+        .select(ALL_COLUMNS)
+        .load::<Upload>(conn)
+        .unwrap_or_default()
+}
+
 /// Updates a given [`Upload`] with new column values.
 pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
     diesel::update(uploads::table.filter(uploads::id.eq(upload.id)))

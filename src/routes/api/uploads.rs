@@ -52,6 +52,34 @@ impl From<&FullUpload> for FullUploadJson {
 }
 
 #[derive(Serialize, Deserialize)]
+pub struct ValidateChecksumRequest {
+  checksums: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct ValidateChecksumResponse {
+  checksums: Vec<String>,
+}
+
+#[rocket::post("/uploads/checksum", format = "json", data = "<request>")]
+pub fn validate_checksum(
+  conn: DatabaseConnection,
+  request: Json<ValidateChecksumRequest>,
+  _auth: Auth,
+) -> Json<ValidateChecksumResponse> {
+  let uploads = upload_service::where_md5(&conn, &request.checksums);
+  let found_checksums = uploads
+    .into_iter()
+    .map(|upload| upload.md5_hash.unwrap())
+    .collect();
+  let response = ValidateChecksumResponse {
+    checksums: found_checksums,
+  };
+
+  Json(response)
+}
+
+#[derive(Serialize, Deserialize)]
 pub struct SearchParams {
   page: Option<i64>,
   query: Option<String>,
