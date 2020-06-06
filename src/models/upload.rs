@@ -580,3 +580,16 @@ pub fn update_md5(conn: &PgConnection, file_id: &str, md5: &str) -> QueryResult<
         .set(uploads::md5_hash.eq(md5))
         .execute(conn)
 }
+
+pub fn random(conn: &PgConnection) -> Option<Upload> {
+    use diesel::dsl::sql;
+    use diesel::sql_types::Integer;
+
+    uploads::table
+        .select(ALL_COLUMNS)
+        .order(sql::<Integer>("random()"))
+        .filter(uploads::status.eq(UploadStatus::Completed))
+        .limit(1)
+        .first::<Upload>(conn)
+        .ok()
+}

@@ -231,6 +231,7 @@ fn main() {
                 routes::upload::edit_comment,
                 routes::upload::edit_comment_page,
                 routes::upload::delete,
+                routes::upload::random,
                 routes::webhooks::video::webhook,
             ],
         )

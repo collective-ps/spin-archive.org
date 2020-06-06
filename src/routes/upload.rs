@@ -458,3 +458,14 @@ pub(crate) fn delete(conn: DatabaseConnection, user: &User, file_id: String) -> 
         Err(error) => Flash::error(Redirect::to(path.clone()), error),
     }
 }
+
+#[rocket::get("/random")]
+pub(crate) fn random(conn: DatabaseConnection) -> Redirect {
+    match upload_service::random(&conn) {
+        Some(upload) => {
+            let path = format!("/u/{}", upload.file_id);
+            Redirect::to(path)
+        }
+        None => Redirect::to("/404"),
+    }
+}
