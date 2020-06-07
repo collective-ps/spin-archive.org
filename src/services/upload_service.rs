@@ -254,6 +254,7 @@ pub fn delete(conn: &PgConnection, upload: &Upload, user: &User) -> QueryResult<
 
 pub fn after_edit_hooks(conn: &PgConnection, upload: &Upload) {
     let _ = tag_service::create_from_tag_string(&conn, &upload.tag_string);
+    let _ = tag_service::rebuild_tag_counts(&conn);
 }
 
 pub fn sanitize_tags<'a>(tags: &'a str) -> String {
