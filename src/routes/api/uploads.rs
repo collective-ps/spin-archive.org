@@ -341,3 +341,7 @@ pub fn twitter(
     }
   }
 }
+
+pub fn routes() -> Vec<rocket::Route> {
+  rocket::routes![validate_checksum, search, new, finalize, twitter]
+}

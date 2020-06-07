@@ -34,3 +34,7 @@ pub fn suggestions(
 
     Ok(Json(response))
 }
+
+pub fn routes() -> Vec<rocket::Route> {
+    rocket::routes![suggestions]
+}
