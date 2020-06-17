@@ -140,6 +140,7 @@ pub fn search(
 pub struct NewUploadRequest {
   file_name: String,
   content_length: i64,
+  md5_hash: String,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -174,17 +175,10 @@ pub fn new(
     }))));
   }
 
-  // Basic duplicate check by file name / ext / file size.
-  if upload_service::get_by_original_file(
-    &conn,
-    name.unwrap().to_str().unwrap(),
-    ext.unwrap().to_str().unwrap(),
-    request.content_length,
-  )
-  .is_some()
-  {
+  // Basic duplicate check by MD5 hash.
+  if upload_service::get_by_md5(&conn, &request.md5_hash).is_some() {
     return Err(BadRequest(Some(json!({
-        "status": "already_uploaded",
+        "status": "error",
         "reason": "Already uploaded"
     }))));
   }
@@ -195,7 +189,7 @@ pub fn new(
     name.unwrap().to_str().unwrap(),
     ext.unwrap().to_str().unwrap(),
     request.content_length,
-    None,
+    Some(request.md5_hash.clone()),
   ) {
     Ok(upload) => {
       let file_name = format!("{}.{}", &upload.file_id, &upload.file_ext);
