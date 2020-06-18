@@ -400,8 +400,8 @@ pub(crate) fn update(
 ) -> Flash<Redirect> {
     let path = format!("/u/{}", file_id);
 
-    if !user.is_contributor() {
-        return Flash::error(Redirect::to(path), "");
+    if !user.can_upload() {
+        return Flash::error(Redirect::to(path), "You can't do that.");
     }
 
     let source = request.source.as_ref().unwrap_or(&"".to_string()).clone();
