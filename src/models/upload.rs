@@ -333,6 +333,7 @@ pub fn where_md5(conn: &PgConnection, hashes: &Vec<String>) -> Vec<Upload> {
         .select(uploads::md5_hash)
         .filter(uploads::md5_hash.eq_any(hashes))
         .filter(uploads::md5_hash.is_not_null())
+        .filter(uploads::status.ne(UploadStatus::Pending))
         .select(ALL_COLUMNS)
         .load::<Upload>(conn)
         .unwrap_or_default()
