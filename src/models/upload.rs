@@ -312,6 +312,7 @@ pub fn get_by_original_file(
         .filter(uploads::file_ext.eq(file_ext))
         .filter(uploads::file_size.eq(file_size))
         .filter(uploads::status.ne(UploadStatus::Pending))
+        .filter(uploads::status.ne(UploadStatus::Deleted))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
         .ok()
@@ -322,6 +323,7 @@ pub fn get_by_md5(conn: &PgConnection, md5_hash: &str) -> Option<Upload> {
     uploads::table
         .filter(uploads::md5_hash.eq(md5_hash))
         .filter(uploads::status.ne(UploadStatus::Pending))
+        .filter(uploads::status.ne(UploadStatus::Deleted))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
         .ok()
@@ -334,6 +336,7 @@ pub fn where_md5(conn: &PgConnection, hashes: &Vec<String>) -> Vec<Upload> {
         .filter(uploads::md5_hash.eq_any(hashes))
         .filter(uploads::md5_hash.is_not_null())
         .filter(uploads::status.ne(UploadStatus::Pending))
+        .filter(uploads::status.ne(UploadStatus::Deleted))
         .select(ALL_COLUMNS)
         .load::<Upload>(conn)
         .unwrap_or_default()
