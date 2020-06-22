@@ -2,6 +2,7 @@
   <div>
     <small>
       <span>spin-archive.org (<a href="https://github.com/andrewvy/spin-archive.org"><em>git</em></a>) |
+      <span><a href="/log">Log</a></span> |
       {% if is_admin %}
         <span><a href="/admin">Admin</a></span> |
       {% endif %}

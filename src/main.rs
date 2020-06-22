@@ -155,6 +155,25 @@ fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
     }
 }
 
+#[rocket::get("/log?<page>")]
+fn audit_log(conn: DatabaseConnection, user: Option<&User>, page: Option<&RawStr>) -> Template {
+    let mut context = TeraContext::new();
+    let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
+    let per_page = 25;
+
+    context::user_context(&mut context, user);
+
+    let log_count = services::audit_service::get_log_count(&conn);
+    let logs = services::audit_service::get_paginated_log(&conn, current_page, per_page);
+    let page_count = (log_count as f64 / per_page as f64).ceil() as i64;
+
+    context.insert("logs", &logs);
+    context.insert("page_count", &page_count);
+    context.insert("page", &current_page);
+
+    Template::render("log", &context)
+}
+
 fn main() {
     dotenv::dotenv().ok();
 
@@ -212,6 +231,7 @@ fn main() {
                 index,
                 logout,
                 about,
+                audit_log,
                 routes::login::index_redirect,
                 routes::login::index,
                 routes::login::post,

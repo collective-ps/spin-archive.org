@@ -5,6 +5,7 @@ import '../css/login.css'
 import '../css/pages/profile.css'
 import '../css/pages/user-comments-page.css'
 import '../css/pages/tags-page.css'
+import '../css/pages/logs-page.css'
 
 import React from 'react'
 import ReactDOM from 'react-dom'

@@ -2,6 +2,7 @@ use chrono::Utc;
 use diesel::PgConnection;
 
 use crate::models::audit_log::{self, AuditLog, NewAuditLog};
+pub use crate::models::audit_log::{get_log_count, get_paginated_log};
 
 pub fn create_audit_log(
     conn: &PgConnection,
