@@ -440,7 +440,7 @@ pub fn index(
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
-                        AND uploads.tag_index @@ plainto_tsquery($2)
+                        AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
                         AND uploads.uploader_user_id = $3
                         GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.created_at DESC
@@ -474,7 +474,7 @@ pub fn index(
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
-                        AND uploads.tag_index @@ plainto_tsquery($2)
+                        AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
                         GROUP BY (uploads.id, users.username, users.role)
                         ORDER BY uploads.created_at DESC
                         ) t
