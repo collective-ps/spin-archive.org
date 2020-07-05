@@ -1,0 +1,56 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="one-column-page forum" id="forum-index-page">
+  <header>
+    <nav class="breadcrumb">
+      <div>
+        <a href="/forum">Forum</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}">{{ forum.title }}</a>
+      </div>
+
+      <div class="description">{{ forum.description }}</div>
+    </nav>
+
+    <div class="forum-actions">
+      {% if can_post -%}
+        <a href="/forum/{{ forum.id }}/new"><button>Create a thread</button></a>
+      {% endif -%}
+    </div>
+  </header>
+
+  <hr class="spacer" />
+
+  <ol class="thread-list">
+    {% for thread in threads -%}
+      {% set show_user_role = thread.thread_author_role != "Registered" -%}
+      {% set show_post_role = thread.post_author_role != "Registered" -%}
+
+      <li class="thread">
+        <div class="left">
+          <div class="thread-title"><a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a></div>
+          <div class="thread-author">
+            <span>{{ thread.thread_author_username }}</span>
+            {% if show_user_role %}
+              <span class="role" data-role="{{ thread.thread_author_role | lower }}">[{{ thread.thread_author_role }}]</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="right">
+          <div class="thread-reply-count">{{ thread.post_count }} post(s)</div>
+          <div class="thread-latest-post">
+            <div class="post-author">
+              <span>{{ thread.post_author_username }}</span>
+              {% if show_post_role %}
+                <span class="role" data-role="{{ thread.post_author_role | lower }}">[{{ thread.post_author_role }}]</span>
+              {% endif %}
+              <span class="date"><small><em>({{ thread.latest_post_created_at | humanized_past }})</em></small></span>
+            </div>
+          </div>
+        </div>
+      </li>
+    {% endfor -%}
+  </ol>
+</main>
+{% endblock content %}

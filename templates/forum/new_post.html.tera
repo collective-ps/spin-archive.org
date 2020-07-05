@@ -1,0 +1,30 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="one-column-page forum" id="forum-index-page">
+  <header>
+    <nav class="breadcrumb">
+      <div>
+        <a href="/forum">Forum</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}">{{ forum.title }}</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a>
+      </div>
+
+      <div class="description">{{ forum.description }}</div>
+    </nav>
+  </header>
+
+  <hr class="spacer" />
+
+  <form class="new-post" action="/forum/{{ forum.id }}/thread/{{ thread.id }}/new" method="POST">
+    <fieldset>
+      <label for="content">Post</label>
+      <textarea id="content" name="content" required></textarea>
+    </fieldset>
+
+    <input type="submit" value="Create new post">
+  </form>
+</main>
+{% endblock content %}

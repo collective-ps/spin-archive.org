@@ -1,0 +1,131 @@
+/* Main Forum CSS */
+
+main.forum {
+  max-width: 1275px;
+}
+
+main.forum header {
+  padding: 2rem 0;
+  display: flex;
+}
+
+main.forum nav {
+  color: var(--color-textGrey);
+  flex: 1;
+  font-weight: bold;
+  padding-top: 12px;
+}
+
+main.forum nav .separator {
+  margin-left: 6px;
+  margin-right: 6px;
+}
+
+main.forum nav .description {
+  display: block;
+  font-weight: normal;
+}
+
+main.forum .forum-actions {
+  text-align: right;
+}
+
+main.forum .spacer {
+  color: var(--color-textGrey);
+}
+
+main.forum .forum-list,
+main.forum .thread-list,
+main.forum .post-list {
+  list-style-type: none;
+}
+
+main.forum .thread-list,
+main.forum .post-list {
+  padding-top: 2em;
+}
+
+main.forum .left,
+main.forum .right {
+  flex: 1;
+}
+
+main.forum .left {
+  display: block;
+}
+
+main.forum .right {
+  text-align: right;
+  display: flex;
+}
+
+main.forum .thread-reply-count,
+main.forum .thread-latest-post {
+  padding: 0 6px;
+  text-align: left;
+}
+
+main.forum .forum-list .forum,
+main.forum .thread-list .thread {
+  padding: 12px;
+  background-color: var(--color-lightGrey);
+  color: var(--color-textGrey);
+  border-radius: 4px;
+  width: 100%;
+}
+
+main.forum .thread-list .thread {
+  display: flex;
+}
+
+main.forum .forum-list .forum + .forum,
+main.forum .thread-list .thread + .thread {
+  margin-top: 12px;
+}
+
+main.forum .forum-list .forum-name,
+main.forum .thread-list .thread-title {
+  font-weight: bold;
+}
+
+main.forum nav a,
+main.forum .forum-list a,
+main.forum .thread-list a {
+  color: inherit;
+  text-decoration: none;
+}
+
+main.forum .new-thread,
+main.forum .new-post {
+  padding-top: 2em;
+}
+
+.post .author {
+  padding: 6px;
+  background-color: var(--color-lightGrey);
+  border-radius: 4px;
+}
+
+.post .post-content {
+  padding: 6px;
+}
+
+.post .author .username,
+.post .author .role,
+.post .author .date {
+  display: inline-block;
+}
+
+.post .author .username {
+  text-decoration: none;
+  font-family: Consolas, Monaco, Menlo, monospace;
+}
+
+.post .author .role {
+  font-weight: 500;
+  font-size: 10pt;
+}
+
+.post .author .date {
+  color: var(--color-grey);
+}

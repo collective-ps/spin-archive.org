@@ -1,0 +1,48 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="one-column-page forum" id="forum-index-page">
+  <header>
+    <nav class="breadcrumb">
+      <div>
+        <a href="/forum">Forum</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}">{{ forum.title }}</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a>
+      </div>
+
+      <div class="description">{{ forum.description }}</div>
+    </nav>
+
+    <div class="forum-actions">
+      {% if can_post -%}
+        <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}/new"><button>Create a post</button></a>
+      {% endif -%}
+    </div>
+  </header>
+
+  <hr class="spacer" />
+
+  <ol class="post-list">
+    {% for post in posts -%}
+      {% set post = post.0 %}
+      {% set author = post.1 %}
+      {% set show_user_role = author.role != "Registered" %}
+
+      <li class="post">
+        <div class="author">
+          <div class="username"><a href="/user/{{ author.username }}">{{ author.username }}</a></div>
+          {% if show_user_role %}
+            <div class="role" data-role="{{ author.role | lower }}">[{{ author.role }}]</div>
+          {% endif %}
+          <div class="date"><small><em>({{ post.created_at | humanized_past }})</em></small></div>
+        </div>
+        <div class="post-content">{{ post.content | from_markdown }}</div>
+        <div class="actions">
+        </div>
+      </li>
+    {% endfor -%}
+  </ol>
+</main>
+{% endblock content %}

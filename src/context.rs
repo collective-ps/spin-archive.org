@@ -131,14 +131,16 @@ pub fn humanized_past(
 pub fn from_markdown(value: TeraValue, _args: HashMap<String, TeraValue>) -> TeraResult<TeraValue> {
     match serde_json::from_value::<String>(value.clone()) {
         Ok(content) => {
-            use pulldown_cmark::{html, Options, Parser};
-
-            let mut options = Options::empty();
-            options.insert(Options::ENABLE_STRIKETHROUGH);
-            let parser = Parser::new_ext(&content, options);
-            let mut html_output = String::new();
-
-            html::push_html(&mut html_output, parser);
+            use comrak::{markdown_to_html, ComrakOptions};
+            let mut html_output = markdown_to_html(
+                &content,
+                &ComrakOptions {
+                    ext_strikethrough: true,
+                    ext_autolink: true,
+                    ext_table: true,
+                    ..Default::default()
+                },
+            );
 
             html_output =
                 html_output.replace("<a ", "<a rel=\"noopener noreferrer\" target=\"_blank\" ");

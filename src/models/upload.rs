@@ -420,6 +420,8 @@ pub fn index(
 ) -> (Vec<FullUpload>, i64, i64) {
     use diesel::sql_types::*;
 
+    // It would be nice to use .to_boxed() here, but it is not available in Diesel yet.
+    // https://github.com/diesel-rs/diesel/pull/1975
     let result = if !query.is_empty() {
         if uploader.is_some() {
             diesel::sql_query(

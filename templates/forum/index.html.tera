@@ -1,0 +1,26 @@
+{% extends "base" %}
+
+{% block content %}
+<main class="one-column-page forum" id="forum-index-page">
+  <header>
+    <nav class="breadcrumb">
+      <div>
+        <a href="/forum">Forum</a>
+      </div>
+    </nav>
+  </header>
+
+  <ol class="forum-list">
+    {% for forum in forums -%}
+        <li class="forum">
+          <div class="forum-name">
+            <a href="/forum/{{ forum.id }}">{{ forum.title }}</a>
+          </div>
+          <div class="forum-description">
+            <a href="/forum/{{ forum.id }}">{{ forum.description }}</a>
+          </div>
+        </li>
+    {% endfor -%}
+  </ol>
+</main>
+{% endblock content %}
