@@ -101,7 +101,7 @@ pub fn by_forum_id(conn: &PgConnection, forum_id: i64) -> Vec<ThreadSummary> {
             ON latest_post.thread_id = post.thread_id AND latest_post.id = post.id
             INNER JOIN users as post_author ON post.author_id = post_author.id
             INNER JOIN posts ON posts.thread_id = threads.id
-            WHERE threads.forum_id = $1
+            WHERE threads.forum_id = $1 AND threads.is_deleted = false
             GROUP BY threads.id, thread_author.id, posts.thread_id, post.created_at, latest_post.id, post_author.id
             ORDER BY threads.is_sticky DESC, post.created_at DESC
         ",
