@@ -10,7 +10,7 @@ use crate::models::forum;
 use crate::models::post;
 use crate::models::thread;
 use crate::models::user::User;
-use crate::services::forum_service;
+use crate::services::{forum_service, notification_service};
 
 #[rocket::get("/")]
 pub(crate) fn index(
@@ -157,12 +157,14 @@ pub(crate) fn handle_new_thread(
                 &thread_params.title,
                 &thread_params.content,
             ) {
-                Ok((thread, _post)) => {
+                Ok((thread, post)) => {
                     let thread_url = format!(
                         "/forum/{forum_id}/thread/{thread_id}",
                         forum_id = forum_id,
                         thread_id = thread.id
                     );
+
+                    notification_service::notify_new_thread(&thread, &post, &user);
 
                     Flash::success(Redirect::to(thread_url), "Created a new thread.")
                 }
@@ -238,7 +240,10 @@ pub(crate) fn handle_new_post(
             };
 
             match post::insert(&conn, &new_post) {
-                Ok(_) => Flash::success(Redirect::to(thread_url), "Created a new post."),
+                Ok(post) => {
+                    notification_service::notify_new_post(&thread, &post, &user);
+                    Flash::success(Redirect::to(thread_url), "Created a new post.")
+                }
                 Err(_) => Flash::error(Redirect::to(forum_url), "Could not create new post."),
             }
         } else {
