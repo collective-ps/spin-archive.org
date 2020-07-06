@@ -39,7 +39,8 @@ main.forum .spacer {
   color: var(--color-textGrey);
 }
 
-main.forum .thread-title {
+main.forum .thread-title,
+main.forum .latest-thread {
   word-break: break-word;
 }
 
@@ -72,10 +73,14 @@ main.forum .right {
   display: flex;
 }
 
+main.forum .forum-list .right {
+  display: block;
+}
+
 main.forum .thread-reply-count,
 main.forum .thread-latest-post {
   padding: 0 6px;
-  text-align: left;
+  text-align: right;
 }
 
 main.forum .forum-list .forum,
@@ -85,9 +90,6 @@ main.forum .thread-list .thread {
   color: var(--color-textGrey);
   border-radius: 4px;
   width: 100%;
-}
-
-main.forum .thread-list .thread {
   display: flex;
 }
 
@@ -96,6 +98,7 @@ main.forum .thread-list .thread + .thread {
   margin-top: 12px;
 }
 
+main.forum .latest-thread,
 main.forum .forum-list .forum-name,
 main.forum .thread-list .thread-title {
   font-weight: bold;
