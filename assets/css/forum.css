@@ -133,6 +133,7 @@ main.forum .new-post {
 .post .post-content {
   padding: 6px;
   word-break: break-word;
+  white-space: pre-line;
 }
 
 .post .author .username,
