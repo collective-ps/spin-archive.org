@@ -23,7 +23,7 @@
     </fieldset>
     <fieldset>
       <label for="content">Post Content</label>
-      <textarea id="content" name="content" required></textarea>
+      <textarea id="content" name="content"></textarea>
     </fieldset>
     <input type="submit" value="Create new thread">
   </form>

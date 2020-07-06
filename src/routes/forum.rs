@@ -229,6 +229,13 @@ pub(crate) fn handle_new_post(
         thread_id = thread_id
     );
 
+    if post_params.content.len() < 3 {
+        return Flash::error(
+            Redirect::to(thread_url),
+            "You must post more than 3 characters.",
+        );
+    }
+
     if forum.is_some() && thread.is_some() {
         let thread = thread.unwrap().0;
 
@@ -320,6 +327,13 @@ pub(crate) fn handle_edit_post(
         thread_id = thread_id
     );
     let post = post::by_id(&conn, post_id);
+
+    if post_params.content.len() < 3 {
+        return Flash::error(
+            Redirect::to(thread_url),
+            "You must post more than 3 characters.",
+        );
+    }
 
     if forum.is_some() && thread.is_some() && post.is_some() {
         let post = post.unwrap();

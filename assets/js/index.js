@@ -117,4 +117,13 @@ window.addEventListener('DOMContentLoaded', () => {
       }
     })
   }
+
+  let $markdownContainer = document.querySelector('textarea#content')
+
+  if ($markdownContainer) {
+    let easyMDE = new EasyMDE({
+      element: $markdownContainer,
+      spellChecker: false,
+    })
+  }
 })

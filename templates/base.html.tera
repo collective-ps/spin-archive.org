@@ -12,6 +12,7 @@
     />
 
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.2/plyr.css" />
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
     <link rel="stylesheet" type="text/css" href={{ "/public/app.css" | safe | append_version }} />
 
     {% block head %}
@@ -62,6 +63,7 @@
 
   <script type="text/javascript" src={{ "/public/app.bundle.js" | safe | append_version }}></script>
   <script src="https://cdn.usefathom.com/script.js" site="UEARXKBQ" defer></script>
+  <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
 
   {% block footer %}
   {% include "partials/footer" %}

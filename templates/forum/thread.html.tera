@@ -61,7 +61,7 @@
   <form class="new-post" action="/forum/{{ forum.id }}/thread/{{ thread.id }}/new" method="POST">
     <fieldset>
       <label for="content">Post</label>
-      <textarea id="content" name="content" required></textarea>
+      <textarea id="content" name="content"></textarea>
     </fieldset>
 
     <input type="submit" value="Create new post">

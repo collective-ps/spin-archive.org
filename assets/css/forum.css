@@ -122,7 +122,7 @@ main.forum .new-post {
     flex-direction: column;
   }
 
-  main.forum button {
+  main.forum .forum-actions button {
     width: 100%;
   }
 }
