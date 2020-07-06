@@ -2,6 +2,7 @@
 
 main.forum {
   max-width: 1275px;
+  margin-bottom: 2em;
 }
 
 main.forum header {
@@ -24,6 +25,10 @@ main.forum nav .separator {
 main.forum nav .description {
   display: block;
   font-weight: normal;
+}
+
+main.forum {
+  font-size: 10pt;
 }
 
 main.forum .forum-actions {
@@ -94,6 +99,7 @@ main.forum .thread-list .thread + .thread {
 main.forum .forum-list .forum-name,
 main.forum .thread-list .thread-title {
   font-weight: bold;
+  font-size: 9pt;
 }
 
 main.forum nav a,
@@ -106,6 +112,16 @@ main.forum .thread-list a {
 main.forum .new-thread,
 main.forum .new-post {
   padding-top: 2em;
+}
+
+@media only screen and (max-width: 700px) {
+  main.forum header {
+    flex-direction: column;
+  }
+
+  main.forum button {
+    width: 100%;
+  }
 }
 
 .post .author {
