@@ -26,9 +26,11 @@
 
   <ol class="post-list">
     {% for post in posts -%}
-      {% set post = post.0 %}
-      {% set author = post.1 %}
-      {% set show_user_role = author.role != "Registered" %}
+      {% set post = post.0 -%}
+      {% set author = post.1 -%}
+      {% set show_user_role = author.role != "Registered" -%}
+      {% set is_author = user_id and author.id == user_id -%}
+      {% set edited = post.created_at != post.updated_at -%}
 
       <li class="post">
         <div class="author">
@@ -36,13 +38,34 @@
           {% if show_user_role %}
             <div class="role" data-role="{{ author.role | lower }}">[{{ author.role }}]</div>
           {% endif %}
-          <div class="date"><small><em>({{ post.created_at | humanized_past }})</em></small></div>
+          <div class="date">
+            <small>
+              <em>({{ post.created_at | humanized_past }})</em>
+              {% if edited %}
+              <span>*</span>
+              {% endif %}
+            </small>
+          </div>
         </div>
         <div class="post-content">{{ post.content | from_markdown }}</div>
         <div class="actions">
+          {% if is_author %}
+          <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}/post/{{ post.id }}/edit">Edit</a>
+          {% endif %}
         </div>
       </li>
     {% endfor -%}
   </ol>
+
+  {% if can_post -%}
+  <form class="new-post" action="/forum/{{ forum.id }}/thread/{{ thread.id }}/new" method="POST">
+    <fieldset>
+      <label for="content">Post</label>
+      <textarea id="content" name="content" required></textarea>
+    </fieldset>
+
+    <input type="submit" value="Create new post">
+  </form>
+  {% endif %}
 </main>
 {% endblock content %}

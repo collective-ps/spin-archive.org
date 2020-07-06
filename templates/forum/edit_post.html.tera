@@ -8,6 +8,8 @@
         <a href="/forum">Forum</a>
         <span class="separator"> > </span>
         <a href="/forum/{{ forum.id }}">{{ forum.title }}</a>
+        <span class="separator"> > </span>
+        <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a>
       </div>
 
       <div class="description">{{ forum.description }}</div>
@@ -16,16 +18,13 @@
 
   <hr class="spacer" />
 
-  <form class="new-thread" action="/forum/{{ forum.id }}/new" method="POST">
+  <form class="new-post" action="/forum/{{ forum.id }}/thread/{{ thread.id }}/post/{{ post.id }}" method="POST">
     <fieldset>
-      <label for="title">Title</label>
-      <input type="text" id="title" name="title" required maxlength="70"></input>
+      <label for="content">Post</label>
+      <textarea id="content" name="content" required>{{ post.content }}</textarea>
     </fieldset>
-    <fieldset>
-      <label for="content">Post Content</label>
-      <textarea id="content" name="content" required></textarea>
-    </fieldset>
-    <input type="submit" value="Create new thread">
+
+    <input type="submit" value="Edit post">
   </form>
 </main>
 {% endblock content %}

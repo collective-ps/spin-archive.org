@@ -27,6 +27,20 @@ pub struct NewPost<'a> {
     pub author_id: i32,
 }
 
+#[derive(Debug, Serialize, Deserialize, AsChangeset)]
+#[table_name = "posts"]
+pub struct UpdatePost<'a> {
+    pub content: &'a str,
+}
+
+/// Gets a [`Post`] by a given `id`.
+pub fn by_id(conn: &PgConnection, post_id: i64) -> Option<Post> {
+    posts::table
+        .filter(posts::id.eq(post_id))
+        .first::<Post>(conn)
+        .ok()
+}
+
 /// Gets posts in default order, by thread_id
 pub fn by_thread_id(conn: &PgConnection, thread_id: i64) -> Vec<(Post, User)> {
     posts::table
@@ -43,4 +57,11 @@ pub fn insert(conn: &PgConnection, post: &NewPost) -> QueryResult<Post> {
     post.insert_into(posts::table)
         .returning(posts::all_columns)
         .get_result(conn)
+}
+
+/// Updates a given [`Post`] with new column values.
+pub fn update(conn: &PgConnection, id: i64, post: &UpdatePost) -> QueryResult<Post> {
+    diesel::update(posts::table.filter(posts::id.eq(id)))
+        .set(post)
+        .get_result::<Post>(conn)
 }

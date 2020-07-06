@@ -133,6 +133,13 @@ pub(crate) fn handle_new_thread(
     let forum = forum::by_id(&conn, forum_id);
     let forum_url = format!("/forum/{forum_id}", forum_id = forum_id);
 
+    if thread_params.title.len() > 70 {
+        return Flash::error(
+            Redirect::to(forum_url),
+            "Title must be no more than 70 characters.",
+        );
+    }
+
     if forum.is_some() {
         let forum = forum.unwrap();
         context.insert("forum", &forum);
@@ -237,6 +244,94 @@ pub(crate) fn handle_new_post(
     }
 }
 
+#[rocket::get("/<forum_id>/thread/<thread_id>/post/<post_id>/edit")]
+pub(crate) fn edit_post(
+    conn: DatabaseConnection,
+    user: &User,
+    forum_id: i64,
+    thread_id: i64,
+    post_id: i64,
+) -> Result<Template, Redirect> {
+    let thread_url = format!(
+        "/forum/{forum_id}/thread/{thread_id}",
+        forum_id = forum_id,
+        thread_id = thread_id
+    );
+
+    let forum = forum::by_id(&conn, forum_id);
+    let thread = thread::by_id(&conn, thread_id);
+
+    let mut context = TeraContext::new();
+
+    context::user_context(&mut context, Some(user));
+
+    match post::by_id(&conn, post_id) {
+        Some(post) => {
+            if post.author_id == user.id {
+                let thread = thread.unwrap().0;
+                let forum = forum.unwrap();
+
+                context.insert("forum", &forum);
+                context.insert("thread", &thread);
+                context.insert("post", &post);
+
+                Ok(Template::render("forum/edit_post", &context))
+            } else {
+                Err(Redirect::to(thread_url))
+            }
+        }
+        None => Err(Redirect::to(thread_url)),
+    }
+}
+
+#[derive(Debug, FromForm)]
+pub struct UpdatePost {
+    content: String,
+}
+
+#[rocket::post(
+    "/<forum_id>/thread/<thread_id>/post/<post_id>",
+    data = "<post_params>"
+)]
+pub(crate) fn handle_edit_post(
+    conn: DatabaseConnection,
+    user: &User,
+    forum_id: i64,
+    thread_id: i64,
+    post_id: i64,
+    post_params: Form<UpdatePost>,
+) -> Flash<Redirect> {
+    let forum = forum::by_id(&conn, forum_id);
+    let thread = thread::by_id(&conn, thread_id);
+    let forum_url = format!("/forum/{forum_id}", forum_id = forum_id);
+    let thread_url = format!(
+        "/forum/{forum_id}/thread/{thread_id}",
+        forum_id = forum_id,
+        thread_id = thread_id
+    );
+    let post = post::by_id(&conn, post_id);
+
+    if forum.is_some() && thread.is_some() && post.is_some() {
+        let post = post.unwrap();
+        let is_author = post.author_id == user.id;
+
+        if is_author || user.is_moderator() {
+            let edit_post = post::UpdatePost {
+                content: &post_params.content,
+            };
+
+            match post::update(&conn, post.id, &edit_post) {
+                Ok(_) => Flash::success(Redirect::to(thread_url), "Edited post"),
+                Err(_) => Flash::error(Redirect::to(forum_url), "Could not edit post."),
+            }
+        } else {
+            Flash::error(Redirect::to(forum_url), "You cannot edit this post.")
+        }
+    } else {
+        Flash::error(Redirect::to(forum_url), "Could not edit post.")
+    }
+}
+
 pub(crate) fn router() -> Vec<rocket::Route> {
     rocket::routes![
         index,
@@ -245,6 +340,8 @@ pub(crate) fn router() -> Vec<rocket::Route> {
         new_thread,
         handle_new_thread,
         new_post,
-        handle_new_post
+        handle_new_post,
+        edit_post,
+        handle_edit_post,
     ]
 }

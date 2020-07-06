@@ -34,6 +34,10 @@ main.forum .spacer {
   color: var(--color-textGrey);
 }
 
+main.forum .thread-title {
+  word-break: break-word;
+}
+
 main.forum .forum-list,
 main.forum .thread-list,
 main.forum .post-list {
@@ -108,6 +112,7 @@ main.forum .new-post {
 
 .post .post-content {
   padding: 6px;
+  word-break: break-word;
 }
 
 .post .author .username,
@@ -128,4 +133,9 @@ main.forum .new-post {
 
 .post .author .date {
   color: var(--color-grey);
+}
+
+.post .actions {
+  text-align: right;
+  padding: 6px;
 }
