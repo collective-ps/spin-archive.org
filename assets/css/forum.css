@@ -38,6 +38,10 @@ main.forum .thread-title {
   word-break: break-word;
 }
 
+main.forum .thread-title.is-sticky {
+  color: var(--color-primary);
+}
+
 main.forum .forum-list,
 main.forum .thread-list,
 main.forum .post-list {

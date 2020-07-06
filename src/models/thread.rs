@@ -103,7 +103,7 @@ pub fn by_forum_id(conn: &PgConnection, forum_id: i64) -> Vec<ThreadSummary> {
             INNER JOIN posts ON posts.thread_id = threads.id
             WHERE threads.forum_id = $1
             GROUP BY threads.id, thread_author.id, posts.thread_id, post.created_at, latest_post.id, post_author.id
-            ORDER BY post.created_at DESC
+            ORDER BY threads.is_sticky DESC, post.created_at DESC
         ",
     )
     .bind::<BigInt, _>(forum_id)

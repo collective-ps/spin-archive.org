@@ -29,7 +29,13 @@
 
       <li class="thread">
         <div class="left">
-          <div class="thread-title"><a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a></div>
+          {% if thread.is_sticky -%}
+          <div class="thread-title is-sticky">
+          {% else %}
+          <div class="thread-title">
+          {% endif %}
+            <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}">{{ thread.title }}</a>
+          </div>
           <div class="thread-author">
             <span>{{ thread.thread_author_username }}</span>
             {% if show_user_role %}
