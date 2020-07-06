@@ -138,7 +138,6 @@ pub fn from_markdown(value: TeraValue, _args: HashMap<String, TeraValue>) -> Ter
                     ext_strikethrough: true,
                     ext_autolink: true,
                     ext_table: true,
-                    hardbreaks: true,
                     ..Default::default()
                 },
             );
