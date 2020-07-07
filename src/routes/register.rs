@@ -1,3 +1,5 @@
+use std::convert::TryInto;
+
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket_contrib::templates::tera::Context as TeraContext;
@@ -58,10 +60,16 @@ pub(crate) fn post(conn: DatabaseConnection, form: Form<RegistrationFields>) -> 
     );
     }
 
-    match user::register(&conn, form.into_inner()) {
-        Ok(user) => {
-            let invitation = invitation.unwrap();
+    let invitation = invitation.unwrap();
 
+    match form
+        .into_inner()
+        .try_into()
+        .and_then(|mut params: user::NewUser| {
+            params.invited_by_user_id = Some(invitation.creator_id);
+            user::register(&conn, params)
+        }) {
+        Ok(user) => {
             let _ = invitation::update(
                 &conn,
                 invitation.id,

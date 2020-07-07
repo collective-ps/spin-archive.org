@@ -161,11 +161,12 @@ impl<'a, 'r> FromRequest<'a, 'r> for &'a User {
 
 #[derive(Insertable)]
 #[table_name = "users"]
-struct NewUser {
+pub struct NewUser {
     email: Option<String>,
     username: String,
     password_hash: String,
     role: UserRole,
+    pub invited_by_user_id: Option<i32>,
 }
 
 #[derive(Debug, FromForm)]
@@ -177,7 +178,7 @@ pub struct RegistrationFields {
     pub code: String,
 }
 
-pub(crate) enum RegistrationError {
+pub enum RegistrationError {
     PasswordFailure,
     AlreadyExists,
 }
@@ -199,6 +200,7 @@ impl TryInto<NewUser> for RegistrationFields {
             username: self.username,
             password_hash: hash_password(&self.password)?,
             role: UserRole::Registered,
+            invited_by_user_id: None,
         })
     }
 }
@@ -231,12 +233,7 @@ fn verify_password(password: &str, hash: &str) -> bool {
     }
 }
 
-pub(crate) fn register(
-    conn: &PgConnection,
-    fields: RegistrationFields,
-) -> Result<User, RegistrationError> {
-    let new_user: NewUser = fields.try_into()?;
-
+pub(crate) fn register(conn: &PgConnection, new_user: NewUser) -> Result<User, RegistrationError> {
     diesel::insert_into(users::table)
         .values(new_user)
         .get_result(conn)
