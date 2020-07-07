@@ -45,7 +45,8 @@ pub(crate) fn forum(
 
     if forum.is_some() {
         let forum = forum.unwrap();
-        let can_post = forum.is_open || user.map(|user| user.is_moderator()).unwrap_or(false);
+        let is_moderator = user.map(|user| user.is_moderator()).unwrap_or(false);
+        let can_post = user.is_some() && (forum.is_open || is_moderator);
 
         context.insert("forum", &forum);
         context.insert("threads", &threads);
@@ -76,7 +77,7 @@ pub(crate) fn thread(
         let posts = post::by_thread_id(&conn, thread_id);
         let thread = thread.unwrap();
         let is_moderator = user.map(|user| user.is_moderator()).unwrap_or(false);
-        let can_post = thread.0.is_open || is_moderator;
+        let can_post = user.is_some() && (thread.0.is_open || is_moderator);
 
         if thread.0.is_deleted && !is_moderator {
             return Err(Redirect::to("/forum"));
