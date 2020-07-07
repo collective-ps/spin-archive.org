@@ -44,6 +44,20 @@ table! {
     use diesel::sql_types::*;
     use diesel_full_text_search::{TsVector as Tsvector};
 
+    invitations (id) {
+        id -> Int8,
+        code -> Text,
+        creator_id -> Int4,
+        consumer_id -> Nullable<Int4>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+table! {
+    use diesel::sql_types::*;
+    use diesel_full_text_search::{TsVector as Tsvector};
+
     posts (id) {
         id -> Int8,
         thread_id -> Int8,
@@ -150,6 +164,7 @@ table! {
         updated_at -> Timestamp,
         role -> Int2,
         daily_upload_limit -> Int4,
+        invited_by_user_id -> Nullable<Int4>,
     }
 }
 
@@ -168,6 +183,7 @@ allow_tables_to_appear_in_same_query!(
     api_tokens,
     audit_log,
     forums,
+    invitations,
     posts,
     tags,
     threads,

@@ -3,6 +3,61 @@
 {% block content %}
 <main class="one-column-page" id="settings-page">
   <div class="content">
+    <div class="invitations">
+      <h3>Invitations</h3>
+
+      <p>
+        New users must be invited by a current user, though there is no formal vetting process.
+        Invitations are used as a mechanism for spam-control, to slow registrations to a pace we can acculturate and to encourage users to be nice, not to make the spin-archive userbase an elite club.
+        You can create your own invite codes below.
+      </p>
+
+      {% if invitations %}
+        <table>
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Created At</th>
+              <th>Used By</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for invitation in invitations %}
+              {% set consumer_user = invitation.1 %}
+              {% set invitation = invitation.0 %}
+
+              <tr>
+                {% if consumer_user %}
+                <td>Invitation used</td>
+                {% else %}
+                <td><pre><code>https://spin-archive.org/register?code={{ invitation.code }}</code></pre></td>
+                {% endif %}
+                <td>{{ invitation.created_at | date(format="%Y-%m-%d") }} <small>({{ invitation.created_at | humanized_past }})</small></td>
+                <td>
+                  {% if consumer_user %}
+                    <a href="/user/{{ consumer_user.username }}" target="_blank">{{ consumer_user.username }}</a>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if not consumer_user %}
+                  <form action="/user/settings/invitations/{{ invitation.id }}/delete" method="POST">
+                    <a href="javascript:;" onclick="parentNode.submit()">Delete</a>
+                  </form>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+      <div class="placeholder">No invitations created</div>
+      {% endif %}
+
+      <form action="/user/settings/invitations" method="post">
+        <button type="submit">New Invite</button>
+      </form>
+    </div>
     <div class="api-tokens">
       <h3>API Tokens</h3>
 

@@ -41,6 +41,9 @@
             <a href="/queue" class="nav-item">Queue</a>
           {% endif %}
           {% if user_id %}
+            <a href="/user/settings" class="nav-item">
+              Profile
+            </a>
             <form action="/logout" method="POST" class="nav-item">
               <a class="nav-item" href="javascript:;" onclick="parentNode.submit()">Log out</a>
             </form>

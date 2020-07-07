@@ -19,6 +19,7 @@
       <label for="email">Email</label>
       <input type="email" name="email" id="email" />
     </fieldset>
+    <input type="hidden" name="code" value="{{ code }}" />
     <input type="submit" value="Register" />
   </form>
 </main>

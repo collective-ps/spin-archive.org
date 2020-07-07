@@ -59,10 +59,21 @@ pub struct User {
     pub updated_at: NaiveDateTime,
     pub role: UserRole,
     pub daily_upload_limit: i32,
+    pub invited_by_user_id: Option<i32>,
 }
 
 impl User {
     pub fn can_upload(&self) -> bool {
+        vec![
+            UserRole::Registered,
+            UserRole::Contributor,
+            UserRole::Moderator,
+            UserRole::Admin,
+        ]
+        .contains(&self.role)
+    }
+
+    pub fn is_not_limited(&self) -> bool {
         vec![
             UserRole::Registered,
             UserRole::Contributor,
@@ -163,6 +174,7 @@ pub struct RegistrationFields {
     pub username: String,
     password: String,
     confirm_password: String,
+    pub code: String,
 }
 
 pub(crate) enum RegistrationError {
