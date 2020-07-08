@@ -179,6 +179,52 @@ pub(crate) fn handle_new_thread(
     }
 }
 
+#[rocket::post("/<forum_id>/thread/<thread_id>/sticky")]
+pub(crate) fn sticky(
+    conn: DatabaseConnection,
+    user: &User,
+    forum_id: i64,
+    thread_id: i64,
+) -> Flash<Redirect> {
+    let thread_url = format!(
+        "/forum/{forum_id}/thread/{thread_id}",
+        forum_id = forum_id,
+        thread_id = thread_id
+    );
+
+    if user.is_moderator() {
+        match thread::set_sticky(&conn, thread_id, true) {
+            Ok(_) => Flash::success(Redirect::to(thread_url), "Stickied."),
+            Err(_) => Flash::error(Redirect::to(thread_url), "Could not sticky thread.")
+        }
+    } else {
+        Flash::error(Redirect::to(thread_url), "Could not sticky thread.")
+    }
+}
+
+#[rocket::post("/<forum_id>/thread/<thread_id>/unsticky")]
+pub(crate) fn unsticky(
+    conn: DatabaseConnection,
+    user: &User,
+    forum_id: i64,
+    thread_id: i64,
+) -> Flash<Redirect> {
+    let thread_url = format!(
+        "/forum/{forum_id}/thread/{thread_id}",
+        forum_id = forum_id,
+        thread_id = thread_id
+    );
+
+    if user.is_moderator() {
+        match thread::set_sticky(&conn, thread_id, false) {
+            Ok(_) => Flash::success(Redirect::to(thread_url), "Unstickied."),
+            Err(_) => Flash::error(Redirect::to(thread_url), "Could not unsticky thread.")
+        }
+    } else {
+        Flash::error(Redirect::to(thread_url), "Could not unsticky thread.")
+    }
+}
+
 #[rocket::get("/<forum_id>/thread/<thread_id>/new")]
 pub(crate) fn new_post(
     conn: DatabaseConnection,
@@ -368,5 +414,7 @@ pub(crate) fn router() -> Vec<rocket::Route> {
         handle_new_post,
         edit_post,
         handle_edit_post,
+        sticky,
+        unsticky,
     ]
 }

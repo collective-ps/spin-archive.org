@@ -70,6 +70,12 @@ pub fn by_id(conn: &PgConnection, thread_id: i64) -> Option<(Thread, User)> {
         .ok()
 }
 
+pub fn set_sticky(conn: &PgConnection, thread_id: i64, is_sticky: bool) -> QueryResult<Thread> {
+    diesel::update(threads::table.filter(threads::id.eq(thread_id)))
+    .set(threads::is_sticky.eq(is_sticky))
+    .get_result::<Thread>(conn)
+}
+
 /// Gets threads in default order, by forum_id.
 pub fn by_forum_id(conn: &PgConnection, forum_id: i64) -> Vec<ThreadSummary> {
     use diesel::sql_types::*;

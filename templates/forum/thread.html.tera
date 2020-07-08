@@ -16,6 +16,17 @@
     </nav>
 
     <div class="forum-actions">
+      {% if is_moderator -%}
+        {% if thread.is_sticky %}
+        <form action="/forum/{{ forum.id }}/thread/{{ thread.id }}/unsticky" method="POST">
+          <a href="javascript:;" onclick="parentNode.submit()">Unsticky</a>
+        </form>
+        {% else %}
+        <form action="/forum/{{ forum.id }}/thread/{{ thread.id }}/sticky" method="POST">
+          <a href="javascript:;" onclick="parentNode.submit()">Sticky</a>
+        </form>
+        {% endif %}
+      {% endif -%}
       {% if can_post -%}
         <a href="/forum/{{ forum.id }}/thread/{{ thread.id }}/new"><button>Create a post</button></a>
       {% endif -%}
