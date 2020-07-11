@@ -26,7 +26,6 @@ mod context;
 mod database;
 mod ingestors;
 mod models;
-mod pagination;
 mod routes;
 mod s3_client;
 mod schema;
