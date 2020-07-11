@@ -146,52 +146,52 @@ pub fn group_tags(tags: Vec<Tag>) -> (Vec<TagGroup>, Vec<Tag>) {
         .filter(|tag| {
             let mut any_matches = false;
 
-            if tag.name.starts_with("community:") {
+            if tag.name.starts_with("community") {
                 groups[0].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("spinner:") {
+            if tag.name.starts_with("spinner") {
                 groups[1].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("cv:") {
+            if tag.name.starts_with("cv") {
                 groups[2].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("pv:") {
+            if tag.name.starts_with("pv") {
                 groups[3].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("sv:") {
+            if tag.name.starts_with("sv") {
                 groups[4].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("editor:") {
+            if tag.name.starts_with("editor") {
                 groups[5].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("event:") {
+            if tag.name.starts_with("event") {
                 groups[6].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("type:") {
+            if tag.name.starts_with("type") {
                 groups[7].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("organizer:") {
+            if tag.name.starts_with("organizer") {
                 groups[8].tags.push(tag.clone());
                 any_matches = true;
             }
 
-            if tag.name.starts_with("team:") {
+            if tag.name.starts_with("team") {
                 groups[9].tags.push(tag.clone());
                 any_matches = true;
             }

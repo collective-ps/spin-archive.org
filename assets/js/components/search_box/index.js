@@ -2,7 +2,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react'
 
 import './index.css'
 
-const TAG_REGEX = /([-~]*)?([a-z\:]*)$/i
+const TAG_REGEX = /([-~]*)?([a-z\:\/]*)$/i
 
 const parseQuery = (text, caretIdx) => {
   let beforeCaretText = text.substring(0, caretIdx)
