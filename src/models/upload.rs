@@ -427,18 +427,18 @@ pub fn index(
             diesel::sql_query(
                 "
                     SELECT *,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = t.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = t.id),
                     COUNT(*) OVER ()
                         FROM
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
-                            users.role AS uploader_role,
-                            (SELECT COUNT(upload_comments.*) AS comment_count
-                            FROM upload_comments
-                            WHERE upload_comments.upload_id = uploads.id),
-                            (SELECT COUNT(upload_views.*) AS view_count
-                            FROM upload_views
-                            WHERE upload_views.upload_id = uploads.id)
+                            users.role AS uploader_role
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
@@ -461,18 +461,18 @@ pub fn index(
             diesel::sql_query(
                 "
                     SELECT *,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = t.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = t.id),
                     COUNT(*) OVER ()
                         FROM
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
-                            users.role AS uploader_role,
-                            (SELECT COUNT(upload_comments.*) AS comment_count
-                            FROM upload_comments
-                            WHERE upload_comments.upload_id = uploads.id),
-                            (SELECT COUNT(upload_views.*) AS view_count
-                            FROM upload_views
-                            WHERE upload_views.upload_id = uploads.id)
+                            users.role AS uploader_role
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
@@ -495,18 +495,18 @@ pub fn index(
             diesel::sql_query(
                 "
                     SELECT *,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = t.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = t.id),
                     COUNT(*) OVER ()
                         FROM
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
-                            users.role AS uploader_role,
-                            (SELECT COUNT(upload_comments.*) AS comment_count
-                            FROM upload_comments
-                            WHERE upload_comments.upload_id = uploads.id),
-                            (SELECT COUNT(upload_views.*) AS view_count
-                            FROM upload_views
-                            WHERE upload_views.upload_id = uploads.id)
+                            users.role AS uploader_role
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1
@@ -527,18 +527,18 @@ pub fn index(
             diesel::sql_query(
                 "
                     SELECT *,
+                        (SELECT COUNT(upload_comments.*) AS comment_count
+                        FROM upload_comments
+                        WHERE upload_comments.upload_id = t.id),
+                        (SELECT COUNT(upload_views.*) AS view_count
+                        FROM upload_views
+                        WHERE upload_views.upload_id = t.id),
                     COUNT(*) OVER ()
                         FROM
                         (
                         SELECT uploads.*,
                             users.username AS uploader_username,
-                            users.role AS uploader_role,
-                            (SELECT COUNT(upload_comments.*) AS comment_count
-                            FROM upload_comments
-                            WHERE upload_comments.upload_id = uploads.id),
-                            (SELECT COUNT(upload_views.*) AS view_count
-                            FROM upload_views
-                            WHERE upload_views.upload_id = uploads.id)
+                            users.role AS uploader_role
                         FROM uploads
                         LEFT JOIN users ON (uploads.uploader_user_id = users.id)
                         WHERE uploads.status = $1

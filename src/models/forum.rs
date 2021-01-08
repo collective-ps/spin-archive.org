@@ -3,7 +3,7 @@ use diesel::prelude::*;
 use diesel::{sql_types, PgConnection};
 use serde::{Deserialize, Serialize};
 
-use crate::models::user::{User, UserRole};
+use crate::models::user::UserRole;
 use crate::schema::forums;
 
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, QueryableByName, Clone)]
