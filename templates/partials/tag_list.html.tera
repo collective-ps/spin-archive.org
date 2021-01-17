@@ -5,7 +5,7 @@
     {% set tag_count = group.tags | length %}
 
     {% if tag_count != 0 %}
-      <details class="tag-group">
+      <details class="tag-group" open>
         <summary>{{ group.name }} ({{ tag_count }})</summary>
         <ol>
         {% for tag in group.tags %}

@@ -40,9 +40,9 @@ pub fn by_names(conn: &PgConnection, tag_names: &Vec<&str>) -> Vec<Tag> {
 }
 
 /// Gets tags by their corresponding name.
-pub fn starting_with(conn: &PgConnection, prefix: &str, limit: i64) -> Vec<Tag> {
+pub fn contains(conn: &PgConnection, prefix: &str, limit: i64) -> Vec<Tag> {
     tags::table
-        .filter(tags::name.ilike(&format!("{}%", prefix)))
+        .filter(tags::name.ilike(&format!("%{}%", prefix)))
         .filter(tags::upload_count.gt(0))
         .order(tags::upload_count.desc())
         .limit(limit)
