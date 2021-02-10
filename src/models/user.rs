@@ -175,7 +175,6 @@ pub struct RegistrationFields {
     pub username: String,
     password: String,
     confirm_password: String,
-    pub code: String,
 }
 
 pub enum RegistrationError {

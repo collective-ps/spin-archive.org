@@ -6,7 +6,6 @@ use rocket_contrib::templates::Template;
 
 use crate::context;
 use crate::database::DatabaseConnection;
-use crate::models::invitation;
 use crate::models::user::{get_user_by_username, User};
 use crate::services::{api_token_service, comment_service, upload_service};
 
@@ -22,10 +21,8 @@ pub(crate) fn settings(
     context::user_context(&mut context, Some(user));
 
     let api_tokens = api_token_service::get_tokens_by_user(&conn, user.id);
-    let invitations = invitation::get_invitations_by_user(&conn, user.id);
 
     context.insert("api_tokens", &api_tokens);
-    context.insert("invitations", &invitations);
 
     Ok(Template::render("users/settings", &context))
 }
@@ -66,50 +63,6 @@ pub(crate) fn delete_api_token(conn: DatabaseConnection, id: i64, user: &User) -
       Redirect::to("/user/settings"),
       "You do not have permission to delete an API token. Must be at least [Contributor] rank.",
     )
-    }
-}
-
-#[rocket::post("/settings/invitations")]
-pub(crate) fn new_invitation(conn: DatabaseConnection, user: &User) -> Flash<Redirect> {
-    if user.is_not_limited() {
-        let new_invite = invitation::NewInvitation {
-            creator_id: user.id,
-            code: nanoid::nanoid!(),
-        };
-
-        match invitation::insert(&conn, &new_invite) {
-            Ok(_) => Flash::success(Redirect::to("/user/settings"), "Created a new invitation."),
-            Err(_) => Flash::error(
-                Redirect::to("/user/settings"),
-                "Could not generate a new invite.",
-            ),
-        }
-    } else {
-        Flash::error(
-            Redirect::to("/user/settings"),
-            "You do not have permission to create invites.",
-        )
-    }
-}
-
-#[rocket::post("/settings/invitations/<id>/delete")]
-pub(crate) fn delete_invitation(conn: DatabaseConnection, id: i64, user: &User) -> Flash<Redirect> {
-    if user.is_not_limited() {
-        match invitation::revoke(&conn, user.id, id) {
-            Ok(_) => Flash::success(
-                Redirect::to("/user/settings"),
-                "Deleted API token succesfully.",
-            ),
-            Err(_) => Flash::error(
-                Redirect::to("/user/settings"),
-                "Could not delete API token.",
-            ),
-        }
-    } else {
-        Flash::error(
-            Redirect::to("/user/settings"),
-            "You do not have permission to delete invites.",
-        )
     }
 }
 
@@ -184,13 +137,5 @@ pub(crate) fn comments(
 }
 
 pub(crate) fn router() -> Vec<rocket::Route> {
-    rocket::routes![
-        index,
-        comments,
-        settings,
-        new_api_token,
-        delete_api_token,
-        new_invitation,
-        delete_invitation
-    ]
+    rocket::routes![index, comments, settings, new_api_token, delete_api_token,]
 }

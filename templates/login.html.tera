@@ -12,7 +12,7 @@
       <input type="password" name="password" id="password" required />
     </fieldset>
     <input type="submit" value="Login" />
+    <a class="register" href="/register">Create an account</a>
   </form>
-  <p>Not a user yet? Sign up is by invitation only to combat spam and increase accountability. If you know a current user of the site, ask them for an invitation or request one in the <a href="https://discord.gg/NMMWPnA" target="_blank">Discord</a>.
 </main>
 {% endblock content %}
