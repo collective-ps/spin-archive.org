@@ -19,9 +19,7 @@ const getMD5Hash = (file) =>
     )
   })
 
-const Uploader = ({ handleSubmit, uploadLimit }) => {
-  const hasUploadLimit = uploadLimit !== null
-
+const Uploader = ({ handleSubmit }) => {
   const getUploadParams = async (fileWithMeta) => {
     try {
       const md5 = await getMD5Hash(fileWithMeta.file)
@@ -78,15 +76,10 @@ const Uploader = ({ handleSubmit, uploadLimit }) => {
     }
   }
 
-  const props = hasUploadLimit
-    ? {
-        maxFiles: uploadLimit,
-        multiple: uploadLimit > 1,
-      }
-    : {
-        maxFiles: 25,
-        multiple: true,
-      }
+  const props = {
+    maxFiles: 25,
+    multiple: true,
+  }
 
   return (
     <Dropzone

@@ -85,10 +85,9 @@ const STATE = {
   error: 'error',
 }
 
-const UploadPage = ({ uploadLimit }) => {
+const UploadPage = () => {
   const [files, setFiles] = useState([])
   const [state, setState] = useState(STATE.upload)
-  const hasUploadLimit = uploadLimit !== null
 
   const handleAfterUpload = (files) => {
     setFiles(files)
@@ -143,51 +142,10 @@ const UploadPage = ({ uploadLimit }) => {
     setState(STATE.upload)
   }
 
-  if (hasUploadLimit && uploadLimit === 0) {
+  if (state == STATE.upload) {
     return (
       <div>
-        <div>Sorry, you have reached your limit of daily uploads.</div>
-        <div>
-          This limit is set in place to help us monitor the site and keep it
-          clean. If you have more content that you wish to share, contact us in
-          the{' '}
-          <a
-            rel='noopener noreferrer'
-            target='_blank'
-            href='https://discord.gg/NMMWPnA'
-          >
-            Discord
-          </a>
-          .
-        </div>
-      </div>
-    )
-  } else if (state == STATE.upload) {
-    return (
-      <div>
-        {hasUploadLimit && (
-          <div>
-            <div>You have {uploadLimit} upload(s) left for the day.</div>
-            <div>
-              This limit is set in place to help us monitor the site and keep it
-              clean. If you have more content that you wish to share, contact us
-              in the{' '}
-              <a
-                rel='noopener noreferrer'
-                target='_blank'
-                href='https://discord.gg/NMMWPnA'
-              >
-                Discord
-              </a>
-              .
-            </div>
-            <div>
-              It's recommended to read the #contributor-guide in the Discord
-              before uploading.
-            </div>
-          </div>
-        )}
-        <Uploader handleSubmit={handleAfterUpload} uploadLimit={uploadLimit} />
+        <Uploader handleSubmit={handleAfterUpload} />
       </div>
     )
   } else if (state == STATE.edit) {

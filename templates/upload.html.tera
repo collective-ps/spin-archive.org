@@ -6,7 +6,7 @@
 </main>
 <div id="twitter-uploader"></div>
 {% else %}
-<main class="text-center" id="upload-page" data-upload-limit="{{ upload_limit }}">
+<main class="text-center" id="upload-page">
 </main>
 {% endif -%}
 {% endblock content %}
