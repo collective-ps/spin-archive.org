@@ -31,7 +31,6 @@
         <div class="col">
           <div class="nav-logo nav-item">spin-archive.org [beta]</div>
           <a href="/" class="nav-item">Home</a>
-          <a href="/forum" class="nav-item">Forum</a>
           <a href="/tags" class="nav-item">Tags</a>
           <a href="/random" class="nav-item">Random</a>
           {% if user_can_upload %}

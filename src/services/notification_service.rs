@@ -1,9 +1,7 @@
 use serde_json::json;
 
 use crate::config;
-use crate::models::{
-    post::Post, thread::Thread, upload::Upload, upload_comment::UploadComment, user::User,
-};
+use crate::models::{upload::Upload, upload_comment::UploadComment, user::User};
 
 /// Notify Contributor Discord that a new pending upload has been submitted for approval.
 pub fn notify_pending_upload(upload: &Upload, user: &User) {
@@ -97,74 +95,6 @@ pub fn notify_new_comment(comment: &UploadComment, upload: &Upload, user: &User)
           "footer": {
             "text": tag_string,
           },
-          "url": url,
-          "color": 7506394,
-          "author": {
-            "name": uploader_name,
-          }
-        }
-      ]
-    });
-
-    let client = reqwest::blocking::Client::new();
-    let webhook_url = config::get_webhook_url();
-
-    let _ = client.post(&webhook_url).json(&json).send();
-}
-
-pub fn notify_new_thread(thread: &Thread, post: &Post, user: &User) {
-    let url = format!(
-        "https://spin-archive.org/forum/{}/thread/{}",
-        thread.forum_id, thread.id
-    );
-
-    let uploader_name = &user.username;
-
-    let description = if post.content.len() > 1000 {
-        format!("{}...", &post.content[..1000])
-    } else {
-        post.content.clone()
-    };
-
-    let json = json!({
-      "embeds": [
-        {
-          "title": format!("New thread - {}", thread.title),
-          "description": description,
-          "url": url,
-          "color": 7506394,
-          "author": {
-            "name": uploader_name,
-          }
-        }
-      ]
-    });
-
-    let client = reqwest::blocking::Client::new();
-    let webhook_url = config::get_webhook_url();
-
-    let _ = client.post(&webhook_url).json(&json).send();
-}
-
-pub fn notify_new_post(thread: &Thread, post: &Post, user: &User) {
-    let url = format!(
-        "https://spin-archive.org/forum/{}/thread/{}",
-        thread.forum_id, thread.id
-    );
-
-    let uploader_name = &user.username;
-
-    let description = if post.content.len() > 1000 {
-        format!("{}...", &post.content[..1000])
-    } else {
-        post.content.clone()
-    };
-
-    let json = json!({
-      "embeds": [
-        {
-          "title": format!("New reply in thread - {}", thread.title),
-          "description": description,
           "url": url,
           "color": 7506394,
           "author": {
