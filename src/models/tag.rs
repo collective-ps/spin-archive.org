@@ -16,6 +16,12 @@ pub struct Tag {
     pub upload_count: i32,
 }
 
+impl Tag {
+    pub fn tag_url(&self) -> String {
+        format!("/?q={}", self.name)
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[table_name = "tags"]
 pub struct NewTag {

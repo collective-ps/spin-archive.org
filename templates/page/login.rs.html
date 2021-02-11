@@ -1,0 +1,21 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+
+@(ctx: &BaseContext)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="text-center" id="login-page">
+    <form action="/login" method="post">
+      <fieldset>
+        <label for="username">Username</label>
+        <input type="text" name="username" id="username" required />
+      </fieldset>
+      <fieldset>
+        <label for="password">Password</label>
+        <input type="password" name="password" id="password" required />
+      </fieldset>
+      <input type="submit" value="Login" />
+      <a class="register" href="/register">Create an account</a>
+    </form>
+  </main>
+})

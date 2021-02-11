@@ -2,12 +2,10 @@ use std::convert::TryInto;
 
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
-use rocket_contrib::templates::tera::Context as TeraContext;
-use rocket_contrib::templates::Template;
 
-use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::{self, RegistrationError, RegistrationFields};
+use crate::template_utils::{BaseContext, Ructe};
 
 #[rocket::get("/register")]
 pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
@@ -15,11 +13,10 @@ pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
 }
 
 #[rocket::get("/register", rank = 2)]
-pub(crate) fn index(flash: Option<FlashMessage>) -> Result<Template, Redirect> {
-    let mut context = TeraContext::new();
-    context::flash_context(&mut context, flash);
+pub(crate) fn index(flash: Option<FlashMessage>) -> Result<Ructe, Redirect> {
+    let ctx = BaseContext::new(None, flash);
 
-    Ok(Template::render("register", &context))
+    Ok(render!(page::register(&ctx)))
 }
 
 #[rocket::post("/register", data = "<form>")]

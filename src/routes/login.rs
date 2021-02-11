@@ -1,12 +1,10 @@
 use rocket::http::{Cookie, Cookies};
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
-use rocket_contrib::templates::tera::Context as TeraContext;
-use rocket_contrib::templates::Template;
 
-use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::{self, LoginError};
+use crate::template_utils::{BaseContext, Ructe};
 
 #[derive(rocket::FromForm)]
 pub(crate) struct LoginFields {
@@ -20,11 +18,10 @@ pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
 }
 
 #[rocket::get("/login", rank = 2)]
-pub(crate) fn index(flash: Option<FlashMessage>) -> Template {
-    let mut context = TeraContext::new();
-    context::flash_context(&mut context, flash);
+pub(crate) fn index(flash: Option<FlashMessage>) -> Ructe {
+    let ctx = BaseContext::new(None, flash);
 
-    Template::render("login", &context)
+    render!(page::login(&ctx))
 }
 
 #[rocket::post("/login", data = "<form>")]

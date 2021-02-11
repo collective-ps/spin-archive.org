@@ -1,0 +1,46 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::api_token::ApiToken;
+
+@(ctx: &BaseContext, api_tokens: Vec<ApiToken>)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="one-column-page" id="settings-page">
+    <div class="content">
+      <div class="api-tokens">
+        <h3>API Tokens</h3>
+
+        @if api_tokens.is_empty() {
+          <div class="placeholder">No API tokens registered</div>
+        } else {
+          <table>
+            <thead>
+              <tr>
+                <th>Token</th>
+                <th>Created At</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for api_token in api_tokens {
+                <tr>
+                  <td><pre><code>@api_token.token</code></pre></td>
+                  <td>@api_token.created_at.format("%Y-%m-%d") <small>(@humanized_past(api_token.created_at))</small></td>
+                  <td>
+                    <form action="/user/settings/api_tokens/@api_token.id/delete" method="POST">
+                      <a href="javascript:;" onclick="parentNode.submit()">Delete</a>
+                    </form>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+
+        <form action="/user/settings/api_tokens" method="post">
+          <button type="submit">Generate</button>
+        </form>
+      </div>
+    </div>
+  </main>
+})

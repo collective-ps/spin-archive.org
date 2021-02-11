@@ -138,6 +138,16 @@ pub struct FullUpload {
     pub count: i64,
 }
 
+impl FullUpload {
+    /// Gets the thumbnail URL
+    pub fn get_thumbnail_url(&self) -> String {
+        self.thumbnail_url
+            .as_ref()
+            .map(|s| s.to_owned())
+            .unwrap_or("".to_string())
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
 #[table_name = "uploads"]
 pub struct UpdateUpload {
@@ -214,6 +224,14 @@ impl Upload {
             .as_ref()
             .unwrap_or(&self.get_file_url())
             .to_string()
+    }
+
+    /// Gets the thumbnail URL
+    pub fn get_thumbnail_url(&self) -> String {
+        self.thumbnail_url
+            .as_ref()
+            .map(|s| s.to_owned())
+            .unwrap_or("".to_string())
     }
 
     pub fn is_video(&self) -> bool {

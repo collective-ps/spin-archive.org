@@ -1,0 +1,63 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::upload::Upload;
+
+@(ctx: &BaseContext, upload: Upload)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="two-column-page">
+    <div class="sidebar upload-metadata"></div>
+
+    <div class="content">
+      <a href="/u/@upload.file_id">Back to upload</a>
+      <form action="/upload/@upload.file_id" method="POST">
+        <fieldset>
+          <label for="tags">Tags (space-separated)</label>
+          <div
+            id="tag-box-input"
+            data-name="tags"
+            data-tags="@upload.tag_string"
+          >
+            <input
+              type="text"
+              id="tag-box-input"
+              name="tags"
+              value="@upload.tag_string"
+              required
+            />
+          </div>
+        </fieldset>
+        <fieldset>
+          <label for="source">Source (URL)</label>
+          <input
+            type="text"
+            id="source"
+            name="source"
+            value="@upload.source.unwrap_or_default()"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="original_upload_date"
+            >Original Upload Date
+            <small
+              >(if uncertain, use first day of month / year approximately)</small
+            ></label
+          >
+          <input
+            type="date"
+            id="original_upload_date"
+            name="original_upload_date"
+            value="@upload.original_upload_date.map(|d| d.to_string()).unwrap_or_default()"
+          />
+        </fieldset>
+        <fieldset>
+          <label for="description">Description</label>
+          <textarea id="description" name="description">
+            @upload.description
+          </textarea>
+        </fieldset>
+        <input type="submit" value="Update" />
+      </form>
+    </div>
+  </main>
+})

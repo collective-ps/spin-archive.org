@@ -22,6 +22,16 @@ pub struct UploadComment {
     pub updated_at: NaiveDateTime,
 }
 
+impl UploadComment {
+    pub fn is_edited(&self) -> bool {
+        self.created_at != self.updated_at
+    }
+
+    pub fn is_author(&self, user_id: i32) -> bool {
+        self.id == user_id as i64
+    }
+}
+
 #[derive(Debug, Insertable)]
 #[table_name = "upload_comments"]
 pub struct NewUploadComment {
@@ -102,6 +112,22 @@ pub fn get_paginated_comments(
         .offset((page - 1) * per_page)
         .load::<(UploadComment, Upload)>(conn)
         .unwrap_or_default()
+}
+
+pub struct RecentComment {
+    pub comment: UploadComment,
+    pub author: User,
+    pub upload: Upload,
+}
+
+impl From<(UploadComment, User, Upload)> for RecentComment {
+    fn from((comment, author, upload): (UploadComment, User, Upload)) -> RecentComment {
+        RecentComment {
+            comment,
+            author,
+            upload,
+        }
+    }
 }
 
 /// Gets the N-most recent comments and their user.

@@ -3,12 +3,11 @@ name = "spin-archive"
 version = "0.1.0"
 authors = ["Andrew Vy <andrew@andrewvy.com>"]
 edition = "2018"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+build = "src/build.rs"
 
 [dependencies]
 rocket = "0.4.4"
-rocket_contrib = { version = "0.4.4", default-features = false, features = ["tera_templates", "serve", "diesel_postgres_pool", "json"] }
+rocket_contrib = { version = "0.4.4", default-features = false, features = ["serve", "diesel_postgres_pool", "json"] }
 serde = { version = "1.0.106", features = ["derive"] }
 serde_json = "1.0.52"
 diesel = { version = "1.4.5", features = ["postgres", "chrono"] }
@@ -35,3 +34,7 @@ tempfile = "3.1.0"
 tokio-util = "0.3.1"
 url = "2.1.1"
 comrak = "0.7.0"
+funty = "=1.1.0"
+
+[build-dependencies]
+ructe = "0.13.0"

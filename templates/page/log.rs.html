@@ -1,0 +1,60 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::{
+  upload::Upload,
+  user::User,
+  audit_log::AuditLog,
+};
+
+@(ctx: &BaseContext, logs: Vec<(AuditLog, User, Upload)>, page_count: i64, page: i64)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="one-column-page" id="logs-page">
+    <div class="content">
+      <div class="banner">
+        <h3>Activity Log</h3>
+        <p>Any updates to uploads are shown here.</p>
+      </div>
+    </div>
+
+    <div class="logs">
+      <ol>
+        @for (audit_log, user, upload) in logs {
+          <li class="log">
+            <div class="timestamp">
+              @audit_log.changed_date.format("%Y-%m-%d %H:%M")
+            </div>
+            <div class="title">
+              <span class="username">
+                <a href="/user/@user.username">@user.username</a>
+              </span>
+              changed @audit_log.column_name on
+              <a href="/u/@upload.file_id">@upload.file_name.unwrap_or_default()</a>.
+            </div>
+          </li>
+        }
+      </ol>
+    </div>
+
+    <div class="pagination">
+      @for i in (1..5).rev() {
+        @if (page - i) > 0 {
+          <a href="/log?page=@(page - i)">@(page - i)</a>
+        }
+      }
+
+      <span>@page</span>
+
+      @if page_count > page {
+        @for i in 1..5 {
+          <a href="/log?page=@(page + i)">@(page + i)</a>
+        }
+
+        @if (page + 5) <= page_count {
+          <span>...</span>
+          <a href="/log?page=@page_count">@page_count</a>
+        }
+      }
+    </div>
+  </main>
+})

@@ -1,6 +1,5 @@
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     api_tokens (id) {
         id -> Int8,
@@ -13,7 +12,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     audit_log (id) {
         id -> Int8,
@@ -29,7 +27,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     forums (id) {
         id -> Int8,
@@ -42,7 +39,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     invitations (id) {
         id -> Int8,
@@ -56,7 +52,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     posts (id) {
         id -> Int8,
@@ -71,7 +66,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     tags (id) {
         id -> Int8,
@@ -85,7 +79,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     threads (id) {
         id -> Int8,
@@ -102,7 +95,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     upload_comments (id) {
         id -> Int8,
@@ -116,7 +108,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     upload_views (id) {
         id -> Int8,
@@ -153,7 +144,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     users (id) {
         id -> Int4,

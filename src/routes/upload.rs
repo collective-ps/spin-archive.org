@@ -6,16 +6,14 @@ use rocket::response::{Flash, Redirect};
 use rocket::FromForm;
 use rocket_contrib::json;
 use rocket_contrib::json::{Json, JsonValue};
-use rocket_contrib::templates::tera::Context as TeraContext;
-use rocket_contrib::templates::Template;
 use serde::{Deserialize, Serialize};
 
-use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::upload;
 use crate::models::user::User;
 use crate::s3_client::generate_signed_url;
 use crate::services::{comment_service, notification_service, tag_service, upload_service};
+use crate::template_utils::{BaseContext, Ructe};
 
 #[derive(Serialize, Deserialize)]
 pub struct UploadFailedResponse {
@@ -60,14 +58,11 @@ pub(crate) fn index(
     _conn: DatabaseConnection,
     flash: Option<FlashMessage>,
     user: &User,
-) -> Result<Template, Redirect> {
+) -> Result<Ructe, Redirect> {
     if user.can_upload() {
-        let mut context = TeraContext::new();
+        let ctx = BaseContext::new(Some(user), flash);
 
-        context::flash_context(&mut context, flash);
-        context::user_context(&mut context, Some(user));
-
-        Ok(Template::render("upload", &context))
+        Ok(render!(page::upload(&ctx)))
     } else {
         Err(Redirect::to("/"))
     }
@@ -85,11 +80,8 @@ pub(crate) fn get(
     flash: Option<FlashMessage>,
     user: Option<&User>,
     file_id: String,
-) -> Result<Template, Redirect> {
-    let mut context = TeraContext::new();
-
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, user);
+) -> Result<Ructe, Redirect> {
+    let ctx = BaseContext::new(user, flash);
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
@@ -100,13 +92,14 @@ pub(crate) fn get(
             let raw_tags = upload.tag_string.split_whitespace().collect::<Vec<&str>>();
             let tags = tag_service::by_names(&conn, &raw_tags);
 
-            context.insert("upload", &upload);
-            context.insert("view_count", &view_count);
-            context.insert("uploader", &uploader_user);
-            context.insert("comments_with_authors", &comments_with_authors);
-            context.insert("tags", &tags);
-
-            Ok(Template::render("uploads/single", &context))
+            Ok(render!(uploads::single(
+                &ctx,
+                &upload,
+                tags,
+                uploader_user,
+                view_count,
+                comments_with_authors
+            )))
         }
         None => Err(Redirect::to("/404")),
     }
@@ -114,28 +107,11 @@ pub(crate) fn get(
 
 /// Embed page for an [`Upload`], primarily used for Twitter cards.
 #[rocket::get("/u/<file_id>/embed")]
-pub(crate) fn embed(
-    conn: DatabaseConnection,
-    flash: Option<FlashMessage>,
-    user: Option<&User>,
-    file_id: String,
-) -> Result<Template, Redirect> {
-    let mut context = TeraContext::new();
-
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, user);
-
+pub(crate) fn embed(conn: DatabaseConnection, file_id: String) -> Result<Ructe, Redirect> {
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
             upload_service::increment_view_count(&conn, upload.id.into());
-            let view_count = upload_service::get_view_count(&conn, upload.id.into());
-            let uploader_user = upload_service::get_uploader_user(&conn, &upload);
-
-            context.insert("upload", &upload);
-            context.insert("view_count", &view_count);
-            context.insert("uploader", &uploader_user);
-
-            Ok(Template::render("uploads/embed", &context))
+            Ok(render!(uploads::embed(upload)))
         }
         None => Err(Redirect::to("/404")),
     }
@@ -148,11 +124,8 @@ pub(crate) fn edit(
     flash: Option<FlashMessage>,
     user: &User,
     file_id: String,
-) -> Result<Template, Redirect> {
-    let mut context = TeraContext::new();
-
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, Some(user));
+) -> Result<Ructe, Redirect> {
+    let ctx = BaseContext::new(Some(user), flash);
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
@@ -160,14 +133,7 @@ pub(crate) fn edit(
                 return Err(Redirect::to(format!("/u/{}", upload.file_id)));
             }
 
-            let view_count = upload_service::get_view_count(&conn, upload.id.into());
-            let uploader_user = upload_service::get_uploader_user(&conn, &upload);
-
-            context.insert("upload", &upload);
-            context.insert("view_count", &view_count);
-            context.insert("uploader", &uploader_user);
-
-            Ok(Template::render("uploads/edit", &context))
+            Ok(render!(uploads::edit(&ctx, upload)))
         }
         None => Err(Redirect::to("/404")),
     }
@@ -180,11 +146,8 @@ pub(crate) fn log(
     flash: Option<FlashMessage>,
     user: Option<&User>,
     file_id: String,
-) -> Result<Template, Redirect> {
-    let mut context = TeraContext::new();
-
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, user);
+) -> Result<Ructe, Redirect> {
+    let ctx = BaseContext::new(user, flash);
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
@@ -192,12 +155,13 @@ pub(crate) fn log(
             let uploader_user = upload_service::get_uploader_user(&conn, &upload);
             let audit_log = upload_service::get_audit_log(&conn, &upload);
 
-            context.insert("upload", &upload);
-            context.insert("view_count", &view_count);
-            context.insert("uploader", &uploader_user);
-            context.insert("audit_log", &audit_log);
-
-            Ok(Template::render("uploads/log", &context))
+            Ok(render!(uploads::log(
+                &ctx,
+                upload,
+                uploader_user,
+                view_count,
+                audit_log
+            )))
         }
         None => Err(Redirect::to("/404")),
     }
@@ -247,19 +211,14 @@ pub(crate) fn edit_comment_page(
     user: &User,
     file_id: String,
     comment_id: i64,
-) -> Result<Template, Redirect> {
+) -> Result<Ructe, Redirect> {
     let path = format!("/u/{}", file_id);
-    let mut context = TeraContext::new();
-
-    context::user_context(&mut context, Some(user));
 
     match comment_service::get_comment_by_id(&conn, comment_id) {
         Some(comment) => {
             if comment.user_id == user.id {
-                context.insert("comment", &comment);
-                context.insert("file_id", &file_id);
-
-                Ok(Template::render("uploads/edit_comment", &context))
+                let ctx = BaseContext::new(Some(user), None);
+                Ok(render!(uploads::edit_comment(&ctx, &file_id, comment)))
             } else {
                 Err(Redirect::to(path))
             }

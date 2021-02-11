@@ -2,26 +2,21 @@ use log::warn;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 use rocket::FromForm;
-use rocket_contrib::templates::tera::Context as TeraContext;
-use rocket_contrib::templates::Template;
 use serde::{Deserialize, Serialize};
 
-use crate::context;
 use crate::database::DatabaseConnection;
 use crate::models::user::User;
 use crate::s3_client;
 use crate::services::{encoder_service, tag_service, upload_service};
+use crate::template_utils::{BaseContext, Ructe};
 
 /// Admin area.
 #[rocket::get("/")]
-pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Template, Redirect> {
+pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Ructe, Redirect> {
     if user.is_admin() {
-        let mut context = TeraContext::new();
+        let ctx = BaseContext::new(Some(user), flash);
 
-        context::flash_context(&mut context, flash);
-        context::user_context(&mut context, Some(user));
-
-        Ok(Template::render("admin/index", &context))
+        Ok(render!(admin::index(&ctx)))
     } else {
         Err(Redirect::to("/"))
     }

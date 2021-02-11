@@ -1,0 +1,15 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+
+@(ctx: &BaseContext)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="two-column-page">
+    <div class="sidebar">
+    </div>
+
+    <div class="content">
+      <p>spin-archive.org is an internet archive project dedicated to preserving the history of pen spinning.</p>
+    </div>
+  </main>
+})
