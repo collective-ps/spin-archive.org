@@ -15,14 +15,9 @@ use rocket::request::FlashMessage;
 use rocket::response::Redirect;
 use rocket::Rocket;
 use rocket_contrib::serve::StaticFiles;
-use rocket_contrib::templates::tera::{
-    Context as TeraContext, Result as TeraResult, Value as TeraValue,
-};
-use rocket_contrib::templates::Template;
 
 mod api;
 mod config;
-mod context;
 mod database;
 mod ingestors;
 mod models;
@@ -30,6 +25,7 @@ mod routes;
 mod s3_client;
 mod schema;
 mod services;
+mod templates;
 
 use database::DatabaseConnection;
 use models::upload::Upload;
@@ -38,13 +34,6 @@ use models::user::{get_user_by_username, User};
 
 embed_migrations!();
 
-type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
-
-lazy_static! {
-    #[derive(Copy, Clone, Debug)]
-    static ref APP_VERSION: String = env::var("GIT_REV").unwrap_or_default();
-}
-
 #[rocket::get("/?<page>&<q>")]
 fn index(
     conn: DatabaseConnection,
@@ -52,7 +41,7 @@ fn index(
     user: Option<&User>,
     page: Option<&RawStr>,
     q: Option<String>,
-) -> Template {
+) -> templates::Index {
     let mut context = TeraContext::new();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 50;
@@ -113,7 +102,7 @@ fn index(
         &comments_and_users_and_uploads,
     );
 
-    Template::render("index", &context)
+    templates::Index {}
 }
 
 #[rocket::post("/logout")]
@@ -180,46 +169,6 @@ fn main() {
 
     rocket::ignite()
         .attach(DatabaseConnection::fairing())
-        .attach(Template::custom(|engines| {
-            engines
-                .tera
-                .register_function("get_thumbnail_url", context::get_thumbnail_url());
-            engines
-                .tera
-                .register_function("get_file_url", context::get_file_url());
-            engines
-                .tera
-                .register_function("get_video_url", context::get_video_url());
-            engines
-                .tera
-                .register_function("is_video", context::is_video());
-            engines
-                .tera
-                .register_function("split_tags", context::split_tags());
-
-            engines.tera.register_filter("tag_url", context::tag_url);
-            engines
-                .tera
-                .register_filter("humanized_past", context::humanized_past);
-
-            engines
-                .tera
-                .register_filter("from_markdown", context::from_markdown);
-
-            engines
-                .tera
-                .register_filter("append_version", append_version);
-
-            engines
-                .tera
-                .register_filter("is_contributor", context::is_contributor);
-
-            engines
-                .tera
-                .register_filter("is_moderator", context::is_moderator);
-
-            engines.tera.register_filter("is_admin", context::is_admin);
-        }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
             run_db_migrations,
@@ -265,17 +214,4 @@ fn main() {
         )
         .register(rocket::catchers![not_found])
         .launch();
-}
-
-pub fn append_version(
-    value: TeraValue,
-    _args: HashMap<String, TeraValue>,
-) -> TeraResult<TeraValue> {
-    match serde_json::from_value::<String>(value.clone()) {
-        Ok(content) => {
-            let new_string = format!("{}?v={}", content, &**APP_VERSION);
-            Ok(serde_json::to_value(new_string).unwrap())
-        }
-        Err(_) => Err("Could not get string.".into()),
-    }
 }

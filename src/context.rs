@@ -2,14 +2,9 @@ use std::collections::HashMap;
 
 use chrono::{NaiveDateTime, Utc};
 use rocket::request::FlashMessage;
-use rocket_contrib::templates::tera::{
-    Context as TeraContext, Result as TeraResult, Value as TeraValue,
-};
 
 use crate::models::upload::Upload;
 use crate::models::user::User;
-
-type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
 
 pub(crate) fn flash_context(context: &mut TeraContext, flash: Option<FlashMessage>) {
     if let Some(msg) = flash {
