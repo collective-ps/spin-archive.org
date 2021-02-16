@@ -4,3 +4,4 @@ Dockerfile
 .gitignore
 node_modules
 .env
+recipe.json

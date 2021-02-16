@@ -1,31 +1,24 @@
 # ------------------------------------------------------------------------------
-# Cargo Build Stage
+# Rust Stage
 # ------------------------------------------------------------------------------
 
-FROM rust:latest as cargo-build
+FROM lukemathwalker/cargo-chef as planner
+WORKDIR app
+COPY . .
+RUN cargo chef prepare  --recipe-path recipe.json
 
-RUN apt-get update
-
-WORKDIR /usr/src/spin-archive
-
-COPY Cargo.toml Cargo.toml
-
-RUN mkdir src/
-
-RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/build.rs
-RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
-
+FROM lukemathwalker/cargo-chef as cacher
+WORKDIR app
+COPY --from=planner /app/recipe.json recipe.json
 COPY rust-toolchain .
+RUN cargo chef cook --release --recipe-path recipe.json
 
-RUN cargo build --release
-
-RUN rm -f target/release/deps/spin-archive*
-
-COPY src ./src
-COPY templates ./templates
-COPY migrations ./migrations
-
-RUN cargo build --release
+FROM rust as builder
+WORKDIR app
+COPY . .
+COPY --from=cacher /app/target target
+COPY --from=cacher $CARGO_HOME $CARGO_HOME
+RUN cargo build --release --bin spin-archive
 
 # ------------------------------------------------------------------------------
 # Front-end Assets Stage
@@ -50,12 +43,11 @@ RUN npm run build
 # Final Stage
 # ------------------------------------------------------------------------------
 
-FROM cargo-build
+FROM rust as runtime
 
 WORKDIR /home/spin-archive/bin/
 
-COPY --from=cargo-build /usr/src/spin-archive/target/release/spin-archive .
-COPY --from=cargo-build /usr/src/spin-archive/templates ./templates
+COPY --from=builder /app/target/release/spin-archive .
 COPY --from=node-build /usr/src/spin-archive/build ./build
 
 CMD ["./spin-archive"]
