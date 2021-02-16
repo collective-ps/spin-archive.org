@@ -12,6 +12,7 @@ COPY Cargo.toml Cargo.toml
 
 RUN mkdir src/
 
+RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/build.rs
 RUN echo "fn main() {println!(\"if you see this, the build broke\")}" > src/main.rs
 
 COPY rust-toolchain .
