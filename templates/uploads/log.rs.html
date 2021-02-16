@@ -1,0 +1,84 @@
+@use crate::template_utils::*;
+@use crate::templates::base;
+@use crate::models::{
+  upload::Upload,
+  user::User,
+  audit_log::AuditLog,
+};
+
+@(ctx: &BaseContext, upload: Upload, uploader: User, view_count: i64, audit_log: Vec<(AuditLog, User)>)
+
+@:base(ctx, None, {
+  <meta
+    property="og:title"
+    content="spin-archive.org | @upload.tag_string"
+  />
+  <meta property="og:type" content="video" />
+  <meta
+    property="og:image"
+    content="upload.get_thumbnail_url()"
+  />
+  <meta
+    property="og:url"
+    content="https://spin-archive.org/u/@upload.file_id"
+  />
+  <meta property="og:video" content="@upload.get_video_url()" />
+  <meta property="og:site_name" content="spin-archive.org" />
+  <meta property="og:description" content="@upload.tag_string" />
+}, {
+<main class="two-column-page">
+  <div class="sidebar upload-metadata">
+    <div class="upload-tags">
+      <label>Tags</label>
+
+      @if let Some(tags) = split_tags(&upload.tag_string) {
+        @if tags.is_empty() {
+          <div>No tags were found.</div>
+        } else {
+          <ol>
+            @for tag in tags {
+              <li><a href="@to_tag_url(&tag)">@tag</a></li>
+            }
+          </ol>
+        }
+      }
+    </div>
+
+    @if let Some(ref source) = upload.source {
+      <div class="upload-source">
+        <label>Source</label>
+        <div>@source</div>
+      </div>
+    }
+
+    <label>Information</label>
+    <div class="view_count"><small>Views:</small> @view_count</div>
+    <div class="uploader">
+      <small>Uploader:</small> <a href="#">@uploader.username</a>
+    </div>
+    <div class="upload-date">
+      <small>Upload Date: @upload.created_at.format("%Y-%m-%d %H:%M")</small>
+    </div>
+    @if let Some(ref file_name) = upload.file_name {
+      <div class="original-filename">
+        <small>Original Filename: @file_name</small>
+      </div>
+    }
+  </div>
+
+  <div class="content">
+    <a href="/u/@upload.file_id">Back to upload</a>
+    <ol class="audit-log">
+      @for (log, user) in audit_log {
+        <li>
+          <span><em>@log.column_name</em></span>
+          <span><strong>Old: </strong>@log.old_value</span>
+          <span><strong>New: </strong>@log.new_value</span>
+          <span>Changed by: @user.username</span>
+          <span>(@log.changed_date.format("%Y-%m-%d %H:%M"))</span>
+        </li>
+      }
+    </ol>
+  </div>
+</main>
+})

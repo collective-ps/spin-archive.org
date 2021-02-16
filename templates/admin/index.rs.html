@@ -1,0 +1,18 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+
+@(ctx: &BaseContext)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="text-center">
+    <form action="/admin/actions/rebuild_tags" method="POST">
+      <button type='submit'>Rebuild Tags</button>
+    </form>
+    <form action="/admin/actions/rebuild_tag_counts" method="POST">
+      <button type='submit'>Rebuild Tag Counts</button>
+    </form>
+    <form action="/admin/actions/rebuild_md5" method="POST">
+      <button type='submit'>Rebuild MD5</button>
+    </form>
+  </main>
+})

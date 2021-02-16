@@ -94,6 +94,10 @@ impl User {
     pub fn is_admin(&self) -> bool {
         vec![UserRole::Admin].contains(&self.role)
     }
+
+    pub fn show_user_role(&self) -> bool {
+        self.role != UserRole::Registered
+    }
 }
 
 impl<DB> ToSql<sql_types::SmallInt, DB> for UserRole

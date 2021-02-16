@@ -1,0 +1,33 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::user::User;
+
+@(ctx: &BaseContext, profile_user: User, comment_count: i64, upload_count: i64)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="one-column-page" id="profile-page">
+    <div class="user-profile">
+      <div class="username">
+        <h2>@profile_user.username</h2>
+      </div>
+      <div class="details">
+        <div class="role">
+          <label>Role</label>
+          <p class="role" data-role="@profile_user.role.to_string().to_lowercase()">@profile_user.role</p>
+        </div>
+        <div class="join-date">
+          <label>Join Date</label>
+          <p class="date">@profile_user.created_at.format("%Y-%m-%d") (@humanized_past(profile_user.created_at))</p>
+        </div>
+        <div class="comment-count">
+          <label>Comment Count</label>
+          <p><a href="/user/@profile_user.username/comments">@comment_count</a></p>
+        </div>
+        <div class="upload-count">
+          <label>Upload Count</label>
+          <p><a href="/?q=uploader:@profile_user.username.to_lowercase()">@upload_count</a></p>
+        </div>
+      </div>
+    </div>
+  </main>
+})

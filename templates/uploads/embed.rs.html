@@ -1,0 +1,23 @@
+@use crate::templates::empty;
+@use crate::models::upload::Upload;
+
+@(upload: Upload)
+
+@:empty(None, {
+  <div class="embed upload" data-id="@upload.file_id">
+    @if upload.is_video() {
+      <video
+        controls
+        muted
+        autoplay
+        loop
+        class="video-player"
+        id="video-player"
+        data-poster="@upload.get_thumbnail_url()"
+      >
+        <source src="@Html(upload.get_video_url())" />
+        >
+      </video>
+    }
+  </div>
+})

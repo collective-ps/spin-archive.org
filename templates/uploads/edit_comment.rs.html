@@ -1,0 +1,23 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::upload_comment::UploadComment;
+
+@(ctx: &BaseContext, file_id: &str, comment: UploadComment)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="two-column-page">
+    <div class="sidebar upload-metadata">
+    </div>
+
+    <div class="content">
+      <a href="/u/@file_id">Back to upload</a>
+      <form action="/u/@file_id/comments/@comment.id" method="POST">
+        <fieldset>
+          <label for="comment">Comment</label>
+          <textarea id="comment" name="comment">@comment.comment</textarea>
+        </fieldset>
+        <input type="submit" value="Edit">
+      </form>
+    </div>
+  </main>
+})

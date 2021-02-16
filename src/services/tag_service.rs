@@ -113,8 +113,8 @@ fn dedupe_tags<'a>(tag_strings: &Vec<String>, buffer: &'a mut HashSet<String>) {
 
 #[derive(Serialize, Deserialize)]
 pub struct TagGroup {
-    name: &'static str,
-    tags: Vec<Tag>,
+    pub name: &'static str,
+    pub tags: Vec<Tag>,
 }
 
 impl TagGroup {

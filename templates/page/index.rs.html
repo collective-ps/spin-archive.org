@@ -1,0 +1,131 @@
+@use crate::template_utils::*;
+@use crate::templates::{
+  base,
+  partials::{
+    tag_list,
+    default_head
+  }
+};
+@use crate::models::{
+  upload_comment::RecentComment,
+  upload::FullUpload,
+  tag::Tag
+};
+@use crate::services::tag_service::TagGroup;
+
+@(
+  ctx: &BaseContext,
+  recent_comments: Vec<RecentComment>,
+  uploads: Vec<FullUpload>,
+  pagination: Pagination,
+  query: String,
+  tags: Vec<Tag>,
+  tag_groups: Vec<TagGroup>
+)
+
+@:base(ctx, None, { @:default_head() }, {
+  <div class="recent-comments">
+    <ol class="comment-list">
+      @for recent_comment in recent_comments {
+        <li class="comment">
+          <div class="author">
+            <div class="username"><a href="/user/@recent_comment.author.username">@recent_comment.author.username</a></div>
+            @if recent_comment.author.show_user_role() {
+              <div class="role" data-role="@recent_comment.author.role.to_string().to_lowercase()">[@recent_comment.author.role]</div>
+            }
+            <span>commented on <a href="/u/@recent_comment.upload.file_id">@recent_comment.upload.file_name.unwrap_or_default()</a></span>
+            <div class="date"><small><em>(@humanized_past(recent_comment.comment.created_at))</em></small></div>
+            @if recent_comment.comment.is_edited() {
+              <span>*</span>
+            }
+          </div>
+          <div class="comment-content">@truncate(recent_comment.comment.comment, 200)</div>
+        </li>
+      }
+    </ol>
+  </div>
+
+  <main id="index-page" class="two-column-page">
+    <div class="sidebar upload-metadata">
+      <div class="search" id="search-box-form" data-query="@query">
+        <form action="/" method="GET">
+          <input type="text" name="q" value="@query">
+        </form>
+      </div>
+      @:tag_list(None, tag_groups, tags)
+    </div>
+
+    <div class="content">
+      <div class="upload-grid">
+        @if uploads.is_empty() {
+          <div class="empty text-center vertical-align">
+            No uploads were posted yet.
+          </div>
+        }
+
+        @for upload in &uploads {
+          <div
+            class="upload"
+            id="@upload.file_id"
+            data-tags="@upload.tag_string"
+            data-uploader="@upload.uploader_username"
+            data-uploader-role="@upload.uploader_role"
+            data-comment-count="@upload.comment_count"
+            data-humanized-past="@humanized_past(upload.created_at)"
+            data-original-file-name="@upload.file_name.clone().unwrap_or("".to_string())"
+          >
+            <a href="/u/@upload.file_id">
+              <img
+                src="@upload.get_thumbnail_url()"
+                onerror="this.src='https://bits.spin-archive.org/placeholder.jpg'"
+                title="uploader:@upload.uploader_username @upload.tag_string"
+                class="thumbnail"
+              />
+              <div class="upload-bottom-bar">
+                <span class="left">@upload.view_count views</span>
+                @if upload.comment_count > 0 {
+                  <span class="right">@upload.comment_count ≡</span>
+                }
+              </div>
+            </a>
+          </div>
+        }
+      </div>
+
+      @if pagination.page_count > 0 {
+        <div class="pagination">
+          @for i in (1..5).rev() {
+            @if (pagination.current_page - i) > 0 {
+              @if query.is_empty() {
+                <a href="/?page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
+              } else {
+                <a href="/?q=@query&page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
+              }
+            }
+          }
+
+          <span>@pagination.current_page</span>
+
+          @if pagination.page_count > pagination.current_page {
+            @for i in 1..5 {
+              @if (pagination.current_page + i) <= pagination.page_count {
+                @if query.is_empty() {
+                  <a href="/?page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
+                } else {
+                  <a href="/?q=@query&page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
+                }
+              }
+            }
+          }
+
+          @if (pagination.current_page + 5) <= pagination.page_count {
+              <span>...</span>
+              <a href="/?page=@pagination.page_count">@pagination.page_count</a>
+          }
+
+          <span><small><em>(@pagination.total_count results)</em></small></span>
+        </div>
+      }
+    </div>
+  </main>
+})

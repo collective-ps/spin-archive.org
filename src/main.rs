@@ -5,24 +5,19 @@ extern crate diesel_migrations;
 #[macro_use]
 extern crate diesel;
 
-use std::collections::HashMap;
 use std::env;
 
-use lazy_static::lazy_static;
-use rocket::http::RawStr;
-use rocket::http::{Cookie, Cookies};
+use rocket::http::{Cookie, Cookies, RawStr};
 use rocket::request::FlashMessage;
 use rocket::response::Redirect;
 use rocket::Rocket;
 use rocket_contrib::serve::StaticFiles;
-use rocket_contrib::templates::tera::{
-    Context as TeraContext, Result as TeraResult, Value as TeraValue,
-};
-use rocket_contrib::templates::Template;
+
+#[macro_use]
+mod template_utils;
 
 mod api;
 mod config;
-mod context;
 mod database;
 mod ingestors;
 mod models;
@@ -32,18 +27,11 @@ mod schema;
 mod services;
 
 use database::DatabaseConnection;
-use models::upload::Upload;
-use models::upload_comment::UploadComment;
+use models::upload_comment::RecentComment;
 use models::user::{get_user_by_username, User};
+use template_utils::{BaseContext, Pagination, Ructe};
 
 embed_migrations!();
-
-type GlobalFn = Box<dyn Fn(HashMap<String, TeraValue>) -> TeraResult<TeraValue> + Sync + Send>;
-
-lazy_static! {
-    #[derive(Copy, Clone, Debug)]
-    static ref APP_VERSION: String = env::var("GIT_REV").unwrap_or_default();
-}
 
 #[rocket::get("/?<page>&<q>")]
 fn index(
@@ -52,16 +40,14 @@ fn index(
     user: Option<&User>,
     page: Option<&RawStr>,
     q: Option<String>,
-) -> Template {
-    let mut context = TeraContext::new();
+) -> Ructe {
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 50;
     let mut query = q.unwrap_or_default();
-    let original_query = query.clone();
 
     // Check if the query has an `uploader:[USERNAME]` tag.
     let mut uploader: Option<User> = None;
-    let mut comments_and_users_and_uploads: Vec<(UploadComment, User, Upload)> = Vec::default();
+    let mut recent_comments: Vec<RecentComment> = Vec::default();
 
     if !query.is_empty() {
         let uploader_regex = regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
@@ -81,7 +67,10 @@ fn index(
             }
         }
     } else {
-        comments_and_users_and_uploads = services::comment_service::get_recent_comments(&conn);
+        recent_comments = services::comment_service::get_recent_comments(&conn)
+            .into_iter()
+            .map(|i| i.into())
+            .collect();
     }
 
     let (uploads, page_count, total_count) =
@@ -98,48 +87,48 @@ fn index(
     let tags = services::tag_service::by_names(&conn, &raw_tags);
     let (tag_groups, tags) = services::tag_service::group_tags(tags);
 
-    context::flash_context(&mut context, flash);
-    context::user_context(&mut context, user);
+    let ctx = BaseContext::new(user, flash);
+    let pagination = Pagination {
+        current_page,
+        page_count,
+        total_count,
+    };
 
-    context.insert("uploads", &uploads);
-    context.insert("page_count", &page_count);
-    context.insert("total_count", &total_count);
-    context.insert("page", &current_page);
-    context.insert("tags", &tags);
-    context.insert("tag_groups", &tag_groups);
-    context.insert("query", &original_query);
-    context.insert(
-        "comments_and_users_and_uploads",
-        &comments_and_users_and_uploads,
-    );
-
-    Template::render("index", &context)
+    render!(page::index(
+        &ctx,
+        recent_comments,
+        uploads,
+        pagination,
+        query,
+        tags,
+        tag_groups
+    ))
 }
 
 #[rocket::post("/logout")]
 fn logout(mut cookies: Cookies) -> Redirect {
     cookies.remove_private(Cookie::named("user_id"));
+
     Redirect::to("/")
 }
 
 #[rocket::get("/about")]
-fn about(user: Option<&User>) -> Template {
-    let mut context = TeraContext::new();
-    context::user_context(&mut context, user);
+fn about(user: Option<&User>) -> Ructe {
+    let ctx = BaseContext::new(user, None);
 
-    Template::render("about", &context)
+    render!(page::about(&ctx))
 }
 
 #[rocket::catch(404)]
-fn not_found(req: &rocket::Request) -> Template {
-    let mut context = TeraContext::new();
-    let user = req.guard::<Option<&User>>().succeeded();
+fn not_found(req: &rocket::Request) -> Ructe {
+    let user = req
+        .guard::<Option<&User>>()
+        .succeeded()
+        .expect("Could not grab user.");
 
-    if let Some(user) = user {
-        context::user_context(&mut context, user);
-    }
+    let ctx = BaseContext::new(user, None);
 
-    Template::render("error/404", &context)
+    render!(error::not_found(&ctx))
 }
 
 fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
@@ -155,22 +144,16 @@ fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
 }
 
 #[rocket::get("/log?<page>")]
-fn audit_log(conn: DatabaseConnection, user: Option<&User>, page: Option<&RawStr>) -> Template {
-    let mut context = TeraContext::new();
+fn audit_log(conn: DatabaseConnection, user: Option<&User>, page: Option<&RawStr>) -> Ructe {
+    let ctx = BaseContext::new(user, None);
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 25;
-
-    context::user_context(&mut context, user);
 
     let log_count = services::audit_service::get_log_count(&conn);
     let logs = services::audit_service::get_paginated_log(&conn, current_page, per_page);
     let page_count = (log_count as f64 / per_page as f64).ceil() as i64;
 
-    context.insert("logs", &logs);
-    context.insert("page_count", &page_count);
-    context.insert("page", &current_page);
-
-    Template::render("log", &context)
+    render!(page::log(&ctx, logs, page_count, current_page))
 }
 
 fn main() {
@@ -180,46 +163,6 @@ fn main() {
 
     rocket::ignite()
         .attach(DatabaseConnection::fairing())
-        .attach(Template::custom(|engines| {
-            engines
-                .tera
-                .register_function("get_thumbnail_url", context::get_thumbnail_url());
-            engines
-                .tera
-                .register_function("get_file_url", context::get_file_url());
-            engines
-                .tera
-                .register_function("get_video_url", context::get_video_url());
-            engines
-                .tera
-                .register_function("is_video", context::is_video());
-            engines
-                .tera
-                .register_function("split_tags", context::split_tags());
-
-            engines.tera.register_filter("tag_url", context::tag_url);
-            engines
-                .tera
-                .register_filter("humanized_past", context::humanized_past);
-
-            engines
-                .tera
-                .register_filter("from_markdown", context::from_markdown);
-
-            engines
-                .tera
-                .register_filter("append_version", append_version);
-
-            engines
-                .tera
-                .register_filter("is_contributor", context::is_contributor);
-
-            engines
-                .tera
-                .register_filter("is_moderator", context::is_moderator);
-
-            engines.tera.register_filter("is_admin", context::is_admin);
-        }))
         .attach(rocket::fairing::AdHoc::on_attach(
             "DB Migrations",
             run_db_migrations,
@@ -267,15 +210,4 @@ fn main() {
         .launch();
 }
 
-pub fn append_version(
-    value: TeraValue,
-    _args: HashMap<String, TeraValue>,
-) -> TeraResult<TeraValue> {
-    match serde_json::from_value::<String>(value.clone()) {
-        Ok(content) => {
-            let new_string = format!("{}?v={}", content, &**APP_VERSION);
-            Ok(serde_json::to_value(new_string).unwrap())
-        }
-        Err(_) => Err("Could not get string.".into()),
-    }
-}
+include!(concat!(env!("OUT_DIR"), "/templates.rs"));

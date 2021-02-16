@@ -1,0 +1,48 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::{
+  upload::Upload,
+  user::User
+};
+
+@(ctx: &BaseContext, uploads_with_users: Vec<(Upload, User)>)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="two-column-page" id="queue-page">
+    <div class="content">
+      <div class="banner">
+        <h3>Approval Queue</h3>
+        <p>
+          New uploads from regular users will be posted here for approval, before
+          being publically viewable.
+        </p>
+      </div>
+
+      @if uploads_with_users.is_empty() {
+        <div class="empty text-center vertical-align">
+          No uploads were posted yet.
+        </div>
+      } else {
+        <div class="upload-grid">
+          @for (upload, uploader) in uploads_with_users {
+            <div
+              class="upload"
+              id="@upload.file_id"
+              data-tags="@upload.tag_string"
+              data-uploader="@uploader.username"
+            >
+              <a href="/u/@upload.file_id">
+                <img
+                  src="@upload.get_thumbnail_url()"
+                  onerror="this.src='https://bits.spin-archive.org/placeholder.jpg'"
+                  title="uploader:@uploader.username @upload.tag_string"
+                  class="thumbnail"
+                />
+              </a>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </main>
+})

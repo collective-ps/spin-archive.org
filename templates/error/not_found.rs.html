@@ -1,0 +1,12 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+
+@(ctx: &BaseContext)
+
+@:base(ctx, Some("spin-archive.org - 404"), { @:default_head() }, {
+  <main class="text-center">
+    <p>
+      404: There's nothing here!
+    </p>
+  </main>
+})

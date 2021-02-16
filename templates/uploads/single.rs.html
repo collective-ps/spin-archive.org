@@ -1,0 +1,251 @@
+@use crate::template_utils::*;
+@use crate::templates::{
+  base,
+  partials::tag_list
+};
+@use crate::models::{
+  upload::{Upload, UploadStatus},
+  user::User,
+  tag::Tag,
+  upload_comment::UploadComment
+};
+
+@(
+  ctx: &BaseContext,
+  upload: &Upload,
+  tags: Vec<Tag>,
+  uploader: User,
+  view_count: i64,
+  comments_with_authors: Vec<(UploadComment, User)>
+)
+
+@:base(ctx, None, {
+  @if upload.is_video() {
+    <meta
+      property="og:title"
+      content="spin-archive.org | @upload.tag_string"
+    />
+    <meta property="og:type" content="video" />
+    <meta
+      property="og:image"
+      content="@upload.get_thumbnail_url()"
+    />
+    <meta
+      property="og:url"
+      content="https://spin-archive.org/u/@upload.file_id"
+    />
+    <meta property="og:video" content="@upload.get_video_url()" />
+    <meta property="og:site_name" content="spin-archive.org" />
+    <meta property="og:description" content="@upload.tag_string" />
+    <meta name="twitter:card" content="player" />
+    <meta name="twitter:site" content="@@spin_archive" />
+    <meta name="twitter:title" content="spin-archive.org" />
+    <meta name="twitter:description" content="@upload.tag_string" />
+    <meta
+      name="twitter:image"
+      content="@upload.get_thumbnail_url()"
+    />
+    <meta
+      name="twitter:player"
+      content="https://spin-archive.org/u/@upload.file_id/embed"
+    />
+    <meta name="twitter:player:width" content="480" />
+    <meta name="twitter:player:height" content="347" />
+  }
+}, {
+  <main class="two-column-page" id="single-upload-page">
+    <div class="sidebar upload-metadata">
+      @:tag_list(Some(&upload), vec![], tags)
+      
+      @if let Some(ref source) = upload.source {
+        <div class="upload-source">
+          <label>Source</label>
+          <div>
+            <a rel="noreferrer noopener" target="_blank" href="@source">@source</a>
+          </div>
+        </div>
+      }
+
+      <label>Information</label>
+
+      <div class="view_count"><small>Views:</small> @view_count</div>
+
+      <div class="uploader">
+        <small>Uploader:</small>
+        <a href="/user/@uploader.username">@uploader.username</a>
+      </div>
+
+      <div class="upload-date">
+        <small>Upload Date: @upload.created_at.format("%Y-%m-%d %H:%M")</small>
+      </div>
+
+      <div class="edit-date">
+        <small>Last Edited: @upload.updated_at.format("%Y-%m-%d %H:%M")</small>
+      </div>
+
+      @if let Some(ref original_upload_date) = upload.original_upload_date {
+        <div class="upload-date">
+          <small>Original Upload Date: @original_upload_date</small>
+        </div>
+      }
+
+      @if let Some(ref file_name) = upload.file_name {
+        <div class="original-filename">
+          <small>Original Filename: @file_name</small>
+        </div>
+      }
+
+      @if let Some(ref md5_hash) = upload.md5_hash {
+        <div class="md5">
+          <small>MD5: @md5_hash</small>
+        </div>
+      }
+      
+      @if let Some(ref user) = ctx.user {
+        @if user.can_upload() {
+          <a href="/u/@upload.file_id/edit" class="nav-item">Edit</a>
+        }
+      }
+
+      <a href="/u/@upload.file_id/log" class="nav-item">Log</a>
+
+      @if let Some(ref user) = ctx.user {
+        @if user.is_contributor() {
+          <div class="upload-status">
+            <label>Status</label>
+            <div>@upload.status</div>
+          </div>
+        }
+
+        @if user.is_admin() {
+          <div class="admin-actions">
+            <label>Admin Actions</label>
+            <form action="/admin/actions/encode_video" method="POST">
+              <input type="hidden" name="file_id" value="@upload.file_id" />
+              <a href="javascript:;" onclick="parentNode.submit()">Encode Video</a>
+            </form>
+          </div>
+        }
+
+        @if user.is_moderator() {
+          <div class="moderator-actions">
+            <label>Moderator Actions</label>
+
+            @if upload.status == UploadStatus::Deleted {
+              <div>Deleted</div>
+            } else {
+              <form action="/upload/@upload.file_id/delete" method="POST">
+                <input type="hidden" name="file_id" value="@upload.file_id" />
+                <a href="javascript:;" onclick="parentNode.submit()">Delete</a>
+              </form>
+            }
+          </div>
+        }
+
+        @if user.is_contributor() {
+          <div class="contributor-actions">
+            <label>Contributor Actions</label>
+
+            @if upload.status == UploadStatus::PendingApproval {
+              <form action="/queue/@upload.file_id/approve" method="POST">
+                <a href="javascript:;" onclick="parentNode.submit()">Approve</a>
+              </form>
+            }
+          </div>
+        }
+      }
+    </div>
+
+    <div class="content">
+      <div class="upload" data-id="@upload.file_id">
+        @if upload.is_video() && upload.status != UploadStatus::Processing {
+          <video
+            controls
+            muted
+            autoplay
+            loop
+            class="video-player"
+            id="video-player"
+            data-poster="@upload.get_thumbnail_url()"
+          >
+            <source src="@upload.get_video_url()" />
+            >
+          </video>
+        }
+      </div>
+
+      @if upload.is_video() {
+        <a download href="@upload.get_file_url()"
+          >Save this video (right-click and save)</a
+        >
+        <a download href="@upload.get_video_url()">(mp4)</a>
+      }
+      
+
+      @if !upload.description.is_empty() {
+        <div class="description">
+          <h5>Description</h5>
+
+          @from_markdown(&upload.description)
+        </div>
+      }
+
+      <div class="comments">
+        <ol class="comment-list">
+          @for (comment, author) in &comments_with_authors {
+            <li class="comment">
+              <div class="author">
+                <div class="username">
+                  <a href="/user/@author.username">@author.username</a>
+                </div>
+
+                @if author.show_user_role() {
+                  <div class="role" data-role="@author.role.to_string().to_lowercase()">
+                    [@author.role]
+                  </div>
+                }
+
+                <div class="date">
+                  <small><em>(@humanized_past(comment.created_at))</em></small>
+                </div>
+
+                @if comment.is_edited() {
+                  <span>*</span>
+                }
+              </div>
+              <div class="comment-content">
+                @from_markdown(&comment.comment)
+              </div>
+              <div class="actions">
+                @if let Some(ref current_user) = ctx.user {
+                  @if comment.is_author(current_user.id) {
+                    <a href="/u/@upload.file_id/comments/@comment.id/edit">Edit</a>
+                  }
+                }
+              </div>
+            </li>
+          }
+        </ol>
+
+        @if comments_with_authors.is_empty() {
+          <div class="no-comments">No comments posted.</div>
+        }
+
+        <hr />
+        <div class="comment-composer">
+          @if ctx.user.is_some() {
+            <form action="/u/@upload.file_id/comments" method="POST">
+              <fieldset>
+                <label for="comment"><em>Post a comment</em></label>
+                <textarea id="comment" name="comment"></textarea>
+              </fieldset>
+              <input type="submit" value="Submit" />
+            </form>
+          } else {
+            <span>You must be logged in to comment.</span>
+          }
+        </div>
+      </div>
+    </div>
+  </main>
+})

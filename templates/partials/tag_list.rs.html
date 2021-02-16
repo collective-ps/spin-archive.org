@@ -1,0 +1,58 @@
+@use crate::services::tag_service::TagGroup;
+@use crate::models::{
+  upload::Upload,
+  tag::Tag
+};
+
+@(upload: Option<&Upload>, tag_groups: Vec<TagGroup>, tags: Vec<Tag>)
+
+<div class="upload-tags">
+  <label>Tags</label>
+
+  @if !tag_groups.is_empty() {
+    @for group in &tag_groups {
+      @if !group.tags.is_empty() {
+        <details class="tag-group" open>
+          <summary>@group.name (@group.tags.len())</summary>
+          <ol>
+            @for tag in &group.tags {
+              <li>
+                <a href="@tag.tag_url()">@tag.name</a>
+                <small>(@tag.upload_count)</small>
+              </li>
+            }
+          </ol>
+        </details>
+      }
+    }
+  }
+
+  @if !tags.is_empty() {
+    @if upload.is_some() {
+      <ol>
+        @for tag in tags {
+          <li>
+            <a href="@tag.tag_url()">@tag.name</a>
+            <small>(@tag.upload_count)</small>
+          </li>
+        }
+      </ol>
+    } else {
+      <details class="tag-group" open>
+        <summary>Uncategorized</summary>
+        <ol>
+          @for tag in tags {
+            <li>
+              <a href="@tag.tag_url()">@tag.name</a>
+              <small>(@tag.upload_count)</small>
+            </li>
+          }
+        </ol>
+      </details>
+    }
+  } else {
+    @if tag_groups.is_empty() {
+      <div>No tags were found.</div>
+    }
+  }
+</div>

@@ -1,0 +1,25 @@
+@use crate::template_utils::*;
+
+@(title: Option<&str>, content: Content)
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>@title.unwrap_or("spin-archive.org")</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="spin-archive.org is an internet archive project dedicated to preserving the history of pen spinning."
+    />
+
+    <link rel="stylesheet" href="https://cdn.plyr.io/3.6.2/plyr.css" />
+    <link rel="stylesheet" type="text/css" href=@static_file("/public/app.css".to_string()) />
+  </head>
+  <body>
+    @:content()
+  </body>
+
+  <script type="text/javascript" src=@static_file("/public/app.bundle.js".to_string())></script>
+  <script src="https://cdn.usefathom.com/script.js" site="UEARXKBQ" defer></script>
+</html>
