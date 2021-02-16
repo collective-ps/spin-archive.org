@@ -1,5 +1,6 @@
 use std::convert::TryInto;
 
+use lazy_static::lazy_static;
 use rocket::request::{FlashMessage, Form};
 use rocket::response::{Flash, Redirect};
 
@@ -22,10 +23,12 @@ pub(crate) fn index(flash: Option<FlashMessage>) -> Result<Ructe, Redirect> {
 #[rocket::post("/register", data = "<form>")]
 pub(crate) fn post(conn: DatabaseConnection, form: Form<RegistrationFields>) -> Flash<Redirect> {
     // @TODO(vy): Move username validation to somewhere else.
-    let re = regex::Regex::new(r"^[a-z_A-Z\d]*$").unwrap();
+    lazy_static! {
+        static ref RE: regex::Regex = regex::Regex::new(r"^[a-z_A-Z\d]*$").unwrap();
+    }
     const REGISTER_URL: &'static str = "/register";
 
-    if !re.is_match(&form.username) || form.username.len() > 20 {
+    if !RE.is_match(&form.username) || form.username.len() > 20 {
         return Flash::error(
         Redirect::to(REGISTER_URL),
       "Invalid username. Must be no longer than 20 characters, and only contain letters + numbers + underscores.",

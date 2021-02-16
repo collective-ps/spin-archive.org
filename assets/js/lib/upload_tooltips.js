@@ -4,9 +4,9 @@ import tippy from 'tippy.js/headless'
 
 import TooltipComponent from '../components/tooltip'
 
-let $indexPage = document.getElementById('index-page')
+let $uploadGrid = document.querySelector('.upload-grid')
 
-if ($indexPage) {
+if ($uploadGrid) {
   tippy('.upload', {
     animation: true,
     placement: 'top-end',

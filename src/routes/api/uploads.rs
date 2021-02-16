@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use chrono::{NaiveDate, NaiveDateTime};
+use lazy_static::lazy_static;
 use log::warn;
 use rocket::response::status::BadRequest;
 use rocket_contrib::json;
@@ -92,6 +93,11 @@ pub fn search(
     request: Json<SearchParams>,
     _auth: Auth,
 ) -> Json<Paginated<FullUploadJson>> {
+    lazy_static! {
+        static ref UPLOADER_REGEX: regex::Regex =
+            regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
+    }
+
     let per_page = 50;
     let current_page = request.page.unwrap_or(1);
     let mut query = request.query.clone().unwrap_or_default();
@@ -100,9 +106,7 @@ pub fn search(
     let mut uploader: Option<User> = None;
 
     if !query.is_empty() {
-        let uploader_regex = regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
-
-        match uploader_regex.captures(&query) {
+        match UPLOADER_REGEX.captures(&query) {
             None => (),
             Some(matches) => {
                 let full_match = &matches[0];

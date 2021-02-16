@@ -7,6 +7,7 @@ extern crate diesel;
 
 use std::env;
 
+use lazy_static::lazy_static;
 use rocket::http::{Cookie, Cookies, RawStr};
 use rocket::request::FlashMessage;
 use rocket::response::Redirect;
@@ -41,6 +42,11 @@ fn index(
     page: Option<&RawStr>,
     q: Option<String>,
 ) -> Ructe {
+    lazy_static! {
+        static ref UPLOADER_REGEX: regex::Regex =
+            regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
+    }
+
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 50;
     let mut query = q.unwrap_or_default();
@@ -50,9 +56,7 @@ fn index(
     let mut recent_comments: Vec<RecentComment> = Vec::default();
 
     if !query.is_empty() {
-        let uploader_regex = regex::Regex::new(r"(uploader:)([a-z_A-Z\d]*)\s?").unwrap();
-
-        match uploader_regex.captures(&query) {
+        match UPLOADER_REGEX.captures(&query) {
             None => (),
             Some(matches) => {
                 let full_match = &matches[0];

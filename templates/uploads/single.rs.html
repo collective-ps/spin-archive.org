@@ -4,7 +4,7 @@
   partials::tag_list
 };
 @use crate::models::{
-  upload::{Upload, UploadStatus},
+  upload::{Upload, UploadStatus, FullUpload},
   user::User,
   tag::Tag,
   upload_comment::UploadComment
@@ -16,7 +16,8 @@
   tags: Vec<Tag>,
   uploader: User,
   view_count: i64,
-  comments_with_authors: Vec<(UploadComment, User)>
+  comments_with_authors: Vec<(UploadComment, User)>,
+  recommended_uploads: Vec<FullUpload>
 )
 
 @:base(ctx, None, {
@@ -157,7 +158,7 @@
     </div>
 
     <div class="content">
-      <div class="upload" data-id="@upload.file_id">
+      <div class="upload-wrapper" data-id="@upload.file_id">
         @if upload.is_video() && upload.status != UploadStatus::Processing {
           <video
             controls
@@ -245,6 +246,38 @@
             <span>You must be logged in to comment.</span>
           }
         </div>
+      </div>
+
+      <h4>Recommended Uploads</h4>
+
+      <div class="upload-grid">
+        @for upload in &recommended_uploads {
+          <div
+            class="upload"
+            id="@upload.file_id"
+            data-tags="@upload.tag_string"
+            data-uploader="@upload.uploader_username"
+            data-uploader-role="@upload.uploader_role"
+            data-comment-count="@upload.comment_count"
+            data-humanized-past="@humanized_past(upload.created_at)"
+            data-original-file-name="@upload.file_name.clone().unwrap_or("".to_string())"
+          >
+            <a href="/u/@upload.file_id">
+              <img
+                src="@upload.get_thumbnail_url()"
+                onerror="this.src='https://bits.spin-archive.org/placeholder.jpg'"
+                title="uploader:@upload.uploader_username @upload.tag_string"
+                class="thumbnail"
+              />
+              <div class="upload-bottom-bar">
+                <span class="left">@upload.view_count views</span>
+                @if upload.comment_count > 0 {
+                  <span class="right">@upload.comment_count ≡</span>
+                }
+              </div>
+            </a>
+          </div>
+        }
       </div>
     </div>
   </main>

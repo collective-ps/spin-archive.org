@@ -6,8 +6,9 @@ use nanoid::nanoid;
 use thiserror::Error;
 
 use crate::models::audit_log::{self, AuditLog};
+use crate::models::tag::Tag;
 use crate::models::upload::{
-    self, NewImmediateUpload, PendingUpload, UpdateUpload, Upload, UploadStatus,
+    self, FullUpload, NewImmediateUpload, PendingUpload, UpdateUpload, Upload, UploadStatus,
 };
 use crate::models::user::User;
 use crate::schema::upload_views;
@@ -278,4 +279,31 @@ pub fn get_uploader_user(conn: &PgConnection, upload: &Upload) -> User {
 /// Gets an audit log for a particular upload.
 pub fn get_audit_log(conn: &PgConnection, upload: &Upload) -> Vec<(AuditLog, User)> {
     audit_log::get_by_row_id(conn, "uploads", upload.id).unwrap_or_default()
+}
+
+pub(crate) fn get_recommended_uploads(
+    conn: &PgConnection,
+    tags: &Vec<Tag>,
+    excluding_id: i32,
+) -> Vec<FullUpload> {
+    let search_tags: Vec<&Tag> = if tags
+        .iter()
+        .any(|tag| tag.name == "type/collaboration_video")
+    {
+        // If this upload is a CV, recommend uploads by the same organizer / editor.
+        tags.iter()
+            .filter(|tag| tag.name.starts_with("editor/") || tag.name.starts_with("organizer/"))
+            .collect()
+    } else {
+        // Otherwise, recommend uploads that happen to feature the same spinners.
+        tags.iter()
+            .filter(|tag| tag.name.starts_with("spinner/"))
+            .collect()
+    };
+
+    if search_tags.is_empty() {
+        return Vec::new();
+    }
+
+    upload::get_with_any_tags(&conn, search_tags, excluding_id)
 }

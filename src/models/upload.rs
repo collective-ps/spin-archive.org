@@ -10,6 +10,7 @@ use diesel::{
 };
 use serde::{Deserialize, Serialize};
 
+use crate::models::tag::Tag;
 use crate::models::user::{User, UserRole};
 use crate::schema::uploads;
 
@@ -616,4 +617,51 @@ pub fn random(conn: &PgConnection) -> Option<Upload> {
         .limit(1)
         .first::<Upload>(conn)
         .ok()
+}
+
+pub fn get_with_any_tags(
+    conn: &PgConnection,
+    tags: Vec<&Tag>,
+    excluding_id: i32,
+) -> Vec<FullUpload> {
+    use diesel::sql_types::*;
+
+    let query = tags
+        .iter()
+        .map(|tag| tag.name.as_ref())
+        .collect::<Vec<&str>>()
+        .join(" | ");
+
+    diesel::sql_query(
+        "
+            SELECT *,
+                (SELECT COUNT(upload_comments.*) AS comment_count
+                FROM upload_comments
+                WHERE upload_comments.upload_id = t.id),
+                (SELECT COUNT(upload_views.*) AS view_count
+                FROM upload_views
+                WHERE upload_views.upload_id = t.id),
+            COUNT(*) OVER ()
+                FROM
+                (
+                SELECT uploads.*,
+                    users.username AS uploader_username,
+                    users.role AS uploader_role
+                FROM uploads
+                TABLESAMPLE BERNOULLI (50)
+                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                WHERE uploads.status = $1
+                AND uploads.id != $2
+                AND (uploads.tag_index @@ to_tsquery($3))
+                GROUP BY (uploads.id, users.username, users.role)
+                ORDER BY uploads.created_at DESC
+                ) t
+                LIMIT 6
+            ",
+    )
+    .bind::<BigInt, _>(2)
+    .bind::<Int4, _>(excluding_id)
+    .bind::<Text, _>(query)
+    .load::<FullUpload>(conn)
+    .expect("Could not get_with_any_tags()")
 }

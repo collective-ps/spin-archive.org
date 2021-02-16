@@ -91,6 +91,10 @@ pub(crate) fn get(
             let comments_with_authors = comment_service::get_comments_for_upload(&conn, &upload);
             let raw_tags = upload.tag_string.split_whitespace().collect::<Vec<&str>>();
             let tags = tag_service::by_names(&conn, &raw_tags);
+            let recommended_uploads =
+                upload_service::get_recommended_uploads(&conn, &tags, upload.id);
+
+            dbg!(&recommended_uploads);
 
             Ok(render!(uploads::single(
                 &ctx,
@@ -98,7 +102,8 @@ pub(crate) fn get(
                 tags,
                 uploader_user,
                 view_count,
-                comments_with_authors
+                comments_with_authors,
+                recommended_uploads
             )))
         }
         None => Err(Redirect::to("/404")),
