@@ -18,7 +18,7 @@ WORKDIR app
 COPY . .
 COPY --from=cacher /app/target target
 COPY --from=cacher $CARGO_HOME $CARGO_HOME
-RUN cargo build --release --bin spin-archive
+RUN SQLX_OFFLINE=true cargo build --release --bin spin-archive
 
 # ------------------------------------------------------------------------------
 # Final Stage

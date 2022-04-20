@@ -1,0 +1,28 @@
+{
+  "db": "MySQL",
+  "5c6e37e4b26c75daddcf648190dd984ea7b4a432d1bba26ff4067e0c04679ac3": {
+    "describe": {
+      "columns": [
+        {
+          "name": "id",
+          "ordinal": 0,
+          "type_info": {
+            "char_set": 63,
+            "flags": {
+              "bits": 36867
+            },
+            "max_size": 11,
+            "type": "Long"
+          }
+        }
+      ],
+      "nullable": [
+        false
+      ],
+      "parameters": {
+        "Right": 0
+      }
+    },
+    "query": "SELECT id FROM uploads"
+  }
+}

@@ -5,3 +5,7 @@ authors = ["Andrew Vy <andrew@andrewvy.com>"]
 edition = "2021"
 
 [dependencies]
+time = "0.3.9"
+dotenv = "0.15.0"
+sqlx = { version = "0.5", features = [ "runtime-tokio-rustls" , "mysql", "migrate", "time", "macros", "offline" ] }
+tokio = { version = "1", features = ["full"] }

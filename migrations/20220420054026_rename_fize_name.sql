@@ -1,0 +1,1 @@
+ALTER TABLE uploads RENAME COLUMN fize_name TO file_name;
