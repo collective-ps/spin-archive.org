@@ -1,0 +1,1 @@
+ALTER TABLE uploads RENAME COLUMN file_text TO file_ext;

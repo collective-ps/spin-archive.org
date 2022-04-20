@@ -18,26 +18,7 @@ WORKDIR app
 COPY . .
 COPY --from=cacher /app/target target
 COPY --from=cacher $CARGO_HOME $CARGO_HOME
-RUN cargo build --release --bin spin-archive
-
-# ------------------------------------------------------------------------------
-# Front-end Assets Stage
-# ------------------------------------------------------------------------------
-
-FROM node:14-alpine as node-build
-
-WORKDIR /usr/src/spin-archive
-
-COPY package.json package.json
-COPY package-lock.json package-lock.json
-COPY webpack.config.js webpack.config.js
-COPY postcss.config.js postcss.config.js
-
-RUN npm install
-
-COPY assets assets
-
-RUN npm run build
+RUN SQLX_OFFLINE=true cargo build --release --bin spin-archive
 
 # ------------------------------------------------------------------------------
 # Final Stage
@@ -48,6 +29,5 @@ FROM rust as runtime
 WORKDIR /home/spin-archive/bin/
 
 COPY --from=builder /app/target/release/spin-archive .
-COPY --from=node-build /usr/src/spin-archive/build ./build
 
 CMD ["./spin-archive"]
