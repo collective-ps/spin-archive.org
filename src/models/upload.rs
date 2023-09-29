@@ -445,29 +445,35 @@ pub fn index(
         if uploader.is_some() {
             diesel::sql_query(
                 "
-                    SELECT *,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
+                    WITH comment_counts AS (
+                    SELECT upload_comments.upload_id,
+                            count(*) comment_count
                         FROM upload_comments
-                        WHERE upload_comments.upload_id = t.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
+                        GROUP BY upload_comments.upload_id
+                    ),
+                    view_counts AS (
+                        SELECT upload_views.upload_id,
+                            count(*) view_count
                         FROM upload_views
-                        WHERE upload_views.upload_id = t.id),
-                    COUNT(*) OVER ()
-                        FROM
-                        (
-                        SELECT uploads.*,
-                            users.username AS uploader_username,
-                            users.role AS uploader_role
-                        FROM uploads
-                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                        WHERE uploads.status = $1
-                        AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
-                        AND uploads.uploader_user_id = $3
-                        GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.created_at DESC
-                        ) t
-                        LIMIT $4
-                        OFFSET $5
+                        GROUP BY upload_views.upload_id
+                    )
+                    SELECT uploads.*,
+                        users.username AS uploader_username,
+                        users.role AS uploader_role,
+                        coalesce(comments.comment_count, 0) AS comment_count,
+                        coalesce(views.view_count, 0) AS view_count,
+                        count(*) over ()
+                    FROM uploads
+                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                    LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
+                    LEFT JOIN view_counts views ON views.upload_id = uploads.id
+                    WHERE uploads.status = $1
+                    AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
+                    AND uploads.uploader_user_id = $3
+                    GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
+                    ORDER BY uploads.created_at desc
+                    LIMIT $4
+                    OFFSET $5
                     ",
             )
             .bind::<BigInt, _>(2)
@@ -479,29 +485,35 @@ pub fn index(
         } else {
             diesel::sql_query(
                 "
-                    SELECT *,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
+                    WITH comment_counts AS (
+                    SELECT upload_comments.upload_id,
+                            count(*) comment_count
                         FROM upload_comments
-                        WHERE upload_comments.upload_id = t.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
+                        GROUP BY upload_comments.upload_id
+                    ),
+                    view_counts AS (
+                        SELECT upload_views.upload_id,
+                            count(*) view_count
                         FROM upload_views
-                        WHERE upload_views.upload_id = t.id),
-                    COUNT(*) OVER ()
-                        FROM
-                        (
-                        SELECT uploads.*,
-                            users.username AS uploader_username,
-                            users.role AS uploader_role
-                        FROM uploads
-                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                        WHERE uploads.status = $1
-                        AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
-                        GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.created_at DESC
-                        ) t
-                        LIMIT $3
-                        OFFSET $4
-                    ",
+                        GROUP BY upload_views.upload_id
+                    )
+                    SELECT uploads.*,
+                        users.username AS uploader_username,
+                        users.role AS uploader_role,
+                        coalesce(comments.comment_count, 0) AS comment_count,
+                        coalesce(views.view_count, 0) AS view_count,
+                        count(*) over ()
+                    FROM uploads
+                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                    LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
+                    LEFT JOIN view_counts views ON views.upload_id = uploads.id
+                    WHERE uploads.status = $1
+                    AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
+                    GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
+                    ORDER BY uploads.created_at desc
+                    LIMIT $3
+                    OFFSET $4
+                ",
             )
             .bind::<BigInt, _>(2)
             .bind::<Text, _>(query)
@@ -509,70 +521,81 @@ pub fn index(
             .bind::<BigInt, _>((page - 1) * per_page)
             .load::<FullUpload>(conn)
         }
+    } else if uploader.is_some() {
+        diesel::sql_query(
+            "
+                WITH comment_counts AS (
+                SELECT upload_comments.upload_id,
+                        count(*) comment_count
+                    FROM upload_comments
+                    GROUP BY upload_comments.upload_id
+                ),
+                view_counts AS (
+                    SELECT upload_views.upload_id,
+                        count(*) view_count
+                    FROM upload_views
+                    GROUP BY upload_views.upload_id
+                )
+                SELECT uploads.*,
+                    users.username AS uploader_username,
+                    users.role AS uploader_role,
+                    coalesce(comments.comment_count, 0) AS comment_count,
+                    coalesce(views.view_count, 0) AS view_count,
+                    count(*) over ()
+                FROM uploads
+                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
+                LEFT JOIN view_counts views ON views.upload_id = uploads.id
+                WHERE uploads.status = $1
+                AND uploads.uploader_user_id = $2
+                GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
+                ORDER BY uploads.created_at desc
+                LIMIT $3
+                OFFSET $4
+                ",
+        )
+        .bind::<BigInt, _>(2)
+        .bind::<Int4, _>(uploader.unwrap().id)
+        .bind::<BigInt, _>(per_page)
+        .bind::<BigInt, _>((page - 1) * per_page)
+        .load::<FullUpload>(conn)
     } else {
-        if uploader.is_some() {
-            diesel::sql_query(
-                "
-                    SELECT *,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
-                        FROM upload_comments
-                        WHERE upload_comments.upload_id = t.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
-                        FROM upload_views
-                        WHERE upload_views.upload_id = t.id),
-                    COUNT(*) OVER ()
-                        FROM
-                        (
-                        SELECT uploads.*,
-                            users.username AS uploader_username,
-                            users.role AS uploader_role
-                        FROM uploads
-                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                        WHERE uploads.status = $1
-                        AND uploads.uploader_user_id = $2
-                        GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.created_at DESC
-                        ) t
-                        LIMIT $3
-                        OFFSET $4
-                    ",
-            )
-            .bind::<BigInt, _>(2)
-            .bind::<Int4, _>(uploader.unwrap().id)
-            .bind::<BigInt, _>(per_page)
-            .bind::<BigInt, _>((page - 1) * per_page)
-            .load::<FullUpload>(conn)
-        } else {
-            diesel::sql_query(
-                "
-                    SELECT *,
-                        (SELECT COUNT(upload_comments.*) AS comment_count
-                        FROM upload_comments
-                        WHERE upload_comments.upload_id = t.id),
-                        (SELECT COUNT(upload_views.*) AS view_count
-                        FROM upload_views
-                        WHERE upload_views.upload_id = t.id),
-                    COUNT(*) OVER ()
-                        FROM
-                        (
-                        SELECT uploads.*,
-                            users.username AS uploader_username,
-                            users.role AS uploader_role
-                        FROM uploads
-                        LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                        WHERE uploads.status = $1
-                        GROUP BY (uploads.id, users.username, users.role)
-                        ORDER BY uploads.created_at DESC
-                        ) t
-                        LIMIT $2
-                        OFFSET $3
-                    ",
-            )
-            .bind::<BigInt, _>(2)
-            .bind::<BigInt, _>(per_page)
-            .bind::<BigInt, _>((page - 1) * per_page)
-            .load::<FullUpload>(conn)
-        }
+        println!("yes!");
+        diesel::sql_query(
+            "
+                WITH comment_counts AS (
+                SELECT upload_comments.upload_id,
+                        count(*) comment_count
+                    FROM upload_comments
+                    GROUP BY upload_comments.upload_id
+                ),
+                view_counts AS (
+                    SELECT upload_views.upload_id,
+                        count(*) view_count
+                    FROM upload_views
+                    GROUP BY upload_views.upload_id
+                )
+                SELECT uploads.*,
+                    users.username AS uploader_username,
+                    users.role AS uploader_role,
+                    coalesce(comments.comment_count, 0) AS comment_count,
+                    coalesce(views.view_count, 0) AS view_count,
+                    count(*) over ()
+                FROM uploads
+                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
+                LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
+                LEFT JOIN view_counts views ON views.upload_id = uploads.id
+                WHERE uploads.status = $1
+                GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
+                ORDER BY uploads.created_at desc
+                LIMIT $2
+                OFFSET $3
+            ",
+        )
+        .bind::<BigInt, _>(2)
+        .bind::<BigInt, _>(per_page)
+        .bind::<BigInt, _>((page - 1) * per_page)
+        .load::<FullUpload>(conn)
     };
 
     match result.unwrap() {
