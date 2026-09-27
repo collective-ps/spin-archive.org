@@ -1,14 +1,21 @@
-target
-node_modules
-build
-scripts
-Dockerfile
-.dockerignore
-.git
-.env*
-recipe.json
-*.db
-*.db-*
-*.csv
-*.tar
-encoder
+# Allowlist: ignore everything, then re-include only what the image build reads.
+# Keeps local junk (migration-work/, target/, node_modules/, *.db, CSVs, .git)
+# out of the build context, so uploads stay small and unrelated files can never
+# invalidate a cached layer. Add new top-level inputs here.
+*
+!Cargo.toml
+!Cargo.lock
+!rust-toolchain
+!src
+!templates
+!migrations
+!package.json
+!package-lock.json
+!webpack.config.js
+!postcss.config.js
+!assets
+
+# Editor/OS droppings inside the allowed directories.
+**/.DS_Store
+**/*.swp
+**/*~
