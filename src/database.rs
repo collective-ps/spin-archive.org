@@ -22,15 +22,17 @@ pub fn database_path() -> String {
 
 /// Per-connection settings. WAL + a busy timeout lets concurrent requests
 /// wait on the write lock instead of failing with "database is locked".
+/// The busy timeout goes first: switching to WAL takes a lock too, and the
+/// pool opens its connections concurrently at startup.
 #[derive(Debug)]
 struct ConnectionOptions;
 
 impl CustomizeConnection<SqliteConnection, r2d2::Error> for ConnectionOptions {
     fn on_acquire(&self, conn: &mut SqliteConnection) -> Result<(), r2d2::Error> {
         conn.batch_execute(
-            "PRAGMA journal_mode = WAL;
+            "PRAGMA busy_timeout = 5000;
+             PRAGMA journal_mode = WAL;
              PRAGMA synchronous = NORMAL;
-             PRAGMA busy_timeout = 5000;
              PRAGMA foreign_keys = ON;",
         )
         .map_err(r2d2::Error::QueryError)
