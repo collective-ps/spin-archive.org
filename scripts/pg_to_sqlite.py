@@ -105,7 +105,8 @@ def run_psql(psql, pg_url, *commands):
     args = [psql, "--no-psqlrc", "-X", "-v", "ON_ERROR_STOP=1", "-d", pg_url]
     for command in commands:
         args += ["-c", command]
-    env = dict(os.environ, PGCLIENTENCODING="UTF8")
+    # datestyle via PGOPTIONS: a `SET` command would print "SET" into the CSV on stdout.
+    env = dict(os.environ, PGCLIENTENCODING="UTF8", PGOPTIONS="-c datestyle=ISO")
     result = subprocess.run(args, capture_output=True, env=env)
     if result.returncode != 0:
         fail(f"psql failed: {result.stderr.decode('utf-8', 'replace').strip()}")
@@ -115,7 +116,7 @@ def run_psql(psql, pg_url, *commands):
 def export_table(psql, pg_url, table, columns):
     select = f"SELECT {', '.join(columns)} FROM {table} ORDER BY id"
     copy = rf"\copy ({select}) TO STDOUT WITH (FORMAT csv, HEADER, NULL '\N')"
-    return run_psql(psql, pg_url, "SET datestyle TO ISO", copy)
+    return run_psql(psql, pg_url, copy)
 
 
 def postgres_count(psql, pg_url, table):
