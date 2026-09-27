@@ -1,7 +1,10 @@
-// This module handles integration with our 3rd-party video encoding service (Coconut API v2).
-// https://docs.coconut.co/jobs/api
+// This module handles video encoding. Each upload is encoded by a single-use Fly Machine
+// running the image in `encoder/`, started through the Machines API. The Machine writes its
+// outputs to presigned Wasabi URLs and reports back to `/webhooks/video`.
+// https://docs.fly.io/machines/api/
 
 use std::env;
+use std::time::Duration;
 
 use log::warn;
 use serde::{Deserialize, Serialize};
@@ -10,20 +13,22 @@ use serde_json::{json, Value};
 use crate::database::DatabaseConnection;
 use crate::models::upload::{self, FinishedEncodingUpload, Upload, UploadStatus};
 use crate::models::user::get_user_by_id;
+use crate::s3_client;
 
-const API_URL: &'static str = "https://api.coconut.co/v2/jobs";
-const BUCKET: &'static str = "bits.spin-archive.org";
-const REGION: &'static str = "us-west-1";
+const MACHINES_API: &'static str = "https://api.machines.dev/v1";
 const WEBHOOK_URL: &'static str = "https://spin-archive.org/webhooks/video";
 
-/// A job, as returned when it is created.
+/// How long the encoder has to upload its outputs.
+const UPLOAD_URL_TTL: Duration = Duration::from_secs(60 * 60 * 12);
+
+/// The encoder Machine, as returned when it is created.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Job {
     pub id: String,
-    pub status: Option<String>,
+    pub state: Option<String>,
 }
 
-/// The webhook payload Coconut posts when a job finishes.
+/// The webhook payload the encoder posts when it finishes.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Notification {
     pub job_id: String,
@@ -38,64 +43,66 @@ pub enum EncoderError {
     UploadNotFound,
 }
 
+fn encoder_app() -> String {
+    env::var("ENCODER_APP").unwrap_or("spin-archive-encoder".to_owned())
+}
+
+/// Authorization header for the Machines API. `fly tokens create` output starts with
+/// "FlyV1 " and is sent as-is; anything else is treated as a bearer token.
+fn authorization() -> String {
+    let token = env::var("FLY_ENCODER_TOKEN").unwrap_or_default();
+
+    if token.starts_with("FlyV1 ") {
+        token
+    } else {
+        format!("Bearer {}", token)
+    }
+}
+
 /// Enqueues an upload to be transcoded.
 pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
-    let api_key = env::var("COCONUT_API_KEY").unwrap_or_default();
+    let app = encoder_app();
+    let image =
+        env::var("ENCODER_IMAGE").unwrap_or(format!("registry.fly.io/{}:latest", app));
 
-    let video_path = format!("/e/{}.mp4", upload.file_id);
-    let thumbnail_path = format!("/t/{}.jpg", upload.file_id);
+    let video_put_url = s3_client::generate_signed_put_url(
+        &format!("e/{}.mp4", upload.file_id),
+        "video/mp4",
+        UPLOAD_URL_TTL,
+    );
+    let thumbnail_put_url = s3_client::generate_signed_put_url(
+        &format!("t/{}.jpg", upload.file_id),
+        "image/jpeg",
+        UPLOAD_URL_TTL,
+    );
 
-    // Encode a single MP4, picking the resolution from the source width.
-    let config = json!({
-        "input": {
-            "url": upload.get_file_url(),
-        },
-        "storage": {
-            "service": "wasabi",
-            "bucket": BUCKET,
-            "region": REGION,
-            "credentials": {
-                "access_key_id": env::var("AWS_ACCESS_KEY_ID").unwrap_or_default(),
-                "secret_access_key": env::var("AWS_SECRET_ACCESS_KEY").unwrap_or_default(),
+    let machine = json!({
+        "region": "sjc",
+        "config": {
+            "image": image,
+            "env": {
+                "INPUT_URL": upload.get_file_url(),
+                "VIDEO_PUT_URL": video_put_url,
+                "THUMBNAIL_PUT_URL": thumbnail_put_url,
+                "WEBHOOK_URL": format!("{}?key={}", WEBHOOK_URL, upload.video_encoding_key),
             },
-        },
-        "notification": {
-            "type": "http",
-            "url": WEBHOOK_URL,
-            "params": {
-                "key": upload.video_encoding_key,
+            "guest": {
+                "cpu_kind": "performance",
+                "cpus": 1,
+                "memory_mb": 2048,
             },
-        },
-        "outputs": {
-            "mp4:480p": {
-                "key": "mp4:480p",
-                "path": video_path,
-                "if": "{{ input.width }} < 1280",
-            },
-            "mp4:720p": {
-                "key": "mp4:720p",
-                "path": video_path,
-                "if": "{{ input.width }} >= 1280 AND {{ input.width }} < 1980",
-            },
-            "mp4:1080p": {
-                "key": "mp4:1080p",
-                "path": video_path,
-                "if": "{{ input.width }} >= 1980",
-            },
-            "jpg:300x": {
-                "key": "jpg:thumbnail",
-                "path": thumbnail_path,
-                "number": 1,
-            },
+            "auto_destroy": true,
+            "restart": { "policy": "no" },
+            "metadata": { "upload": upload.file_id },
         },
     });
 
     let client = reqwest::blocking::Client::new();
 
     let response = client
-        .post(API_URL)
-        .basic_auth(api_key, Some(""))
-        .json(&config)
+        .post(&format!("{}/apps/{}/machines", MACHINES_API, app))
+        .header("Authorization", authorization())
+        .json(&machine)
         .send()
         .map_err(|e| {
             warn!("[encoding] request failed: {:?}", e);
@@ -104,7 +111,7 @@ pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
 
     if !response.status().is_success() {
         warn!(
-            "[encoding] job rejected ({}): {}",
+            "[encoding] could not start encoder ({}): {}",
             response.status(),
             response.text().unwrap_or_default()
         );

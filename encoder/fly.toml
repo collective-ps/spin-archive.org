@@ -1,0 +1,10 @@
+# Holds the encoder image only; it runs no standing Machines.
+# The main app starts one auto-destroying Machine per upload via the Machines API.
+#
+# Publish a new image with:
+#   fly deploy --config encoder/fly.toml --build-only --push --image-label latest
+app = "spin-archive-encoder"
+primary_region = "sjc"
+
+[build]
+  dockerfile = "Dockerfile"

@@ -11,3 +11,4 @@ recipe.json
 *.db-*
 *.csv
 *.tar
+encoder

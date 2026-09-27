@@ -107,3 +107,21 @@ pub fn generate_signed_url(folder_name: &str, file_name: &str) -> String {
 
     url
 }
+
+/// Generates a pre-signed PUT url for `key` that is valid for `expires_in`.
+///
+/// The uploader must send the same `Content-Type`, since it is part of the signature.
+pub fn generate_signed_put_url(key: &str, content_type: &str, expires_in: Duration) -> String {
+    let request = PutObjectRequest {
+        bucket: "bits.spin-archive.org".to_owned(),
+        key: key.to_owned(),
+        content_type: Some(content_type.to_owned()),
+        ..Default::default()
+    };
+
+    request.get_presigned_url(
+        &region(),
+        &credentials(),
+        &PreSignedRequestOption { expires_in },
+    )
+}
