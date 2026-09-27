@@ -6,11 +6,11 @@ use log::warn;
 use crate::database::DatabaseConnection;
 use crate::models::upload::UploadStatus;
 use crate::models::user::get_user_by_id;
-use crate::services::encoder_service::{self, Job};
+use crate::services::encoder_service::{self, Notification};
 use crate::services::notification_service;
 
 #[rocket::post("/webhooks/video?<key>", format = "json", data = "<request>")]
-pub(crate) fn webhook(conn: DatabaseConnection, request: Json<Job>, key: Option<String>) -> Status {
+pub(crate) fn webhook(conn: DatabaseConnection, request: Json<Notification>, key: Option<String>) -> Status {
     if key.is_none() {
         return Status::BadRequest;
     }

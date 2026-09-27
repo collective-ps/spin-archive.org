@@ -1,29 +1,34 @@
-// This module handles integration with our 3rd-party video encoding service.
+// This module handles integration with our 3rd-party video encoding service (Coconut API v2).
+// https://docs.coconut.co/jobs/api
 
 use std::env;
 
 use log::warn;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
+use serde_json::{json, Value};
 
 use crate::database::DatabaseConnection;
 use crate::models::upload::{self, FinishedEncodingUpload, Upload, UploadStatus};
 use crate::models::user::get_user_by_id;
 
-const HOST: &'static str = "https://s3.us-west-1.wasabisys.com";
+const API_URL: &'static str = "https://api.coconut.co/v2/jobs";
 const BUCKET: &'static str = "bits.spin-archive.org";
-const WEBHOOK_BASE: &'static str = "https://spin-archive.org/webhooks/video";
+const REGION: &'static str = "us-west-1";
+const WEBHOOK_URL: &'static str = "https://spin-archive.org/webhooks/video";
 
+/// A job, as returned when it is created.
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Job {
-    id: i32,
-    status: Option<String>,
-    created_at: Option<String>,
-    completed_at: Option<String>,
-    progress: Option<String>,
-    errors: Value,
-    output_urls: Value,
-    event: Option<String>,
+    pub id: String,
+    pub status: Option<String>,
+}
+
+/// The webhook payload Coconut posts when a job finishes.
+#[derive(Debug, Serialize, Deserialize)]
+pub struct Notification {
+    pub job_id: String,
+    pub event: String,
+    pub data: Value,
 }
 
 #[derive(Debug)]
@@ -35,107 +40,125 @@ pub enum EncoderError {
 
 /// Enqueues an upload to be transcoded.
 pub fn enqueue_upload(upload: &Upload) -> Result<Job, EncoderError> {
-    let api_key = env::var("COCONUT_API_KEY").unwrap();
+    let api_key = env::var("COCONUT_API_KEY").unwrap_or_default();
 
-    let source = upload.get_file_url();
+    let video_path = format!("/e/{}.mp4", upload.file_id);
+    let thumbnail_path = format!("/t/{}.jpg", upload.file_id);
 
-    let output_filename = format!("{file_id}.mp4", file_id = upload.file_id,);
-
-    let webhook_url = format!("{}?key={}", WEBHOOK_BASE, upload.video_encoding_key);
-
-    // Encode videos in lower quality if greater than 125MB.
-    let config = vec![
-        format!("set source = {}", source),
-        format!("set webhook = {}", webhook_url),
-        format!(
-            "-> mp4:480p = {}, if=$source_width < 1280",
-            output_url("e", &output_filename)
-        ),
-        format!(
-            "-> mp4:720p = {}, if=$source_width >= 1280 and $source_width < 1980",
-            output_url("e", &output_filename)
-        ),
-        format!(
-            "-> mp4:1080p = {}, if=$source_width >= 1980",
-            output_url("e", &output_filename)
-        ),
-        format!(
-            "-> jpg:300x = {}",
-            output_url("t", &format!("{}.jpg", upload.file_id))
-        ),
-    ]
-    .join("\n");
+    // Encode a single MP4, picking the resolution from the source width.
+    let config = json!({
+        "input": {
+            "url": upload.get_file_url(),
+        },
+        "storage": {
+            "service": "wasabi",
+            "bucket": BUCKET,
+            "region": REGION,
+            "credentials": {
+                "access_key_id": env::var("AWS_ACCESS_KEY_ID").unwrap_or_default(),
+                "secret_access_key": env::var("AWS_SECRET_ACCESS_KEY").unwrap_or_default(),
+            },
+        },
+        "notification": {
+            "type": "http",
+            "url": WEBHOOK_URL,
+            "params": {
+                "key": upload.video_encoding_key,
+            },
+        },
+        "outputs": {
+            "mp4:480p": {
+                "key": "mp4:480p",
+                "path": video_path,
+                "if": "{{ input.width }} < 1280",
+            },
+            "mp4:720p": {
+                "key": "mp4:720p",
+                "path": video_path,
+                "if": "{{ input.width }} >= 1280 AND {{ input.width }} < 1980",
+            },
+            "mp4:1080p": {
+                "key": "mp4:1080p",
+                "path": video_path,
+                "if": "{{ input.width }} >= 1980",
+            },
+            "jpg:300x": {
+                "key": "jpg:thumbnail",
+                "path": thumbnail_path,
+                "number": 1,
+            },
+        },
+    });
 
     let client = reqwest::blocking::Client::new();
 
-    match client
-        .post("https://api.coconut.co/v1/job")
-        .basic_auth(api_key, None::<String>)
-        .body(config)
+    let response = client
+        .post(API_URL)
+        .basic_auth(api_key, Some(""))
+        .json(&config)
         .send()
-    {
-        Ok(response) => response.json::<Job>().map_err(|err| {
-            warn!("{:?}", err);
-            EncoderError::JsonError
-        }),
-        Err(e) => {
-            warn!("{:?}", e);
+        .map_err(|e| {
+            warn!("[encoding] request failed: {:?}", e);
+            EncoderError::ApiFailure
+        })?;
 
-            Err(EncoderError::ApiFailure)
-        }
+    if !response.status().is_success() {
+        warn!(
+            "[encoding] job rejected ({}): {}",
+            response.status(),
+            response.text().unwrap_or_default()
+        );
+
+        return Err(EncoderError::ApiFailure);
     }
+
+    response.json::<Job>().map_err(|err| {
+        warn!("[encoding] {:?}", err);
+        EncoderError::JsonError
+    })
 }
 
 pub fn accept_webhook(
     conn: &DatabaseConnection,
     video_encoding_key: &str,
-    job: &Job,
+    notification: &Notification,
 ) -> Result<Upload, EncoderError> {
-    match upload::get_by_video_encoding_key(&conn, video_encoding_key) {
-        Some(upload) => {
-            if job.event == Some("job.completed".to_string()) {
-                let output_filename = format!("{file_id}.mp4", file_id = upload.file_id,);
-                let video_url = format!("https://bits.spin-archive.org/e/{}", output_filename);
-                let thumbnail_url =
-                    format!("https://bits.spin-archive.org/t/{}.jpg", upload.file_id);
+    let upload = match upload::get_by_video_encoding_key(&conn, video_encoding_key) {
+        Some(upload) => upload,
+        None => return Err(EncoderError::UploadNotFound),
+    };
 
-                let uploader = get_user_by_id(&conn, upload.uploader_user_id.unwrap()).unwrap();
+    match notification.event.as_str() {
+        "job.completed" => {
+            let video_url = format!("https://bits.spin-archive.org/e/{}.mp4", upload.file_id);
+            let thumbnail_url = format!("https://bits.spin-archive.org/t/{}.jpg", upload.file_id);
 
-                let status = if uploader.is_contributor() {
-                    UploadStatus::Completed
-                } else {
-                    UploadStatus::PendingApproval
-                };
+            let uploader = get_user_by_id(&conn, upload.uploader_user_id.unwrap()).unwrap();
 
-                let finished_encoding = FinishedEncodingUpload {
-                    status,
-                    thumbnail_url: thumbnail_url,
-                    video_url: video_url,
-                };
-
-                match upload::update_encoding(&conn, upload.id, &finished_encoding) {
-                    Ok(upload) => Ok(upload),
-                    Err(_) => Err(EncoderError::ApiFailure),
-                }
+            let status = if uploader.is_contributor() {
+                UploadStatus::Completed
             } else {
-                Err(EncoderError::ApiFailure)
-            }
+                UploadStatus::PendingApproval
+            };
+
+            let finished_encoding = FinishedEncodingUpload {
+                status,
+                thumbnail_url,
+                video_url,
+            };
+
+            upload::update_encoding(&conn, upload.id, &finished_encoding)
+                .map_err(|_| EncoderError::ApiFailure)
         }
-        None => Err(EncoderError::UploadNotFound),
+        "job.failed" => {
+            warn!(
+                "[encoding] job {} failed for upload {}: {}",
+                notification.job_id, upload.file_id, notification.data
+            );
+
+            upload::update_status(&conn, upload.id, UploadStatus::Failed)
+                .map_err(|_| EncoderError::ApiFailure)
+        }
+        _ => Err(EncoderError::ApiFailure),
     }
-}
-
-fn output_url(prefix: &str, file_name: &str) -> String {
-    let access_key = env::var("AWS_ACCESS_KEY_ID").unwrap();
-    let secret_key = env::var("AWS_SECRET_ACCESS_KEY").unwrap();
-
-    format!(
-        "s3://{access_key}:{secret_key}@{bucket}/{prefix}/{output}?host={host}",
-        access_key = access_key,
-        secret_key = secret_key,
-        bucket = BUCKET,
-        prefix = prefix,
-        output = file_name,
-        host = HOST
-    )
 }
