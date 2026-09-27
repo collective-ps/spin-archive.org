@@ -9,7 +9,7 @@ mounted at `/data` (see `fly.toml`). The Machine stops when idle and starts on
 the next request.
 
 ```sh
-fly volumes create spin_archive_data --region sea --size 1   # once
+fly volumes create spin_archive_data --region sjc --size 1   # once
 fly secrets set ROCKET_SECRET_KEY=$(openssl rand -base64 32) \
   AWS_ACCESS_KEY_ID=... AWS_SECRET_ACCESS_KEY=... COCONUT_API_KEY=... \
   DISCORD_WEBHOOK_URL=... DISCORD_CONTRIBUTOR_WEBHOOK_URL=...
