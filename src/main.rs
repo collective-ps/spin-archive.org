@@ -20,7 +20,6 @@ mod template_utils;
 mod api;
 mod config;
 mod database;
-mod ingestors;
 mod models;
 mod routes;
 mod s3_client;

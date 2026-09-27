@@ -2,7 +2,6 @@ use std::path::Path;
 
 use chrono::{NaiveDate, NaiveDateTime};
 use lazy_static::lazy_static;
-use log::warn;
 use rocket::response::status::BadRequest;
 use rocket_contrib::json;
 use rocket_contrib::json::{Json, JsonValue};
@@ -10,7 +9,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::api::{Auth, Paginated};
 use crate::database::DatabaseConnection;
-use crate::ingestors;
 use crate::models;
 use crate::models::upload::FullUpload;
 use crate::models::user::{get_user_by_username, User};
@@ -276,68 +274,6 @@ pub(crate) fn finalize(
     }
 }
 
-#[derive(Deserialize)]
-pub struct TwitterUpload {
-    url: String,
-    tags: String,
-}
-
-#[derive(Serialize)]
-pub struct TwitterUploadResponse {
-    id: String,
-    url: String,
-}
-
-#[rocket::post("/uploads/twitter", format = "json", data = "<request>")]
-pub fn twitter(
-    conn: DatabaseConnection,
-    auth: Option<Auth>,
-    user: Option<&User>,
-    request: Json<TwitterUpload>,
-) -> Result<Json<TwitterUploadResponse>, BadRequest<JsonValue>> {
-    if auth.is_none() && user.is_none() {
-        return Err(BadRequest(Some(json!({
-            "status": "no_permissions",
-            "reason": "Unauthorized"
-        }))));
-    }
-
-    if auth.is_none() && !user.unwrap().is_contributor() {
-        return Err(BadRequest(Some(json!({
-            "status": "no_permissions",
-            "reason": "Unauthorized"
-        }))));
-    }
-
-    let uploader = match auth {
-        None => user.unwrap(),
-        Some(auth) => auth.user,
-    };
-
-    let existing_upload = upload_service::get_by_source(&conn, &request.url);
-
-    if existing_upload.is_some() {
-        return Err(BadRequest(Some(json!({
-            "status": "already_exists",
-            "reason": "An upload with this URL already exists"
-        }))));
-    }
-
-    match ingestors::twitter::download_from_tweet(conn, &uploader, &request.url, &request.tags) {
-        Ok(upload) => Ok(Json(TwitterUploadResponse {
-            id: upload.file_id.clone(),
-            url: format!("https://spin-archive.org/u/{}", upload.file_id),
-        })),
-        Err(err) => {
-            warn!("[api/v1/uploads/twitter] {}", err);
-            Err(BadRequest(Some(json!({
-                "status": "error",
-                "reason": format!("{}", err)
-            }))))
-        }
-    }
-}
-
 pub fn routes() -> Vec<rocket::Route> {
-    rocket::routes![validate_checksum, search, new, finalize, twitter]
+    rocket::routes![validate_checksum, search, new, finalize]
 }

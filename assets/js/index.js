@@ -15,7 +15,6 @@ import UploadPage from './pages/upload'
 
 import SearchBox from './components/search_box/form'
 import SearchBoxInput from './components/search_box'
-import TwitterUploader from './components/twitter_uploader'
 
 import './lib/upload_tooltips'
 
@@ -56,11 +55,6 @@ if (document.getElementById('upload-page')) {
   let page = document.getElementById('upload-page')
 
   ReactDOM.render(<UploadPage />, page)
-}
-
-if (document.getElementById('twitter-uploader')) {
-  let $el = document.getElementById('twitter-uploader')
-  ReactDOM.render(<TwitterUploader />, $el)
 }
 
 window.addEventListener('DOMContentLoaded', () => {

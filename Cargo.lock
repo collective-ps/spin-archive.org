@@ -145,12 +145,6 @@ dependencies = [
 
 [[package]]
 name = "base64"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b41b7ea54a0c9d92199de89e20e58d49f02f8e699814ef3fdf266f6f748d15c7"
-
-[[package]]
-name = "base64"
 version = "0.12.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
@@ -383,17 +377,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "derive_more"
-version = "0.99.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "41cb0e6161ad61ed084a36ba71fbba9e3ac5aee3606fb607fe08da6acbcf3d8c"
-dependencies = [
- "proc-macro2 1.0.24",
- "quote 1.0.9",
- "syn 1.0.60",
-]
-
-[[package]]
 name = "devise"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -500,32 +483,6 @@ name = "dotenv"
 version = "0.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
-
-[[package]]
-name = "egg-mode"
-version = "0.14.0"
-source = "git+https://github.com/andrewvy/egg-mode#c1598525eb38d44c30b91accd3a2cb4059ba2064"
-dependencies = [
- "base64 0.11.0",
- "chrono",
- "derive_more",
- "futures",
- "hmac",
- "hyper 0.13.10",
- "hyper-tls",
- "lazy_static",
- "mime 0.3.16",
- "native-tls",
- "percent-encoding 2.1.0",
- "rand 0.7.3",
- "regex",
- "serde",
- "serde_json",
- "sha-1",
- "thiserror",
- "tokio",
- "url 2.2.0",
-]
 
 [[package]]
 name = "either"
@@ -2379,7 +2336,6 @@ dependencies = [
  "diesel",
  "diesel_migrations",
  "dotenv",
- "egg-mode",
  "funty",
  "lazy_static",
  "libsqlite3-sys",
@@ -2397,12 +2353,9 @@ dependencies = [
  "rust-argon2",
  "serde",
  "serde_json",
- "tempfile",
  "thiserror",
  "timeago",
  "tokio",
- "tokio-util",
- "url 2.2.0",
 ]
 
 [[package]]

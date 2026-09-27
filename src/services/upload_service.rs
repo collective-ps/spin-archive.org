@@ -8,15 +8,15 @@ use thiserror::Error;
 use crate::models::audit_log::{self, AuditLog};
 use crate::models::tag::Tag;
 use crate::models::upload::{
-    self, FullUpload, NewImmediateUpload, PendingUpload, UpdateUpload, Upload, UploadStatus,
+    self, FullUpload, PendingUpload, UpdateUpload, Upload, UploadStatus,
 };
 use crate::models::user::User;
 use crate::schema::upload_views;
 use crate::services::{audit_service, encoder_service, tag_service};
 
 pub use crate::models::upload::{
-    get_by_file_id, get_by_md5, get_by_original_file, get_by_source, get_pending_approval_uploads,
-    get_upload_count_by_user_id, insert_immediate_upload, random, update_md5, update_status,
+    get_by_file_id, get_by_md5, get_by_original_file, get_pending_approval_uploads,
+    get_upload_count_by_user_id, random, update_md5, update_status,
     where_md5,
 };
 
@@ -36,47 +36,6 @@ pub(crate) enum UploadError {
 
     #[error("Upload was not found")]
     NotFound,
-}
-
-pub(crate) fn immediate_upload(
-    conn: &SqliteConnection,
-    user: &User,
-    file_id: &str,
-    file_name: &str,
-    file_ext: &str,
-    thumbnail_url: &str,
-    file_size: i64,
-    tag_string: &str,
-    source: &str,
-    description: &str,
-    original_upload_date: NaiveDate,
-) -> Result<Upload, UploadError> {
-    let new_tag_string = sanitize_tags(tag_string);
-
-    let immediate_upload = NewImmediateUpload {
-        status: UploadStatus::Completed,
-        file_id: file_id.to_owned(),
-        video_encoding_key: nanoid!(),
-        uploader_user_id: user.id,
-        file_name: file_name.to_owned(),
-        file_ext: file_ext.to_owned(),
-        thumbnail_url: thumbnail_url.to_owned(),
-        tag_string: new_tag_string.to_owned(),
-        source: source.to_owned(),
-        description: description.to_owned(),
-        original_upload_date,
-        file_size,
-    };
-
-    match upload::insert_immediate_upload(&conn, &immediate_upload)
-        .map_err(|_| UploadError::DatabaseError)
-    {
-        Ok(upload) => {
-            after_edit_hooks(&conn, &upload);
-            Ok(upload)
-        }
-        err => err,
-    }
 }
 
 /// Creates a new pending upload.

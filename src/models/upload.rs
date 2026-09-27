@@ -190,23 +190,6 @@ pub struct FinishedEncodingUpload {
     pub video_url: String,
 }
 
-#[derive(Insertable)]
-#[table_name = "uploads"]
-pub struct NewImmediateUpload {
-    pub file_ext: String,
-    pub file_id: String,
-    pub file_name: String,
-    pub file_size: i64,
-    pub status: UploadStatus,
-    pub thumbnail_url: String,
-    pub uploader_user_id: i32,
-    pub video_encoding_key: String,
-    pub tag_string: String,
-    pub source: String,
-    pub description: String,
-    pub original_upload_date: NaiveDate,
-}
-
 const ASSET_HOST: &'static str = "https://bits.spin-archive.org/uploads";
 
 impl Upload {
@@ -301,17 +284,6 @@ pub fn get_by_file_id(conn: &SqliteConnection, search_file_id: &str) -> Option<U
 
     uploads
         .filter(file_id.eq(search_file_id))
-        .select(ALL_COLUMNS)
-        .first::<Upload>(conn)
-        .ok()
-}
-
-/// Gets an [`Upload`] by `source`.
-pub fn get_by_source(conn: &SqliteConnection, source_url: &str) -> Option<Upload> {
-    use crate::schema::uploads::dsl::*;
-
-    uploads
-        .filter(source.eq(source_url))
         .select(ALL_COLUMNS)
         .first::<Upload>(conn)
         .ok()
@@ -412,18 +384,6 @@ pub fn insert_pending_upload(
 ) -> QueryResult<Upload> {
     diesel::insert_into(uploads::table)
         .values(pending_upload)
-        .execute(conn)?;
-
-    get_by_id(conn, last_insert_rowid(conn)? as i32)
-}
-
-/// Inserts a given [`NewImmediateUpload`] into the database.
-pub fn insert_immediate_upload(
-    conn: &SqliteConnection,
-    immediate_upload: &NewImmediateUpload,
-) -> QueryResult<Upload> {
-    diesel::insert_into(uploads::table)
-        .values(immediate_upload)
         .execute(conn)?;
 
     get_by_id(conn, last_insert_rowid(conn)? as i32)
