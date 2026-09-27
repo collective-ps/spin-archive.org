@@ -5,6 +5,7 @@ use rocket::FromForm;
 use serde::{Deserialize, Serialize};
 
 use crate::database::DatabaseConnection;
+use crate::models::upload;
 use crate::models::user::User;
 use crate::s3_client;
 use crate::services::{encoder_service, tag_service, upload_service};
@@ -19,6 +20,77 @@ pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Ructe, R
         Ok(render!(admin::index(&ctx)))
     } else {
         Err(Redirect::to("/"))
+    }
+}
+
+/// Encoding queue and encoder Machines.
+#[rocket::get("/encoding")]
+pub(crate) fn encoding(
+    conn: DatabaseConnection,
+    flash: Option<FlashMessage>,
+    user: &User,
+) -> Result<Ructe, Redirect> {
+    if !user.is_admin() {
+        return Err(Redirect::to("/"));
+    }
+
+    let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
+
+    let encoding = upload::get_encoding(&conn);
+    let queued = upload::get_queued_for_encoding(&conn, 50);
+    let queued_count = upload::count_queued_for_encoding(&conn);
+    let failed = upload::get_failed_encodings(&conn, 20);
+    let legacy_count = upload::count_legacy_encoding(&conn);
+    let machines = encoder_service::list_machines().ok();
+
+    Ok(render!(admin::encoding(
+        &ctx,
+        encoding,
+        queued,
+        queued_count,
+        failed,
+        legacy_count,
+        machines
+    )))
+}
+
+#[rocket::post("/encoding/<file_id>/retry")]
+pub(crate) fn action_retry_encoding(
+    user: &User,
+    conn: DatabaseConnection,
+    file_id: String,
+) -> Flash<Redirect> {
+    if !user.is_admin() {
+        return Flash::error(Redirect::to("/"), "");
+    }
+
+    match upload::requeue_failed_encoding(&conn, &file_id) {
+        Ok(1) => {
+            encoder_service::dispatch_in_background();
+            Flash::success(Redirect::to("/admin/encoding"), "Queued for encoding.")
+        }
+        _ => Flash::error(Redirect::to("/admin/encoding"), "Could not queue upload."),
+    }
+}
+
+#[rocket::post("/encoding/requeue_legacy")]
+pub(crate) fn action_requeue_legacy_encodings(
+    user: &User,
+    conn: DatabaseConnection,
+) -> Flash<Redirect> {
+    if !user.is_admin() {
+        return Flash::error(Redirect::to("/"), "");
+    }
+
+    match upload::requeue_legacy_encodings(&conn) {
+        Ok(count) => {
+            encoder_service::dispatch_in_background();
+            Flash::success(
+                Redirect::to("/admin/encoding"),
+                format!("Queued {} uploads for encoding.", count),
+            )
+        }
+        Err(_) => Flash::error(Redirect::to("/admin/encoding"), "Could not queue uploads."),
     }
 }
 
@@ -65,7 +137,7 @@ pub(crate) fn action_encode_video(
     }
 
     match upload_service::get_by_file_id(&conn, &request.file_id) {
-        Some(upload) => match encoder_service::enqueue_upload(&upload) {
+        Some(upload) => match encoder_service::start_encoder(&upload) {
             Ok(_) => Flash::success(Redirect::to("/"), "Sent video for encoding."),
             _ => Flash::error(Redirect::to("/"), "Could not enqueue video for encoding."),
         },
@@ -104,6 +176,9 @@ pub(crate) fn router() -> Vec<rocket::Route> {
         action_rebuild_tags,
         action_rebuild_tag_counts,
         action_encode_video,
-        action_rebuild_md5
+        action_rebuild_md5,
+        encoding,
+        action_retry_encoding,
+        action_requeue_legacy_encodings
     ]
 }

@@ -1,16 +1,23 @@
 use std::env;
 use std::ops::Deref;
+use std::sync::Mutex;
 
 use diesel::connection::SimpleConnection;
 use diesel::prelude::*;
 use diesel::r2d2::{self, ConnectionManager, CustomizeConnection, Pool, PooledConnection};
 use diesel::SqliteConnection;
+use lazy_static::lazy_static;
 use rocket::fairing::{AdHoc, Fairing};
 use rocket::http::Status;
 use rocket::request::{self, FromRequest, Request};
 use rocket::{Outcome, Rocket, State};
 
 type SqlitePool = Pool<ConnectionManager<SqliteConnection>>;
+
+lazy_static! {
+    /// The pool, for work that runs outside a request (e.g. background threads).
+    static ref POOL: Mutex<Option<SqlitePool>> = Mutex::new(None);
+}
 
 /// A pooled SQLite connection, usable as a request guard.
 pub struct DatabaseConnection(PooledConnection<ConnectionManager<SqliteConnection>>);
@@ -49,7 +56,10 @@ impl DatabaseConnection {
                 .connection_customizer(Box::new(ConnectionOptions))
                 .build(manager)
             {
-                Ok(pool) => Ok(rocket.manage(pool)),
+                Ok(pool) => {
+                    *POOL.lock().unwrap() = Some(pool.clone());
+                    Ok(rocket.manage(pool))
+                }
                 Err(e) => {
                     log::error!("Failed to open database {}: {:?}", database_path(), e);
                     Err(rocket)
@@ -64,6 +74,13 @@ impl DatabaseConnection {
             .and_then(|pool| pool.get().ok())
             .map(DatabaseConnection)
     }
+}
+
+/// Gets a connection outside of a request, once the pool has been set up.
+pub fn background_connection() -> Option<DatabaseConnection> {
+    let pool = POOL.lock().unwrap().clone()?;
+
+    pool.get().ok().map(DatabaseConnection)
 }
 
 impl Deref for DatabaseConnection {

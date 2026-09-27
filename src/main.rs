@@ -147,7 +147,10 @@ fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
     let conn = DatabaseConnection::get_one(&rocket).expect("No DB connection!");
 
     match embedded_migrations::run(&*conn) {
-        Ok(()) => Ok(rocket),
+        Ok(()) => {
+            services::encoder_service::spawn_dispatcher();
+            Ok(rocket)
+        }
         Err(e) => {
             log::error!("Failed to run DB migrations: {:?}", e);
             Err(rocket)

@@ -1,7 +1,6 @@
 use chrono::NaiveDate;
 use diesel::prelude::*;
 use diesel::SqliteConnection;
-use log::{debug, warn};
 use nanoid::nanoid;
 use thiserror::Error;
 
@@ -94,17 +93,7 @@ pub(crate) fn finalize_upload(
                 Ok(upload) => {
                     after_edit_hooks(&conn, &upload);
 
-                    match encoder_service::enqueue_upload(&upload) {
-                        Ok(_job) => {
-                            debug!("[encoding] Started job id {}", upload.video_encoding_key);
-                        }
-                        Err(e) => {
-                            warn!(
-                                "[encoding] Job error: {:?} for job id {}",
-                                e, upload.video_encoding_key
-                            );
-                        }
-                    }
+                    encoder_service::dispatch_in_background();
 
                     Ok(upload)
                 }

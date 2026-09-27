@@ -1,0 +1,105 @@
+@use crate::template_utils::*;
+@use crate::templates::{base, partials::default_head};
+@use crate::models::upload::{EncodingUpload, Upload};
+@use crate::services::encoder_service::Machine;
+
+@(ctx: &BaseContext, encoding: Vec<EncodingUpload>, queued: Vec<Upload>, queued_count: i64, failed: Vec<Upload>, legacy_count: i64, machines: Option<Vec<Machine>>)
+
+@:base(ctx, None, { @:default_head() }, {
+  <main class="encoding-admin">
+    <p><a href="/admin">&larr; Admin</a></p>
+    <h3>Encoding</h3>
+    <p>
+      @encoding.len() encoding &middot; @queued_count queued &middot; @failed.len() recently failed
+    </p>
+
+    <h4>Encoding</h4>
+    @if encoding.is_empty() {
+      <p>Nothing is encoding.</p>
+    } else {
+      <table>
+        <tr><th>Upload</th><th>File</th><th>Machine</th><th>Started</th></tr>
+        @for (upload, machine_id, started_at) in encoding {
+          <tr>
+            <td><a href="/u/@upload.file_id">@upload.file_id</a></td>
+            <td>@upload.file_name.as_deref().unwrap_or("")</td>
+            <td>@machine_id.as_deref().unwrap_or("")</td>
+            <td>@if let Some(started_at) = started_at { @humanized_past(started_at) }</td>
+          </tr>
+        }
+      </table>
+    }
+
+    <h4>Encoder machines</h4>
+    @if let Some(machines) = machines {
+      @if machines.is_empty() {
+        <p>No encoder machines are running.</p>
+      } else {
+        <table>
+          <tr><th>Machine</th><th>State</th><th>Region</th><th>Upload</th><th>Created</th></tr>
+          @for machine in machines {
+            <tr>
+              <td>@machine.id</td>
+              <td>@machine.state</td>
+              <td>@machine.region</td>
+              <td>@if let Some(file_id) = machine.upload_file_id() { <a href="/u/@file_id">@file_id</a> }</td>
+              <td>@machine.created_at</td>
+            </tr>
+          }
+        </table>
+      }
+    } else {
+      <p>Could not reach the Fly Machines API.</p>
+    }
+
+    <h4>Queued</h4>
+    @if queued.is_empty() {
+      <p>The queue is empty.</p>
+    } else {
+      @if queued_count > 50 {
+        <p>Showing the next @queued.len() of @queued_count.</p>
+      }
+      <table>
+        <tr><th>Upload</th><th>File</th><th>Finalized</th></tr>
+        @for upload in queued {
+          <tr>
+            <td><a href="/u/@upload.file_id">@upload.file_id</a></td>
+            <td>@upload.file_name.as_deref().unwrap_or("")</td>
+            <td>@humanized_past(upload.updated_at)</td>
+          </tr>
+        }
+      </table>
+    }
+
+    <h4>Recently failed</h4>
+    @if failed.is_empty() {
+      <p>No failed uploads.</p>
+    } else {
+      <table>
+        <tr><th>Upload</th><th>File</th><th>Failed</th><th></th></tr>
+        @for upload in failed {
+          <tr>
+            <td><a href="/u/@upload.file_id">@upload.file_id</a></td>
+            <td>@upload.file_name.as_deref().unwrap_or("")</td>
+            <td>@humanized_past(upload.updated_at)</td>
+            <td>
+              <form action="/admin/encoding/@upload.file_id/retry" method="POST">
+                <button type="submit">Retry</button>
+              </form>
+            </td>
+          </tr>
+        }
+      </table>
+    }
+
+    @if legacy_count > 0 {
+      <h4>Left over from Coconut</h4>
+      <p>
+        @legacy_count uploads were still processing when the old encoder was retired.
+      </p>
+      <form action="/admin/encoding/requeue_legacy" method="POST">
+        <button type="submit">Queue all @legacy_count for encoding</button>
+      </form>
+    }
+  </main>
+})

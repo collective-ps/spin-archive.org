@@ -32,6 +32,9 @@ pub(crate) fn webhook(conn: DatabaseConnection, request: Json<Notification>, key
                     Some(())
                 });
 
+            // A slot freed up; start the next queued encode.
+            encoder_service::dispatch_in_background();
+
             Status::Ok
         }
         Err(err) => {

@@ -137,6 +137,8 @@ table! {
         video_url -> Nullable<Text>,
         description -> Text,
         original_upload_date -> Nullable<Date>,
+        encoder_machine_id -> Nullable<Text>,
+        encoding_started_at -> Nullable<Timestamp>,
     }
 }
 

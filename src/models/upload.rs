@@ -389,6 +389,140 @@ pub fn insert_pending_upload(
     get_by_id(conn, last_insert_rowid(conn)? as i32)
 }
 
+/// Machine id given to uploads left in Processing by the old Coconut integration.
+/// These are neither queued nor counted as encoding.
+pub const LEGACY_ENCODER_MACHINE_ID: &'static str = "legacy";
+
+/// Gets uploads waiting for an encoder, oldest first.
+pub fn get_queued_for_encoding(conn: &SqliteConnection, limit: i64) -> Vec<Upload> {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Processing))
+        .filter(uploads::encoder_machine_id.is_null())
+        .order(uploads::id.asc())
+        .limit(limit)
+        .select(ALL_COLUMNS)
+        .load::<Upload>(conn)
+        .unwrap_or_default()
+}
+
+/// Counts uploads currently being encoded.
+pub fn count_encoding(conn: &SqliteConnection) -> i64 {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Processing))
+        .filter(uploads::encoder_machine_id.is_not_null())
+        .filter(uploads::encoder_machine_id.ne(LEGACY_ENCODER_MACHINE_ID))
+        .count()
+        .get_result(conn)
+        .unwrap_or(0)
+}
+
+/// Records that `machine_id` started encoding the upload.
+pub fn set_encoder_machine(
+    conn: &SqliteConnection,
+    upload_id: i32,
+    machine_id: &str,
+    started_at: NaiveDateTime,
+) -> QueryResult<usize> {
+    diesel::update(uploads::table.filter(uploads::id.eq(upload_id)))
+        .set((
+            uploads::encoder_machine_id.eq(machine_id),
+            uploads::encoding_started_at.eq(started_at),
+        ))
+        .execute(conn)
+}
+
+/// Marks encodes started before `cutoff` as failed, for Machines that never reported back.
+pub fn fail_stale_encodings(conn: &SqliteConnection, cutoff: NaiveDateTime) -> QueryResult<usize> {
+    diesel::update(
+        uploads::table
+            .filter(uploads::status.eq(UploadStatus::Processing))
+            .filter(uploads::encoder_machine_id.is_not_null())
+            .filter(uploads::encoder_machine_id.ne(LEGACY_ENCODER_MACHINE_ID))
+            .filter(uploads::encoding_started_at.lt(cutoff)),
+    )
+    .set(uploads::status.eq(UploadStatus::Failed))
+    .execute(conn)
+}
+
+/// An upload being encoded, with its encoder Machine and start time.
+pub type EncodingUpload = (Upload, Option<String>, Option<NaiveDateTime>);
+
+/// Gets uploads currently being encoded, oldest first.
+pub fn get_encoding(conn: &SqliteConnection) -> Vec<EncodingUpload> {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Processing))
+        .filter(uploads::encoder_machine_id.is_not_null())
+        .filter(uploads::encoder_machine_id.ne(LEGACY_ENCODER_MACHINE_ID))
+        .order(uploads::encoding_started_at.asc())
+        .select((
+            ALL_COLUMNS,
+            uploads::encoder_machine_id,
+            uploads::encoding_started_at,
+        ))
+        .load::<EncodingUpload>(conn)
+        .unwrap_or_default()
+}
+
+/// Counts uploads waiting for an encoder.
+pub fn count_queued_for_encoding(conn: &SqliteConnection) -> i64 {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Processing))
+        .filter(uploads::encoder_machine_id.is_null())
+        .count()
+        .get_result(conn)
+        .unwrap_or(0)
+}
+
+/// Counts uploads left in Processing by the old Coconut integration.
+pub fn count_legacy_encoding(conn: &SqliteConnection) -> i64 {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Processing))
+        .filter(uploads::encoder_machine_id.eq(LEGACY_ENCODER_MACHINE_ID))
+        .count()
+        .get_result(conn)
+        .unwrap_or(0)
+}
+
+/// Gets the most recently failed uploads.
+pub fn get_failed_encodings(conn: &SqliteConnection, limit: i64) -> Vec<Upload> {
+    uploads::table
+        .filter(uploads::status.eq(UploadStatus::Failed))
+        .order(uploads::updated_at.desc())
+        .limit(limit)
+        .select(ALL_COLUMNS)
+        .load::<Upload>(conn)
+        .unwrap_or_default()
+}
+
+/// Puts a failed upload back in the encoding queue.
+pub fn requeue_failed_encoding(conn: &SqliteConnection, file_id: &str) -> QueryResult<usize> {
+    diesel::update(
+        uploads::table
+            .filter(uploads::file_id.eq(file_id))
+            .filter(uploads::status.eq(UploadStatus::Failed)),
+    )
+    .set((
+        uploads::status.eq(UploadStatus::Processing),
+        uploads::encoder_machine_id.eq(None::<String>),
+        uploads::encoding_started_at.eq(None::<NaiveDateTime>),
+    ))
+    .execute(conn)
+}
+
+/// Puts every upload left in Processing by the old Coconut integration in the encoding queue.
+pub fn requeue_legacy_encodings(conn: &SqliteConnection) -> QueryResult<usize> {
+    diesel::update(
+        uploads::table
+            .filter(uploads::status.eq(UploadStatus::Processing))
+            .filter(uploads::encoder_machine_id.eq(LEGACY_ENCODER_MACHINE_ID)),
+    )
+    .set((
+        uploads::encoder_machine_id.eq(None::<String>),
+        uploads::encoding_started_at.eq(None::<NaiveDateTime>),
+    ))
+    .execute(conn)
+}
+
 /// Gets all pending approval uploads and their uploader.
 pub fn get_pending_approval_uploads(conn: &SqliteConnection) -> Vec<(Upload, User)> {
     use crate::schema::users;
