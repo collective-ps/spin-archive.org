@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use crate::database::DatabaseConnection;
 use crate::models::upload;
 use crate::models::user::User;
+use crate::routes::robots::IsBot;
 use crate::s3_client::generate_signed_url;
 use crate::services::{comment_service, notification_service, tag_service, upload_service};
 use crate::template_utils::{BaseContext, Ructe};
@@ -60,7 +61,7 @@ pub(crate) fn index(
     user: &User,
 ) -> Result<Ructe, Redirect> {
     if user.can_upload() {
-        let ctx = BaseContext::new(Some(user), flash);
+        let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
 
         Ok(render!(page::upload(&ctx)))
     } else {
@@ -79,13 +80,16 @@ pub(crate) fn get(
     conn: DatabaseConnection,
     flash: Option<FlashMessage>,
     user: Option<&User>,
+    is_bot: IsBot,
     file_id: String,
 ) -> Result<Ructe, Redirect> {
     let ctx = BaseContext::new(user, flash);
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
-            upload_service::increment_view_count(&conn, upload.id.into());
+            if !is_bot.0 {
+                upload_service::increment_view_count(&conn, upload.id.into());
+            }
             let view_count = upload_service::get_view_count(&conn, upload.id.into());
             let uploader_user = upload_service::get_uploader_user(&conn, &upload);
             let comments_with_authors = comment_service::get_comments_for_upload(&conn, &upload);
@@ -112,10 +116,16 @@ pub(crate) fn get(
 
 /// Embed page for an [`Upload`], primarily used for Twitter cards.
 #[rocket::get("/u/<file_id>/embed")]
-pub(crate) fn embed(conn: DatabaseConnection, file_id: String) -> Result<Ructe, Redirect> {
+pub(crate) fn embed(
+    conn: DatabaseConnection,
+    is_bot: IsBot,
+    file_id: String,
+) -> Result<Ructe, Redirect> {
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
-            upload_service::increment_view_count(&conn, upload.id.into());
+            if !is_bot.0 {
+                upload_service::increment_view_count(&conn, upload.id.into());
+            }
             Ok(render!(uploads::embed(upload)))
         }
         None => Err(Redirect::to("/404")),
@@ -130,7 +140,7 @@ pub(crate) fn edit(
     user: &User,
     file_id: String,
 ) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(Some(user), flash);
+    let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
@@ -152,7 +162,7 @@ pub(crate) fn log(
     user: Option<&User>,
     file_id: String,
 ) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(user, flash);
+    let ctx = BaseContext::new(user, flash).noindex_nofollow();
 
     match upload::get_by_file_id(&conn, &file_id) {
         Some(upload) => {
@@ -222,7 +232,7 @@ pub(crate) fn edit_comment_page(
     match comment_service::get_comment_by_id(&conn, comment_id) {
         Some(comment) => {
             if comment.user_id == user.id {
-                let ctx = BaseContext::new(Some(user), None);
+                let ctx = BaseContext::new(Some(user), None).noindex_nofollow();
                 Ok(render!(uploads::edit_comment(&ctx, &file_id, comment)))
             } else {
                 Err(Redirect::to(path))

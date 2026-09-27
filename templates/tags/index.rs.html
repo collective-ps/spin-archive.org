@@ -21,7 +21,7 @@
               <ol>
                 @for tag in group.tags {
                   <li>
-                    <a href="@tag.tag_url()">@tag.name</a>
+                    <a rel="nofollow" href="@tag.tag_url()">@tag.name</a>
                     <small>(@tag.upload_count)</small>
                   </li>
                 }
@@ -37,7 +37,7 @@
           <ol>
             @for tag in tags {
               <li>
-                <a href="@tag.tag_url()">@tag.name</a>
+                <a rel="nofollow" href="@tag.tag_url()">@tag.name</a>
                 <small>(@tag.upload_count)</small>
               </li>
             }

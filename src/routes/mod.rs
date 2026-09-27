@@ -3,6 +3,7 @@ pub mod api;
 pub mod login;
 pub mod queue;
 pub mod register;
+pub mod robots;
 pub mod tags;
 pub mod upload;
 pub mod users;

@@ -50,6 +50,7 @@ fn index(
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 50;
     let mut query = q.unwrap_or_default();
+    let is_search = !query.is_empty();
 
     // Check if the query has an `uploader:[USERNAME]` tag.
     let mut uploader: Option<User> = None;
@@ -91,7 +92,15 @@ fn index(
     let tags = services::tag_service::by_names(&conn, &raw_tags);
     let (tag_groups, tags) = services::tag_service::group_tags(tags);
 
-    let ctx = BaseContext::new(user, flash);
+    // Search/filter results are endless combinations: keep crawlers out.
+    // Plain pagination isn't worth indexing either, but its uploads are.
+    let ctx = if is_search {
+        BaseContext::new(user, flash).noindex_nofollow()
+    } else if current_page > 1 {
+        BaseContext::new(user, flash).noindex()
+    } else {
+        BaseContext::new(user, flash)
+    };
     let pagination = Pagination {
         current_page,
         page_count,
@@ -130,7 +139,7 @@ fn not_found(req: &rocket::Request) -> Ructe {
         .succeeded()
         .expect("Could not grab user.");
 
-    let ctx = BaseContext::new(user, None);
+    let ctx = BaseContext::new(user, None).noindex_nofollow();
 
     render!(error::not_found(&ctx))
 }
@@ -149,7 +158,7 @@ fn run_db_migrations(rocket: rocket::Rocket) -> Result<Rocket, Rocket> {
 
 #[rocket::get("/log?<page>")]
 fn audit_log(conn: DatabaseConnection, user: Option<&User>, page: Option<&RawStr>) -> Ructe {
-    let ctx = BaseContext::new(user, None);
+    let ctx = BaseContext::new(user, None).noindex_nofollow();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 25;
 
@@ -178,6 +187,8 @@ fn main() {
                 logout,
                 about,
                 audit_log,
+                routes::robots::robots_txt,
+                routes::robots::sitemap,
                 routes::login::index_redirect,
                 routes::login::index,
                 routes::login::post,

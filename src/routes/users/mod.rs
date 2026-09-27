@@ -13,7 +13,7 @@ pub(crate) fn settings(
     flash: Option<FlashMessage>,
     user: &User,
 ) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(Some(user), flash);
+    let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
     let api_tokens = api_token_service::get_tokens_by_user(&conn, user.id);
 
     Ok(render!(users::settings(&ctx, api_tokens)))
@@ -65,7 +65,7 @@ pub(crate) fn index(
     user: Option<&User>,
     username: String,
 ) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(user, flash);
+    let ctx = BaseContext::new(user, flash).noindex_nofollow();
 
     match get_user_by_username(&conn, &username) {
         Some(profile_user) => {
@@ -92,7 +92,7 @@ pub(crate) fn comments(
     username: String,
     page: Option<&RawStr>,
 ) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(user, flash);
+    let ctx = BaseContext::new(user, flash).noindex_nofollow();
     let current_page = page.unwrap_or("1".into()).parse::<i64>().unwrap_or(1);
     let per_page = 25;
 

@@ -13,6 +13,9 @@
       name="description"
       content="spin-archive.org is an internet archive project dedicated to preserving the history of pen spinning."
     />
+    @if let Some(robots) = ctx.robots {
+      <meta name="robots" content="@robots" />
+    }
 
     <link rel="stylesheet" href="https://cdn.plyr.io/3.6.2/plyr.css" />
     <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
@@ -28,7 +31,7 @@
           <div class="nav-logo nav-item">spin-archive.org [beta]</div>
           <a href="/" class="nav-item">Home</a>
           <a href="/tags" class="nav-item">Tags</a>
-          <a href="/random" class="nav-item">Random</a>
+          <a rel="nofollow" href="/random" class="nav-item">Random</a>
           @if ctx.user.is_some() {
             <a href="/upload" class="nav-item">Upload</a>
           }
@@ -38,14 +41,14 @@
             }
           }
           @if ctx.user.is_some() {
-            <a href="/user/settings" class="nav-item">
+            <a rel="nofollow" href="/user/settings" class="nav-item">
               Profile
             </a>
             <form action="/logout" method="POST" class="nav-item">
               <a class="nav-item" href="javascript:;" onclick="parentNode.submit()">Log out</a>
             </form>
           } else {
-            <a href="/login" class="nav-item">Login</a>
+            <a rel="nofollow" href="/login" class="nav-item">Login</a>
           }
         </div>
       </nav>

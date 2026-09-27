@@ -77,6 +77,8 @@ pub struct Flash {
 pub struct BaseContext<'a> {
     pub user: Option<&'a User>,
     pub flash: Option<Flash>,
+    /// Content of the `<meta name="robots">` tag, if the page shouldn't be indexed.
+    pub robots: Option<&'static str>,
 }
 
 impl<'a> BaseContext<'a> {
@@ -87,7 +89,20 @@ impl<'a> BaseContext<'a> {
                 name: f.name().to_owned(),
                 msg: f.msg().to_owned(),
             }),
+            robots: None,
         }
+    }
+
+    /// Ask crawlers not to index this page (but still follow its links).
+    pub fn noindex(mut self) -> BaseContext<'a> {
+        self.robots = Some("noindex, follow");
+        self
+    }
+
+    /// Ask crawlers neither to index this page nor to follow its links.
+    pub fn noindex_nofollow(mut self) -> BaseContext<'a> {
+        self.robots = Some("noindex, nofollow");
+        self
     }
 }
 

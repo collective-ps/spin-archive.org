@@ -15,7 +15,7 @@ pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
 
 #[rocket::get("/register", rank = 2)]
 pub(crate) fn index(flash: Option<FlashMessage>) -> Result<Ructe, Redirect> {
-    let ctx = BaseContext::new(None, flash);
+    let ctx = BaseContext::new(None, flash).noindex_nofollow();
 
     Ok(render!(page::register(&ctx)))
 }

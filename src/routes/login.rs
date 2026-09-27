@@ -19,7 +19,7 @@ pub(crate) fn index_redirect(_user: &user::User) -> Redirect {
 
 #[rocket::get("/login", rank = 2)]
 pub(crate) fn index(flash: Option<FlashMessage>) -> Ructe {
-    let ctx = BaseContext::new(None, flash);
+    let ctx = BaseContext::new(None, flash).noindex_nofollow();
 
     render!(page::login(&ctx))
 }

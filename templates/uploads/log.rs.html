@@ -37,7 +37,7 @@
         } else {
           <ol>
             @for tag in tags {
-              <li><a href="@to_tag_url(&tag)">@tag</a></li>
+              <li><a rel="nofollow" href="@to_tag_url(&tag)">@tag</a></li>
             }
           </ol>
         }

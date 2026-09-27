@@ -26,7 +26,7 @@
             </div>
             <div class="title">
               <span class="username">
-                <a href="/user/@user.username">@user.username</a>
+                <a rel="nofollow" href="/user/@user.username">@user.username</a>
               </span>
               changed @audit_log.column_name on
               <a href="/u/@upload.file_id">@upload.file_name.unwrap_or_default()</a>.
@@ -39,7 +39,7 @@
     <div class="pagination">
       @for i in (1..5).rev() {
         @if (page - i) > 0 {
-          <a href="/log?page=@(page - i)">@(page - i)</a>
+          <a rel="nofollow" href="/log?page=@(page - i)">@(page - i)</a>
         }
       }
 
@@ -47,12 +47,12 @@
 
       @if page_count > page {
         @for i in 1..5 {
-          <a href="/log?page=@(page + i)">@(page + i)</a>
+          <a rel="nofollow" href="/log?page=@(page + i)">@(page + i)</a>
         }
 
         @if (page + 5) <= page_count {
           <span>...</span>
-          <a href="/log?page=@page_count">@page_count</a>
+          <a rel="nofollow" href="/log?page=@page_count">@page_count</a>
         }
       }
     </div>

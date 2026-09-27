@@ -554,6 +554,16 @@ pub fn random(conn: &SqliteConnection) -> Option<Upload> {
         .ok()
 }
 
+/// (file_id, updated_at) of every completed upload, newest first, for the sitemap.
+pub fn get_sitemap_entries(conn: &SqliteConnection) -> Vec<(String, NaiveDateTime)> {
+    uploads::table
+        .select((uploads::file_id, uploads::updated_at))
+        .filter(uploads::status.eq(UploadStatus::Completed))
+        .order(uploads::created_at.desc())
+        .load(conn)
+        .unwrap_or_default()
+}
+
 pub fn get_with_any_tags(
     conn: &SqliteConnection,
     tags: Vec<&Tag>,

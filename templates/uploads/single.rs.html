@@ -73,7 +73,7 @@
 
       <div class="uploader">
         <small>Uploader:</small>
-        <a href="/user/@uploader.username">@uploader.username</a>
+        <a rel="nofollow" href="/user/@uploader.username">@uploader.username</a>
       </div>
 
       <div class="upload-date">
@@ -104,11 +104,11 @@
       
       @if let Some(ref user) = ctx.user {
         @if user.can_upload() {
-          <a href="/u/@upload.file_id/edit" class="nav-item">Edit</a>
+          <a rel="nofollow" href="/u/@upload.file_id/edit" class="nav-item">Edit</a>
         }
       }
 
-      <a href="/u/@upload.file_id/log" class="nav-item">Log</a>
+      <a rel="nofollow" href="/u/@upload.file_id/log" class="nav-item">Log</a>
 
       @if let Some(ref user) = ctx.user {
         @if user.is_contributor() {
@@ -197,7 +197,7 @@
             <li class="comment">
               <div class="author">
                 <div class="username">
-                  <a href="/user/@author.username">@author.username</a>
+                  <a rel="nofollow" href="/user/@author.username">@author.username</a>
                 </div>
 
                 @if author.show_user_role() {
@@ -220,7 +220,7 @@
               <div class="actions">
                 @if let Some(ref current_user) = ctx.user {
                   @if comment.is_author(current_user.id) {
-                    <a href="/u/@upload.file_id/comments/@comment.id/edit">Edit</a>
+                    <a rel="nofollow" href="/u/@upload.file_id/comments/@comment.id/edit">Edit</a>
                   }
                 }
               </div>

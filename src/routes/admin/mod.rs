@@ -14,7 +14,7 @@ use crate::template_utils::{BaseContext, Ructe};
 #[rocket::get("/")]
 pub(crate) fn index(flash: Option<FlashMessage>, user: &User) -> Result<Ructe, Redirect> {
     if user.is_admin() {
-        let ctx = BaseContext::new(Some(user), flash);
+        let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
 
         Ok(render!(admin::index(&ctx)))
     } else {

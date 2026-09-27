@@ -17,7 +17,7 @@ pub(crate) fn index(
         return Err(Redirect::to("/"));
     }
 
-    let ctx = BaseContext::new(Some(user), flash);
+    let ctx = BaseContext::new(Some(user), flash).noindex_nofollow();
     let uploads_with_users = upload_service::get_pending_approval_uploads(&conn);
 
     Ok(render!(queue::index(&ctx, uploads_with_users)))

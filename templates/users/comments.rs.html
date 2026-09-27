@@ -33,7 +33,7 @@
     <div class="pagination">
       @for i in (1..5).rev() {
         @if (page - i) > 0 {
-          <a href="/user/@profile_user.username/comments?page=@(page - i)">@(page - i)</a>
+          <a rel="nofollow" href="/user/@profile_user.username/comments?page=@(page - i)">@(page - i)</a>
         }
       }
 
@@ -41,12 +41,12 @@
 
       @if page_count > page {
         @for i in 1..5 {
-          <a href="/user/@profile_user.username/comments?page=@(page + i)">@(page + i)</a>
+          <a rel="nofollow" href="/user/@profile_user.username/comments?page=@(page + i)">@(page + i)</a>
         }
 
         @if (page + 5) <= page_count {
           <span>...</span>
-          <a href="/user/@profile_user.username/comments?page=@page_count">@page_count</a>
+          <a rel="nofollow" href="/user/@profile_user.username/comments?page=@page_count">@page_count</a>
         }
       }
     </div>

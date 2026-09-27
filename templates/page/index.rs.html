@@ -29,7 +29,7 @@
       @for recent_comment in recent_comments {
         <li class="comment">
           <div class="author">
-            <div class="username"><a href="/user/@recent_comment.author.username">@recent_comment.author.username</a></div>
+            <div class="username"><a rel="nofollow" href="/user/@recent_comment.author.username">@recent_comment.author.username</a></div>
             @if recent_comment.author.show_user_role() {
               <div class="role" data-role="@recent_comment.author.role.to_string().to_lowercase()">[@recent_comment.author.role]</div>
             }
@@ -97,9 +97,9 @@
           @for i in (1..5).rev() {
             @if (pagination.current_page - i) > 0 {
               @if query.is_empty() {
-                <a href="/?page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
+                <a rel="nofollow" href="/?page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
               } else {
-                <a href="/?q=@query&page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
+                <a rel="nofollow" href="/?q=@query&page=@(pagination.current_page - i)">@(pagination.current_page - i)</a>
               }
             }
           }
@@ -110,9 +110,9 @@
             @for i in 1..5 {
               @if (pagination.current_page + i) <= pagination.page_count {
                 @if query.is_empty() {
-                  <a href="/?page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
+                  <a rel="nofollow" href="/?page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
                 } else {
-                  <a href="/?q=@query&page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
+                  <a rel="nofollow" href="/?q=@query&page=@(pagination.current_page + i)">@(pagination.current_page + i)</a>
                 }
               }
             }
@@ -120,7 +120,7 @@
 
           @if (pagination.current_page + 5) <= pagination.page_count {
               <span>...</span>
-              <a href="/?page=@pagination.page_count">@pagination.page_count</a>
+              <a rel="nofollow" href="/?page=@pagination.page_count">@pagination.page_count</a>
           }
 
           <span><small><em>(@pagination.total_count results)</em></small></span>
