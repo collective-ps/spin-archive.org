@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
 use crate::schema::tags;
@@ -29,15 +29,14 @@ pub struct NewTag {
 }
 
 /// Inserts a new [`Tag`] into the database.
-pub fn insert(conn: &PgConnection, tag: &NewTag) -> QueryResult<usize> {
-    tag.insert_into(tags::table)
-        .on_conflict(tags::name)
-        .do_nothing()
+pub fn insert(conn: &SqliteConnection, tag: &NewTag) -> QueryResult<usize> {
+    diesel::insert_or_ignore_into(tags::table)
+        .values(tag)
         .execute(conn)
 }
 
 /// Gets tags by their corresponding name.
-pub fn by_names(conn: &PgConnection, tag_names: &Vec<&str>) -> Vec<Tag> {
+pub fn by_names(conn: &SqliteConnection, tag_names: &Vec<&str>) -> Vec<Tag> {
     tags::table
         .filter(tags::name.eq_any(tag_names))
         .order((tags::name.asc(), tags::upload_count.desc()))
@@ -46,9 +45,9 @@ pub fn by_names(conn: &PgConnection, tag_names: &Vec<&str>) -> Vec<Tag> {
 }
 
 /// Gets tags by their corresponding name.
-pub fn contains(conn: &PgConnection, prefix: &str, limit: i64) -> Vec<Tag> {
+pub fn contains(conn: &SqliteConnection, prefix: &str, limit: i64) -> Vec<Tag> {
     tags::table
-        .filter(tags::name.ilike(&format!("%{}%", prefix)))
+        .filter(tags::name.like(&format!("%{}%", prefix)))
         .filter(tags::upload_count.gt(0))
         .order(tags::upload_count.desc())
         .limit(limit)
@@ -57,7 +56,7 @@ pub fn contains(conn: &PgConnection, prefix: &str, limit: i64) -> Vec<Tag> {
 }
 
 /// Gets all tags.
-pub fn all(conn: &PgConnection) -> Vec<Tag> {
+pub fn all(conn: &SqliteConnection) -> Vec<Tag> {
     tags::table
         .filter(tags::upload_count.gt(0))
         .order((tags::name.asc(), tags::upload_count.desc()))

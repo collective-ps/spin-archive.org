@@ -2,36 +2,34 @@
 # Rust Stage
 # ------------------------------------------------------------------------------
 
-FROM lukemathwalker/cargo-chef as planner
-WORKDIR app
-COPY . .
-RUN cargo chef prepare  --recipe-path recipe.json
+FROM rust:1-bookworm AS builder
+WORKDIR /app
 
-FROM lukemathwalker/cargo-chef as cacher
-WORKDIR app
-COPY --from=planner /app/recipe.json recipe.json
+# Install the pinned nightly toolchain in its own layer.
 COPY rust-toolchain .
-RUN cargo chef cook --release --recipe-path recipe.json
+RUN rustup show
 
-FROM rust as builder
-WORKDIR app
+# Build dependencies against a stub main so they're cached between deploys.
+# build.rs compiles the ructe templates, so those come along too.
+COPY Cargo.toml Cargo.lock ./
+COPY src/build.rs src/build.rs
+COPY templates templates
+RUN echo "fn main() {}" > src/main.rs \
+    && cargo build --release --bin spin-archive \
+    && rm -rf target/release/spin-archive target/release/deps/spin_archive-* target/release/.fingerprint/spin-archive-*
+
 COPY . .
-COPY --from=cacher /app/target target
-COPY --from=cacher $CARGO_HOME $CARGO_HOME
-RUN cargo build --release --bin spin-archive
+RUN touch src/main.rs && cargo build --release --bin spin-archive
 
 # ------------------------------------------------------------------------------
 # Front-end Assets Stage
 # ------------------------------------------------------------------------------
 
-FROM node:14-alpine as node-build
+FROM node:14-alpine AS node-build
 
 WORKDIR /usr/src/spin-archive
 
-COPY package.json package.json
-COPY package-lock.json package-lock.json
-COPY webpack.config.js webpack.config.js
-COPY postcss.config.js postcss.config.js
+COPY package.json package-lock.json webpack.config.js postcss.config.js ./
 
 RUN npm install
 
@@ -43,11 +41,22 @@ RUN npm run build
 # Final Stage
 # ------------------------------------------------------------------------------
 
-FROM rust as runtime
+FROM debian:bookworm-slim AS runtime
 
-WORKDIR /home/spin-archive/bin/
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends ca-certificates libssl3 sqlite3 \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
 
 COPY --from=builder /app/target/release/spin-archive .
 COPY --from=node-build /usr/src/spin-archive/build ./build
+
+ENV ROCKET_ENV=production \
+    ROCKET_ADDRESS=0.0.0.0 \
+    ROCKET_PORT=8080 \
+    DATABASE_PATH=/data/spin-archive.db
+
+EXPOSE 8080
 
 CMD ["./spin-archive"]

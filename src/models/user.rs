@@ -9,7 +9,7 @@ use diesel::{
     expression::{helper_types::AsExprOf, AsExpression},
     prelude::*,
     serialize::{self, Output, ToSql},
-    sql_types, Identifiable, PgConnection, Queryable,
+    sql_types, Identifiable, SqliteConnection, Queryable,
 };
 use rocket::{
     outcome::IntoOutcome,
@@ -208,13 +208,13 @@ impl TryInto<NewUser> for RegistrationFields {
     }
 }
 
-pub fn get_user_by_id(conn: &PgConnection, user_id: i32) -> Option<User> {
+pub fn get_user_by_id(conn: &SqliteConnection, user_id: i32) -> Option<User> {
     use crate::schema::users::dsl::*;
 
     users.filter(id.eq(user_id)).first::<User>(conn).ok()
 }
 
-pub fn get_user_by_username(conn: &PgConnection, username: &str) -> Option<User> {
+pub fn get_user_by_username(conn: &SqliteConnection, username: &str) -> Option<User> {
     users::table
         .filter(lower(users::username).eq(lower(username)))
         .first::<User>(conn)
@@ -236,15 +236,22 @@ fn verify_password(password: &str, hash: &str) -> bool {
     }
 }
 
-pub(crate) fn register(conn: &PgConnection, new_user: NewUser) -> Result<User, RegistrationError> {
+pub(crate) fn register(conn: &SqliteConnection, new_user: NewUser) -> Result<User, RegistrationError> {
+    let username = new_user.username.clone();
+
     diesel::insert_into(users::table)
         .values(new_user)
-        .get_result(conn)
+        .execute(conn)
+        .map_err(|_| RegistrationError::AlreadyExists)?;
+
+    users::table
+        .filter(users::username.eq(username))
+        .first(conn)
         .map_err(|_| RegistrationError::AlreadyExists)
 }
 
 pub(crate) fn login(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     login_username: &str,
     login_password: &str,
 ) -> Result<User, LoginError> {
@@ -263,7 +270,7 @@ pub(crate) fn login(
 }
 
 #[allow(dead_code)]
-pub(crate) fn by_ids(conn: &PgConnection, ids: Vec<i32>) -> Vec<User> {
+pub(crate) fn by_ids(conn: &SqliteConnection, ids: Vec<i32>) -> Vec<User> {
     users::table
         .filter(users::id.eq_any(ids))
         .load::<User>(conn)

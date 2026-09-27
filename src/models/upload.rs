@@ -6,10 +6,11 @@ use diesel::{
     expression::{helper_types::AsExprOf, AsExpression},
     prelude::*,
     serialize::{self, Output, ToSql},
-    sql_types, AsChangeset, Identifiable, PgConnection, Queryable,
+    sql_types, AsChangeset, Identifiable, SqliteConnection, Queryable,
 };
 use serde::{Deserialize, Serialize};
 
+use crate::database::last_insert_rowid;
 use crate::models::tag::Tag;
 use crate::models::user::{User, UserRole};
 use crate::schema::uploads;
@@ -286,8 +287,16 @@ impl AsExpression<sql_types::SmallInt> for &UploadStatus {
     }
 }
 
+/// Gets an [`Upload`] by `id`.
+fn get_by_id(conn: &SqliteConnection, upload_id: i32) -> QueryResult<Upload> {
+    uploads::table
+        .filter(uploads::id.eq(upload_id))
+        .select(ALL_COLUMNS)
+        .first::<Upload>(conn)
+}
+
 /// Gets an [`Upload`] by `file_id`.
-pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Upload> {
+pub fn get_by_file_id(conn: &SqliteConnection, search_file_id: &str) -> Option<Upload> {
     use crate::schema::uploads::dsl::*;
 
     uploads
@@ -298,7 +307,7 @@ pub fn get_by_file_id(conn: &PgConnection, search_file_id: &str) -> Option<Uploa
 }
 
 /// Gets an [`Upload`] by `source`.
-pub fn get_by_source(conn: &PgConnection, source_url: &str) -> Option<Upload> {
+pub fn get_by_source(conn: &SqliteConnection, source_url: &str) -> Option<Upload> {
     use crate::schema::uploads::dsl::*;
 
     uploads
@@ -309,7 +318,7 @@ pub fn get_by_source(conn: &PgConnection, source_url: &str) -> Option<Upload> {
 }
 
 /// Gets an [`Upload`] by `video_encoding_key`.
-pub fn get_by_video_encoding_key(conn: &PgConnection, search_key: &str) -> Option<Upload> {
+pub fn get_by_video_encoding_key(conn: &SqliteConnection, search_key: &str) -> Option<Upload> {
     use crate::schema::uploads::dsl::*;
 
     uploads
@@ -321,7 +330,7 @@ pub fn get_by_video_encoding_key(conn: &PgConnection, search_key: &str) -> Optio
 
 /// Gets an [`Upload`] by `file_name` + `file_ext` + `file_size`.
 pub fn get_by_original_file(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     file_name: &str,
     file_ext: &str,
     file_size: i64,
@@ -338,7 +347,7 @@ pub fn get_by_original_file(
 }
 
 /// Gets an [`Upload`] by `md5_hash`.
-pub fn get_by_md5(conn: &PgConnection, md5_hash: &str) -> Option<Upload> {
+pub fn get_by_md5(conn: &SqliteConnection, md5_hash: &str) -> Option<Upload> {
     uploads::table
         .filter(uploads::md5_hash.eq(md5_hash))
         .filter(uploads::status.ne(UploadStatus::Pending))
@@ -349,7 +358,7 @@ pub fn get_by_md5(conn: &PgConnection, md5_hash: &str) -> Option<Upload> {
 }
 
 /// Get uploads where matching by md5 hashes.
-pub fn where_md5(conn: &PgConnection, hashes: &Vec<String>) -> Vec<Upload> {
+pub fn where_md5(conn: &SqliteConnection, hashes: &Vec<String>) -> Vec<Upload> {
     uploads::table
         .select(uploads::md5_hash)
         .filter(uploads::md5_hash.eq_any(hashes))
@@ -362,61 +371,66 @@ pub fn where_md5(conn: &PgConnection, hashes: &Vec<String>) -> Vec<Upload> {
 }
 
 /// Updates a given [`Upload`] with new column values.
-pub fn update(conn: &PgConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
+pub fn update(conn: &SqliteConnection, upload: &UpdateUpload) -> QueryResult<Upload> {
     diesel::update(uploads::table.filter(uploads::id.eq(upload.id)))
         .set(upload)
-        .returning(ALL_COLUMNS)
-        .get_result::<Upload>(conn)
+        .execute(conn)?;
+
+    get_by_id(conn, upload.id)
 }
 
 /// Updates a given [`Upload`] based on encoding response.
 pub fn update_encoding(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     id: i32,
     upload: &FinishedEncodingUpload,
 ) -> QueryResult<Upload> {
     diesel::update(uploads::table.filter(uploads::id.eq(id)))
         .set(upload)
-        .returning(ALL_COLUMNS)
-        .get_result::<Upload>(conn)
+        .execute(conn)?;
+
+    get_by_id(conn, id)
 }
 
 /// Updates a given [`Upload`] to given [`UploadStatus`].
 pub fn update_status(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     upload_id: i32,
     status: UploadStatus,
 ) -> QueryResult<Upload> {
     diesel::update(uploads::table.filter(uploads::id.eq(upload_id)))
         .set(uploads::status.eq(status))
-        .returning(ALL_COLUMNS)
-        .get_result::<Upload>(conn)
+        .execute(conn)?;
+
+    get_by_id(conn, upload_id)
 }
 
 /// Inserts a given [`PendingUpload`] into the database.
 pub fn insert_pending_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     pending_upload: &PendingUpload,
 ) -> QueryResult<Upload> {
     diesel::insert_into(uploads::table)
         .values(pending_upload)
-        .returning(ALL_COLUMNS)
-        .get_result(conn)
+        .execute(conn)?;
+
+    get_by_id(conn, last_insert_rowid(conn)? as i32)
 }
 
 /// Inserts a given [`NewImmediateUpload`] into the database.
 pub fn insert_immediate_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     immediate_upload: &NewImmediateUpload,
 ) -> QueryResult<Upload> {
     diesel::insert_into(uploads::table)
         .values(immediate_upload)
-        .returning(ALL_COLUMNS)
-        .get_result(conn)
+        .execute(conn)?;
+
+    get_by_id(conn, last_insert_rowid(conn)? as i32)
 }
 
 /// Gets all pending approval uploads and their uploader.
-pub fn get_pending_approval_uploads(conn: &PgConnection) -> Vec<(Upload, User)> {
+pub fn get_pending_approval_uploads(conn: &SqliteConnection) -> Vec<(Upload, User)> {
     use crate::schema::users;
 
     uploads::table
@@ -427,11 +441,39 @@ pub fn get_pending_approval_uploads(conn: &PgConnection) -> Vec<(Upload, User)> 
         .unwrap_or_default()
 }
 
+/// Wraps a query selecting `uploads.*` plus a `count` column into one returning [`FullUpload`]s,
+/// adding the uploader and comment/view counts for just the selected page of rows.
+fn full_upload_query(page_query: &str) -> String {
+    format!(
+        "
+        SELECT page.*,
+            users.username AS uploader_username,
+            users.role AS uploader_role,
+            (SELECT count(*) FROM upload_comments WHERE upload_comments.upload_id = page.id) AS comment_count,
+            (SELECT count(*) FROM upload_views WHERE upload_views.upload_id = page.id) AS view_count
+        FROM ({page_query}) page
+        LEFT JOIN users ON page.uploader_user_id = users.id
+        ORDER BY page.created_at DESC
+        ",
+        page_query = page_query
+    )
+}
+
+/// Encodes whitespace-separated search terms as a JSON array, for use with `json_each()`.
+fn tags_json<'a, I: IntoIterator<Item = &'a str>>(tags: I) -> String {
+    let tags: Vec<String> = tags.into_iter().map(|tag| tag.to_lowercase()).collect();
+
+    serde_json::to_string(&tags).unwrap_or("[]".to_owned())
+}
+
 /// Index query for uploads, fetches completed uploads by the page number provided.
 ///
-/// Returns a tuple: (Vec<Upload>, page_count).
+/// A non-empty `query` matches uploads that have every term as a tag, or whose
+/// original file name contains the query.
+///
+/// Returns a tuple: (Vec<Upload>, page_count, total_count).
 pub fn index(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     page: i64,
     per_page: i64,
     query: &str,
@@ -439,180 +481,50 @@ pub fn index(
 ) -> (Vec<FullUpload>, i64, i64) {
     use diesel::sql_types::*;
 
-    // It would be nice to use .to_boxed() here, but it is not available in Diesel yet.
-    // https://github.com/diesel-rs/diesel/pull/1975
-    let result = if !query.is_empty() {
-        if uploader.is_some() {
-            diesel::sql_query(
-                "
-                    WITH comment_counts AS (
-                    SELECT upload_comments.upload_id,
-                            count(*) comment_count
-                        FROM upload_comments
-                        GROUP BY upload_comments.upload_id
-                    ),
-                    view_counts AS (
-                        SELECT upload_views.upload_id,
-                            count(*) view_count
-                        FROM upload_views
-                        GROUP BY upload_views.upload_id
-                    )
-                    SELECT uploads.*,
-                        users.username AS uploader_username,
-                        users.role AS uploader_role,
-                        coalesce(comments.comment_count, 0) AS comment_count,
-                        coalesce(views.view_count, 0) AS view_count,
-                        count(*) over ()
-                    FROM uploads
-                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                    LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
-                    LEFT JOIN view_counts views ON views.upload_id = uploads.id
-                    WHERE uploads.status = $1
-                    AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
-                    AND uploads.uploader_user_id = $3
-                    GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
-                    ORDER BY uploads.created_at desc
-                    LIMIT $4
-                    OFFSET $5
-                    ",
-            )
-            .bind::<BigInt, _>(2)
-            .bind::<Text, _>(query)
-            .bind::<Int4, _>(uploader.unwrap().id)
-            .bind::<BigInt, _>(per_page)
-            .bind::<BigInt, _>((page - 1) * per_page)
-            .load::<FullUpload>(conn)
-        } else {
-            diesel::sql_query(
-                "
-                    WITH comment_counts AS (
-                    SELECT upload_comments.upload_id,
-                            count(*) comment_count
-                        FROM upload_comments
-                        GROUP BY upload_comments.upload_id
-                    ),
-                    view_counts AS (
-                        SELECT upload_views.upload_id,
-                            count(*) view_count
-                        FROM upload_views
-                        GROUP BY upload_views.upload_id
-                    )
-                    SELECT uploads.*,
-                        users.username AS uploader_username,
-                        users.role AS uploader_role,
-                        coalesce(comments.comment_count, 0) AS comment_count,
-                        coalesce(views.view_count, 0) AS view_count,
-                        count(*) over ()
-                    FROM uploads
-                    LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                    LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
-                    LEFT JOIN view_counts views ON views.upload_id = uploads.id
-                    WHERE uploads.status = $1
-                    AND (uploads.tag_index @@ plainto_tsquery($2) OR uploads.file_name ILIKE CONCAT('%', $2, '%'))
-                    GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
-                    ORDER BY uploads.created_at desc
-                    LIMIT $3
-                    OFFSET $4
-                ",
-            )
-            .bind::<BigInt, _>(2)
-            .bind::<Text, _>(query)
-            .bind::<BigInt, _>(per_page)
-            .bind::<BigInt, _>((page - 1) * per_page)
-            .load::<FullUpload>(conn)
-        }
-    } else if uploader.is_some() {
-        diesel::sql_query(
-            "
-                WITH comment_counts AS (
-                SELECT upload_comments.upload_id,
-                        count(*) comment_count
-                    FROM upload_comments
-                    GROUP BY upload_comments.upload_id
-                ),
-                view_counts AS (
-                    SELECT upload_views.upload_id,
-                        count(*) view_count
-                    FROM upload_views
-                    GROUP BY upload_views.upload_id
-                )
-                SELECT uploads.*,
-                    users.username AS uploader_username,
-                    users.role AS uploader_role,
-                    coalesce(comments.comment_count, 0) AS comment_count,
-                    coalesce(views.view_count, 0) AS view_count,
-                    count(*) over ()
-                FROM uploads
-                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
-                LEFT JOIN view_counts views ON views.upload_id = uploads.id
-                WHERE uploads.status = $1
-                AND uploads.uploader_user_id = $2
-                GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
-                ORDER BY uploads.created_at desc
-                LIMIT $3
-                OFFSET $4
-                ",
-        )
-        .bind::<BigInt, _>(2)
-        .bind::<Int4, _>(uploader.unwrap().id)
-        .bind::<BigInt, _>(per_page)
-        .bind::<BigInt, _>((page - 1) * per_page)
-        .load::<FullUpload>(conn)
-    } else {
-        println!("yes!");
-        diesel::sql_query(
-            "
-                WITH comment_counts AS (
-                SELECT upload_comments.upload_id,
-                        count(*) comment_count
-                    FROM upload_comments
-                    GROUP BY upload_comments.upload_id
-                ),
-                view_counts AS (
-                    SELECT upload_views.upload_id,
-                        count(*) view_count
-                    FROM upload_views
-                    GROUP BY upload_views.upload_id
-                )
-                SELECT uploads.*,
-                    users.username AS uploader_username,
-                    users.role AS uploader_role,
-                    coalesce(comments.comment_count, 0) AS comment_count,
-                    coalesce(views.view_count, 0) AS view_count,
-                    count(*) over ()
-                FROM uploads
-                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                LEFT JOIN comment_counts comments ON comments.upload_id = uploads.id
-                LEFT JOIN view_counts views ON views.upload_id = uploads.id
-                WHERE uploads.status = $1
-                GROUP BY (uploads.id, users.username, users.role, comments.comment_count, views.view_count)
-                ORDER BY uploads.created_at desc
-                LIMIT $2
-                OFFSET $3
-            ",
-        )
-        .bind::<BigInt, _>(2)
-        .bind::<BigInt, _>(per_page)
-        .bind::<BigInt, _>((page - 1) * per_page)
-        .load::<FullUpload>(conn)
-    };
+    let query = query.trim();
+    let search = if query.is_empty() { None } else { Some(query) };
 
-    match result.unwrap() {
-        full_uploads => {
-            let total_count = full_uploads
-                .first()
-                .map(|full_upload| full_upload.count)
-                .unwrap_or(0);
+    let result = diesel::sql_query(full_upload_query(
+        "
+        SELECT uploads.*, count(*) OVER () AS count
+        FROM uploads
+        WHERE uploads.status = ?1
+        AND (?2 IS NULL OR uploads.uploader_user_id = ?2)
+        AND (?3 IS NULL
+            OR uploads.file_name LIKE '%' || ?3 || '%'
+            OR NOT EXISTS (
+                SELECT 1 FROM json_each(?4) AS term
+                WHERE instr(' ' || uploads.tag_string || ' ', ' ' || term.value || ' ') = 0
+            ))
+        ORDER BY uploads.created_at DESC
+        LIMIT ?5
+        OFFSET ?6
+        ",
+    ))
+    .bind::<SmallInt, _>(UploadStatus::Completed)
+    .bind::<Nullable<Integer>, _>(uploader.map(|user| user.id))
+    .bind::<Nullable<Text>, _>(search)
+    .bind::<Text, _>(tags_json(query.split_whitespace()))
+    .bind::<BigInt, _>(per_page)
+    .bind::<BigInt, _>((page - 1) * per_page)
+    .load::<FullUpload>(conn);
 
-            let total_pages = (total_count as f64 / per_page as f64).ceil() as i64;
+    let full_uploads = result.unwrap_or_else(|err| {
+        log::error!("Failed to load uploads index: {:?}", err);
+        Vec::new()
+    });
 
-            (full_uploads, total_pages, total_count)
-        }
-    }
+    let total_count = full_uploads
+        .first()
+        .map(|full_upload| full_upload.count)
+        .unwrap_or(0);
+
+    let total_pages = (total_count as f64 / per_page as f64).ceil() as i64;
+
+    (full_uploads, total_pages, total_count)
 }
 
-pub fn get_upload_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
+pub fn get_upload_count_by_user_id(conn: &SqliteConnection, user_id: i32) -> i64 {
     use diesel::dsl::count;
 
     uploads::table
@@ -623,13 +535,13 @@ pub fn get_upload_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
         .unwrap_or_default()
 }
 
-pub fn update_md5(conn: &PgConnection, file_id: &str, md5: &str) -> QueryResult<usize> {
+pub fn update_md5(conn: &SqliteConnection, file_id: &str, md5: &str) -> QueryResult<usize> {
     diesel::update(uploads::table.filter(uploads::file_id.eq(file_id)))
         .set(uploads::md5_hash.eq(md5))
         .execute(conn)
 }
 
-pub fn random(conn: &PgConnection) -> Option<Upload> {
+pub fn random(conn: &SqliteConnection) -> Option<Upload> {
     use diesel::dsl::sql;
     use diesel::sql_types::Integer;
 
@@ -643,48 +555,32 @@ pub fn random(conn: &PgConnection) -> Option<Upload> {
 }
 
 pub fn get_with_any_tags(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     tags: Vec<&Tag>,
     excluding_id: i32,
 ) -> Vec<FullUpload> {
     use diesel::sql_types::*;
 
-    let query = tags
-        .iter()
-        .map(|tag| tag.name.as_ref())
-        .collect::<Vec<&str>>()
-        .join(" | ");
-
-    diesel::sql_query(
+    // `abs(random()) % 2 = 0` stands in for Postgres' `TABLESAMPLE BERNOULLI (50)`,
+    // so recommendations vary between page loads.
+    diesel::sql_query(full_upload_query(
         "
-            SELECT *,
-                (SELECT COUNT(upload_comments.*) AS comment_count
-                FROM upload_comments
-                WHERE upload_comments.upload_id = t.id),
-                (SELECT COUNT(upload_views.*) AS view_count
-                FROM upload_views
-                WHERE upload_views.upload_id = t.id),
-            COUNT(*) OVER ()
-                FROM
-                (
-                SELECT uploads.*,
-                    users.username AS uploader_username,
-                    users.role AS uploader_role
-                FROM uploads
-                TABLESAMPLE BERNOULLI (50)
-                LEFT JOIN users ON (uploads.uploader_user_id = users.id)
-                WHERE uploads.status = $1
-                AND uploads.id != $2
-                AND (uploads.tag_index @@ to_tsquery($3))
-                GROUP BY (uploads.id, users.username, users.role)
-                ORDER BY uploads.created_at DESC
-                ) t
-                LIMIT 6
-            ",
-    )
-    .bind::<BigInt, _>(2)
-    .bind::<Int4, _>(excluding_id)
-    .bind::<Text, _>(query)
+        SELECT uploads.*, count(*) OVER () AS count
+        FROM uploads
+        WHERE uploads.status = ?1
+        AND uploads.id != ?2
+        AND abs(random()) % 2 = 0
+        AND EXISTS (
+            SELECT 1 FROM json_each(?3) AS tag
+            WHERE instr(' ' || uploads.tag_string || ' ', ' ' || tag.value || ' ') > 0
+        )
+        ORDER BY uploads.created_at DESC
+        LIMIT 6
+        ",
+    ))
+    .bind::<SmallInt, _>(UploadStatus::Completed)
+    .bind::<Integer, _>(excluding_id)
+    .bind::<Text, _>(tags_json(tags.iter().map(|tag| tag.name.as_ref())))
     .load::<FullUpload>(conn)
     .expect("Could not get_with_any_tags()")
 }

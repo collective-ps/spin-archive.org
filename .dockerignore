@@ -1,7 +1,13 @@
 target
+node_modules
+build
+scripts
 Dockerfile
 .dockerignore
-.gitignore
-node_modules
-.env
+.git
+.env*
 recipe.json
+*.db
+*.db-*
+*.csv
+*.tar

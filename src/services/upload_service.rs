@@ -1,6 +1,6 @@
 use chrono::NaiveDate;
 use diesel::prelude::*;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use log::{debug, warn};
 use nanoid::nanoid;
 use thiserror::Error;
@@ -39,7 +39,7 @@ pub(crate) enum UploadError {
 }
 
 pub(crate) fn immediate_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     user: &User,
     file_id: &str,
     file_name: &str,
@@ -81,7 +81,7 @@ pub(crate) fn immediate_upload(
 
 /// Creates a new pending upload.
 pub(crate) fn new_pending_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     user: &User,
     file_name: &str,
     file_ext: &str,
@@ -105,7 +105,7 @@ pub(crate) fn new_pending_upload(
 /// Finalizes a pending upload, which means the user has finished uploading the file and
 /// we can move the upload for later processing.
 pub(crate) fn finalize_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     _uploader: &User,
     file_id: &str,
     tags: &str,
@@ -159,7 +159,7 @@ pub(crate) fn finalize_upload(
 
 /// Updates an already published upload.
 pub(crate) fn update_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     user_id: i32,
     file_id: &str,
     tags: &str,
@@ -222,7 +222,7 @@ pub(crate) fn update_upload(
     }
 }
 
-pub fn delete(conn: &PgConnection, upload: &Upload, user: &User) -> QueryResult<Upload> {
+pub fn delete(conn: &SqliteConnection, upload: &Upload, user: &User) -> QueryResult<Upload> {
     upload::update_status(&conn, upload.id, UploadStatus::Deleted).and_then(|new_upload| {
         audit_service::create_audit_log(
             &conn,
@@ -238,7 +238,7 @@ pub fn delete(conn: &PgConnection, upload: &Upload, user: &User) -> QueryResult<
     })
 }
 
-pub fn after_edit_hooks(conn: &PgConnection, upload: &Upload) {
+pub fn after_edit_hooks(conn: &SqliteConnection, upload: &Upload) {
     let _ = tag_service::create_from_tag_string(&conn, &upload.tag_string);
     let _ = tag_service::rebuild_tag_counts(&conn);
 }
@@ -252,14 +252,14 @@ pub fn sanitize_tags<'a>(tags: &'a str) -> String {
 }
 
 /// Increments the view count for an upload.
-pub fn increment_view_count(conn: &PgConnection, upload_id: i32) {
+pub fn increment_view_count(conn: &SqliteConnection, upload_id: i32) {
     let view = View { upload_id };
 
     let _ = view.insert_into(upload_views::table).execute(conn);
 }
 
 /// Gets the view count for an upload.
-pub fn get_view_count(conn: &PgConnection, upload_id: i32) -> i64 {
+pub fn get_view_count(conn: &SqliteConnection, upload_id: i32) -> i64 {
     use diesel::prelude::*;
 
     upload_views::table
@@ -270,19 +270,19 @@ pub fn get_view_count(conn: &PgConnection, upload_id: i32) -> i64 {
 }
 
 /// Gets the associated uploader user.
-pub fn get_uploader_user(conn: &PgConnection, upload: &Upload) -> User {
+pub fn get_uploader_user(conn: &SqliteConnection, upload: &Upload) -> User {
     use crate::models::user;
 
     user::get_user_by_id(&conn, upload.uploader_user_id.expect("No uploader user")).unwrap()
 }
 
 /// Gets an audit log for a particular upload.
-pub fn get_audit_log(conn: &PgConnection, upload: &Upload) -> Vec<(AuditLog, User)> {
+pub fn get_audit_log(conn: &SqliteConnection, upload: &Upload) -> Vec<(AuditLog, User)> {
     audit_log::get_by_row_id(conn, "uploads", upload.id).unwrap_or_default()
 }
 
 pub(crate) fn get_recommended_uploads(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     tags: &Vec<Tag>,
     excluding_id: i32,
 ) -> Vec<FullUpload> {

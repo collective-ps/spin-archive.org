@@ -1,6 +1,6 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
 use crate::models::user::User;
@@ -25,15 +25,16 @@ pub struct NewApiToken {
 }
 
 /// Inserts a new [`ApiToken`] into the database.
-pub fn insert(conn: &PgConnection, api_token: &NewApiToken) -> QueryResult<ApiToken> {
-  api_token
-    .insert_into(api_tokens::table)
-    .returning(api_tokens::all_columns)
-    .get_result(conn)
+pub fn insert(conn: &SqliteConnection, api_token: &NewApiToken) -> QueryResult<ApiToken> {
+  api_token.insert_into(api_tokens::table).execute(conn)?;
+
+  api_tokens::table
+    .filter(api_tokens::token.eq(&api_token.token))
+    .first(conn)
 }
 
 /// Deletes an [`ApiToken`] from the database.
-pub fn revoke(conn: &PgConnection, user_id: i32, api_token_id: i64) -> QueryResult<usize> {
+pub fn revoke(conn: &SqliteConnection, user_id: i32, api_token_id: i64) -> QueryResult<usize> {
   diesel::delete(
     api_tokens::table
       .filter(api_tokens::id.eq(api_token_id))
@@ -43,7 +44,7 @@ pub fn revoke(conn: &PgConnection, user_id: i32, api_token_id: i64) -> QueryResu
 }
 
 /// Gets an [`ApiToken`] and corresponding [`User`] by their token string.
-pub fn by_token(conn: &PgConnection, token: &str) -> Option<(ApiToken, User)> {
+pub fn by_token(conn: &SqliteConnection, token: &str) -> Option<(ApiToken, User)> {
   use crate::schema::users;
 
   api_tokens::table
@@ -54,7 +55,7 @@ pub fn by_token(conn: &PgConnection, token: &str) -> Option<(ApiToken, User)> {
 }
 
 /// Gets all tokens for a given user_id.
-pub fn get_tokens_by_user(conn: &PgConnection, user_id: i32) -> Vec<ApiToken> {
+pub fn get_tokens_by_user(conn: &SqliteConnection, user_id: i32) -> Vec<ApiToken> {
   api_tokens::table
     .filter(api_tokens::user_id.eq(user_id))
     .load::<ApiToken>(conn)

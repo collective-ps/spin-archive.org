@@ -1,0 +1,11 @@
+DROP TABLE invitations;
+DROP TABLE posts;
+DROP TABLE threads;
+DROP TABLE forums;
+DROP TABLE api_tokens;
+DROP TABLE tags;
+DROP TABLE upload_comments;
+DROP TABLE audit_log;
+DROP TABLE upload_views;
+DROP TABLE uploads;
+DROP TABLE users;

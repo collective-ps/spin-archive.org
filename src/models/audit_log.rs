@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
+use crate::database::last_insert_rowid;
 use crate::models::upload::{Upload, ALL_COLUMNS as ALL_UPLOAD_COLUMNS};
 use crate::models::user::User;
 use crate::schema::{audit_log, uploads, users};
@@ -35,12 +36,16 @@ pub struct NewAuditLog {
     pub new_value: String,
 }
 
-pub fn insert(conn: &PgConnection, audit_log: &NewAuditLog) -> QueryResult<AuditLog> {
-    audit_log.insert_into(audit_log::table).get_result(conn)
+pub fn insert(conn: &SqliteConnection, audit_log: &NewAuditLog) -> QueryResult<AuditLog> {
+    audit_log.insert_into(audit_log::table).execute(conn)?;
+
+    audit_log::table
+        .find(last_insert_rowid(conn)?)
+        .first(conn)
 }
 
 pub fn get_by_row_id(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     table_name: &str,
     row_id: i32,
 ) -> QueryResult<Vec<(AuditLog, User)>> {
@@ -52,7 +57,7 @@ pub fn get_by_row_id(
 }
 
 pub fn get_paginated_log(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     page: i64,
     per_page: i64,
 ) -> Vec<(AuditLog, User, Upload)> {
@@ -72,7 +77,7 @@ pub fn get_paginated_log(
         .unwrap_or_default()
 }
 
-pub fn get_log_count(conn: &PgConnection) -> i64 {
+pub fn get_log_count(conn: &SqliteConnection) -> i64 {
     use diesel::dsl::count;
 
     audit_log::table

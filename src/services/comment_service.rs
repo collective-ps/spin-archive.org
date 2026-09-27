@@ -1,4 +1,4 @@
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 
 use crate::models::upload::Upload;
 use crate::models::upload_comment::{self, NewUploadComment, UpdateUploadComment, UploadComment};
@@ -9,7 +9,7 @@ pub use crate::models::upload_comment::{
 };
 
 pub fn create_comment_on_upload(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     upload: &Upload,
     user: &User,
     comment: &str,
@@ -24,7 +24,7 @@ pub fn create_comment_on_upload(
 }
 
 pub fn edit_comment(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     upload_comment: &UploadComment,
     user: &User,
     comment: &str,
@@ -40,6 +40,6 @@ pub fn edit_comment(
     upload_comment::update(&conn, upload_comment.id, &update).ok()
 }
 
-pub fn get_comments_for_upload(conn: &PgConnection, upload: &Upload) -> Vec<(UploadComment, User)> {
+pub fn get_comments_for_upload(conn: &SqliteConnection, upload: &Upload) -> Vec<(UploadComment, User)> {
     upload_comment::get_by_upload_id(&conn, upload.id).unwrap_or_default()
 }

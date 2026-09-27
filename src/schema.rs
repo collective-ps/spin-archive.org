@@ -118,7 +118,6 @@ table! {
 
 table! {
     use diesel::sql_types::*;
-    use diesel_full_text_search::{TsVector as Tsvector};
 
     uploads (id) {
         id -> Int4,
@@ -133,7 +132,6 @@ table! {
         updated_at -> Timestamp,
         file_ext -> Text,
         tag_string -> Text,
-        tag_index -> Tsvector,
         video_encoding_key -> Text,
         thumbnail_url -> Nullable<Text>,
         video_url -> Nullable<Text>,

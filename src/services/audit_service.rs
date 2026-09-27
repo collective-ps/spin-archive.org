@@ -1,11 +1,11 @@
 use chrono::Utc;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 
 use crate::models::audit_log::{self, AuditLog, NewAuditLog};
 pub use crate::models::audit_log::{get_log_count, get_paginated_log};
 
 pub fn create_audit_log(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     table_name: &str,
     column_name: &str,
     row_id: i32,

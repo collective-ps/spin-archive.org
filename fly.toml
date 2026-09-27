@@ -1,0 +1,39 @@
+app = "spin-archive"
+primary_region = "sea"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  ROCKET_ENV = "production"
+  ROCKET_ADDRESS = "0.0.0.0"
+  ROCKET_PORT = "8080"
+  DATABASE_PATH = "/data/spin-archive.db"
+  RUST_LOG = "info"
+
+# SQLite lives on a single volume, so there is exactly one Machine. `immediate`
+# replaces it in place instead of trying to start a second Machine alongside it.
+[deploy]
+  strategy = "immediate"
+
+[[mounts]]
+  source = "spin_archive_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    path = "/about"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"

@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use log::debug;
 use serde::{Deserialize, Serialize};
 
@@ -10,7 +10,7 @@ use crate::schema::uploads;
 
 pub use crate::models::tag::{all, by_names};
 
-pub fn create_from_tag_string(conn: &PgConnection, tag_string: &str) {
+pub fn create_from_tag_string(conn: &SqliteConnection, tag_string: &str) {
     let tags = sanitize_tags(tag_string);
 
     for tag_name in tags.iter() {
@@ -28,7 +28,7 @@ pub fn sanitize_tags<'a>(tags: &'a str) -> Vec<String> {
         .collect::<Vec<_>>()
 }
 
-pub fn rebuild(conn: &PgConnection) {
+pub fn rebuild(conn: &SqliteConnection) {
     use diesel::prelude::*;
 
     let limit = 250;
@@ -69,36 +69,42 @@ pub fn rebuild(conn: &PgConnection) {
     }
 }
 
-pub fn rebuild_tag_counts(conn: &PgConnection) -> Vec<Tag> {
+/// Recounts how many completed uploads use each tag, returning the tags whose count changed.
+pub fn rebuild_tag_counts(conn: &SqliteConnection) -> Vec<Tag> {
+    use crate::schema::tags;
     use diesel::prelude::*;
+    use std::collections::HashMap;
 
-    let mut tags = Vec::with_capacity(1000);
+    conn.transaction::<_, diesel::result::Error, _>(|| {
+        let tag_strings: Vec<String> = uploads::table
+            .select(uploads::tag_string)
+            .filter(uploads::status.eq(UploadStatus::Completed))
+            .load(conn)?;
 
-    let mut updated_tags = diesel::sql_query(
-        "UPDATE tags SET upload_count = true_count FROM (
-        SELECT tag, COUNT(*) AS true_count
-        FROM uploads,
-        unnest(string_to_array(tag_string, ' ')) AS tag
-        WHERE uploads.status = 2
-        GROUP BY tag
-      ) true_counts WHERE tags.name = tag AND tags.upload_count != true_count RETURNING tags.*",
-    )
-    .load::<Tag>(conn)
-    .unwrap_or_default();
+        let mut true_counts: HashMap<&str, i32> = HashMap::new();
 
-    let mut removed_tags = diesel::sql_query(
-        "UPDATE tags SET upload_count = 0 WHERE upload_count != 0 AND name NOT IN (
-        SELECT DISTINCT tag
-        FROM uploads, unnest(string_to_array(tag_string, ' ')) AS tag
-        GROUP BY tag
-      ) RETURNING tags.*",
-    )
-    .load::<Tag>(conn)
-    .unwrap_or_default();
+        for tag in tag_strings.iter().flat_map(|tag_string| tag_string.split_whitespace()) {
+            *true_counts.entry(tag).or_insert(0) += 1;
+        }
 
-    tags.append(&mut updated_tags);
-    tags.append(&mut removed_tags);
-    tags
+        let mut changed_tags = Vec::new();
+
+        for mut tag in tags::table.load::<Tag>(conn)? {
+            let true_count = true_counts.get(tag.name.as_str()).copied().unwrap_or(0);
+
+            if tag.upload_count != true_count {
+                diesel::update(tags::table.find(tag.id))
+                    .set(tags::upload_count.eq(true_count))
+                    .execute(conn)?;
+
+                tag.upload_count = true_count;
+                changed_tags.push(tag);
+            }
+        }
+
+        Ok(changed_tags)
+    })
+    .unwrap_or_default()
 }
 
 fn dedupe_tags<'a>(tag_strings: &Vec<String>, buffer: &'a mut HashSet<String>) {

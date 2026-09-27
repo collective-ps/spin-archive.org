@@ -1,8 +1,9 @@
 use chrono::NaiveDateTime;
 use diesel::prelude::*;
-use diesel::PgConnection;
+use diesel::SqliteConnection;
 use serde::{Deserialize, Serialize};
 
+use crate::database::last_insert_rowid;
 use crate::models::upload::{Upload, ALL_COLUMNS as ALL_UPLOAD_COLUMNS};
 use crate::models::user::User;
 use crate::schema::upload_comments;
@@ -48,16 +49,20 @@ pub struct UpdateUploadComment {
 
 /// Inserts a new [`UploadComment`] into the database.
 pub fn insert(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     upload_comments: &NewUploadComment,
 ) -> QueryResult<UploadComment> {
     upload_comments
         .insert_into(upload_comments::table)
-        .get_result(conn)
+        .execute(conn)?;
+
+    upload_comments::table
+        .find(last_insert_rowid(conn)?)
+        .first(conn)
 }
 
 /// Gets an [`UploadComment`] by a given `comment_id`.
-pub fn get_comment_by_id(conn: &PgConnection, comment_id: i64) -> Option<UploadComment> {
+pub fn get_comment_by_id(conn: &SqliteConnection, comment_id: i64) -> Option<UploadComment> {
     upload_comments::table
         .filter(upload_comments::id.eq(comment_id))
         .first::<UploadComment>(conn)
@@ -66,7 +71,7 @@ pub fn get_comment_by_id(conn: &PgConnection, comment_id: i64) -> Option<UploadC
 
 /// Gets all comments + authors by `upload_id`.
 pub fn get_by_upload_id(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     upload_id: i32,
 ) -> QueryResult<Vec<(UploadComment, User)>> {
     upload_comments::table
@@ -78,16 +83,18 @@ pub fn get_by_upload_id(
 
 /// Updates a given [`UploadComment`] with new column values.
 pub fn update(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     id: i64,
     comment: &UpdateUploadComment,
 ) -> QueryResult<UploadComment> {
     diesel::update(upload_comments::table.filter(upload_comments::id.eq(id)))
         .set(comment)
-        .get_result::<UploadComment>(conn)
+        .execute(conn)?;
+
+    upload_comments::table.find(id).first::<UploadComment>(conn)
 }
 
-pub fn get_comment_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
+pub fn get_comment_count_by_user_id(conn: &SqliteConnection, user_id: i32) -> i64 {
     use diesel::dsl::count;
 
     upload_comments::table
@@ -98,7 +105,7 @@ pub fn get_comment_count_by_user_id(conn: &PgConnection, user_id: i32) -> i64 {
 }
 
 pub fn get_paginated_comments(
-    conn: &PgConnection,
+    conn: &SqliteConnection,
     user_id: i32,
     page: i64,
     per_page: i64,
@@ -131,7 +138,7 @@ impl From<(UploadComment, User, Upload)> for RecentComment {
 }
 
 /// Gets the N-most recent comments and their user.
-pub fn get_recent_comments(conn: &PgConnection) -> Vec<(UploadComment, User, Upload)> {
+pub fn get_recent_comments(conn: &SqliteConnection) -> Vec<(UploadComment, User, Upload)> {
     upload_comments::table
         .inner_join(users::table)
         .inner_join(uploads::table)
